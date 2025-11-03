@@ -120,7 +120,9 @@ export async function POST(request: NextRequest) {
     }
 
     const autumn = new Autumn({ apiKey: process.env.AUTUMN_SECRET_KEY! });
-    const idempotencyKey = `${userId}:aeo:${encodeURIComponent(url)}`;
+    // Unique per-run idempotency base to ensure every click deducts 30
+    const runId = (globalThis as any).crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const idempotencyKey = `${userId}:aeo:${runId}`;
 
     // Check allowance
     try {

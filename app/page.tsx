@@ -307,7 +307,7 @@ function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefi
     // Frontend pre-check for credits (30)
     if (credits < REQUIRED_CREDITS_AEO) {
       const go = window.confirm(`Insufficient credits. You need ${REQUIRED_CREDITS_AEO} credits to generate an AEO report. Your balance is ${credits}. Go to pricing?`);
-      if (go) router.push('/pricing-public');
+      if (go) router.push('/plans');
       return;
     }
 
