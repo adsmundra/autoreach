@@ -516,7 +516,7 @@ export default function BrandMonitorPage() {
                   active={activeTab === "brand"}
                   onClick={() => setActiveTab("brand")}
                 />
-                {/* <TabButton
+                <TabButton
                   title="AEO Report"
                   active={activeTab === "aeo"}
                   onClick={() => setActiveTab("aeo")}
@@ -530,7 +530,7 @@ export default function BrandMonitorPage() {
                   title="UGC"
                   active={activeTab === "ugc"}
                   onClick={() => setActiveTab("ugc")}
-                /> */}
+                />
               </div>
             </nav>
           </div>
