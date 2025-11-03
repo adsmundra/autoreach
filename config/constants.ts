@@ -9,6 +9,7 @@ export const FEATURE_ID_MESSAGES = 'messages';
 // Credit costs
 export const CREDITS_PER_MESSAGE = 5;
 export const CREDITS_PER_BRAND_ANALYSIS = 10;
+export const CREDITS_PER_FILE_GENERATION = 30;
 
 // User roles
 export const ROLE_USER = 'user';

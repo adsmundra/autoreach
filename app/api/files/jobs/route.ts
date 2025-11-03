@@ -1,12 +1,26 @@
+import crypto from 'crypto';
+import { Autumn } from 'autumn-js';
+import { eq } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
+
+import { CREDITS_PER_FILE_GENERATION, FEATURE_ID_MESSAGES } from '@/config/constants';
+import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { fileGenerationJobs } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
-import crypto from 'crypto';
-import { auth } from '@/lib/auth';
+import {
+  AuthenticationError,
+  ExternalServiceError,
+  InsufficientCreditsError,
+  ValidationError,
+  handleApiError,
+} from '@/lib/api-errors';
 
 const N8N_WEBHOOK = 'https://n8n.welz.in/webhook/2f48da23-976e-4fd0-97da-2cb24c0b3e38';
 const WEBHOOK_SECRET = process.env.FILES_WEBHOOK_SECRET || '';
+
+const autumn = new Autumn({
+  apiKey: process.env.AUTUMN_SECRET_KEY!,
+});
 
 function hmacSign(input: string, secret: string) {
   return crypto.createHmac('sha256', secret).update(input).digest('hex');
@@ -15,39 +29,66 @@ function hmacSign(input: string, secret: string) {
 export async function POST(req: NextRequest) {
   try {
     const session = await auth.api.getSession({ headers: req.headers });
-    if (!session) {
-      return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });
+    if (!session?.user) {
+      throw new AuthenticationError('Please log in to generate files');
     }
 
     const body = await req.json();
     const { url, brand = '', category = '', competitors = [], prompts = '' } = body || {};
 
     if (!url || typeof url !== 'string') {
-      return NextResponse.json({ error: 'Invalid url' }, { status: 400 });
+      throw new ValidationError('Invalid url', { url: 'A valid URL is required' });
     }
     if (!brand || typeof brand !== 'string') {
-      return NextResponse.json({ error: 'Invalid brand' }, { status: 400 });
+      throw new ValidationError('Invalid brand', { brand: 'Brand name is required' });
     }
     if (!category || typeof category !== 'string') {
-      return NextResponse.json({ error: 'Invalid category' }, { status: 400 });
+      throw new ValidationError('Invalid category', { category: 'Category is required' });
     }
 
     const userId = session.user.id;
     const userEmail = session.user.email || '';
 
+    // Verify the customer has enough credits available
+    let balance = 0;
+    try {
+      const access = await autumn.check({
+        customer_id: userId,
+        feature_id: FEATURE_ID_MESSAGES,
+      });
+
+      balance = access.data?.balance || 0;
+
+      if (!access.data?.allowed || balance < CREDITS_PER_FILE_GENERATION) {
+        throw new InsufficientCreditsError(
+          `Insufficient credits. You need at least ${CREDITS_PER_FILE_GENERATION} credits to generate files.`,
+          { required: CREDITS_PER_FILE_GENERATION, available: balance }
+        );
+      }
+    } catch (error) {
+      if (error instanceof InsufficientCreditsError) {
+        throw error;
+      }
+
+      throw new ExternalServiceError('Unable to verify credits. Please try again', 'autumn');
+    }
+
     // Create job with nonce
     const nonce = crypto.randomBytes(16).toString('hex');
-    const [job] = await db.insert(fileGenerationJobs).values({
-      userId,
-      userEmail,
-      url,
-      brand,
-      category,
-      competitors,
-      prompts,
-      status: 'pending',
-      nonce,
-    }).returning();
+    const [job] = await db
+      .insert(fileGenerationJobs)
+      .values({
+        userId,
+        userEmail,
+        url,
+        brand,
+        category,
+        competitors,
+        prompts,
+        status: 'pending',
+        nonce,
+      })
+      .returning();
 
     const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || ''}/api/files/callback`;
     const timestamp = Date.now();
@@ -78,16 +119,72 @@ export async function POST(req: NextRequest) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+
       responseCode = `${res.status}`;
-      await db.update(fileGenerationJobs).set({ webhookAttemptedAt: new Date(), webhookResponseCode: responseCode, status: 'in_progress' }).where(eq(fileGenerationJobs.id, job.id));
-    } catch (e) {
-      await db.update(fileGenerationJobs).set({ webhookAttemptedAt: new Date(), webhookResponseCode: responseCode || 'ERR', status: 'failed', error: 'Failed to reach webhook' }).where(eq(fileGenerationJobs.id, job.id));
-      return NextResponse.json({ jobId: job.id, status: 'failed', error: 'Failed to trigger workflow' }, { status: 500 });
+
+      if (!res.ok) {
+        throw new ExternalServiceError(`Workflow responded with status ${res.status}`, 'n8n');
+      }
+
+      await db
+        .update(fileGenerationJobs)
+        .set({ webhookAttemptedAt: new Date(), webhookResponseCode: responseCode, status: 'in_progress' })
+        .where(eq(fileGenerationJobs.id, job.id));
+    } catch (error) {
+      await db
+        .update(fileGenerationJobs)
+        .set({
+          webhookAttemptedAt: new Date(),
+          webhookResponseCode: responseCode || 'ERR',
+          status: 'failed',
+          error: 'Failed to trigger workflow',
+        })
+        .where(eq(fileGenerationJobs.id, job.id));
+
+      if (error instanceof ExternalServiceError) {
+        throw error;
+      }
+
+      throw new ExternalServiceError('Failed to trigger workflow', 'n8n');
     }
 
-    return NextResponse.json({ jobId: job.id, status: 'in_progress' });
-  } catch (e: any) {
-    console.error(e);
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+    // Deduct credits now that the workflow has been started
+    let remainingCredits = balance;
+    try {
+      await autumn.track({
+        customer_id: userId,
+        feature_id: FEATURE_ID_MESSAGES,
+        count: CREDITS_PER_FILE_GENERATION,
+      });
+    } catch (error) {
+      console.error('[files/jobs] Failed to deduct credits:', error);
+
+      await db
+        .update(fileGenerationJobs)
+        .set({
+          status: 'failed',
+          error: 'Unable to deduct credits for file generation',
+        })
+        .where(eq(fileGenerationJobs.id, job.id));
+
+      throw new ExternalServiceError('Unable to process credit deduction. Please try again', 'autumn');
+    }
+
+    try {
+      const usage = await autumn.check({
+        customer_id: userId,
+        feature_id: FEATURE_ID_MESSAGES,
+      });
+
+      remainingCredits = usage.data?.balance ?? Math.max(0, balance - CREDITS_PER_FILE_GENERATION);
+    } catch (error) {
+      console.error('[files/jobs] Failed to fetch remaining credits:', error);
+      remainingCredits = Math.max(0, balance - CREDITS_PER_FILE_GENERATION);
+    }
+
+    return NextResponse.json({ jobId: job.id, status: 'in_progress', remainingCredits });
+  } catch (error) {
+    console.error('[files/jobs] Error creating file generation job:', error);
+    return handleApiError(error);
   }
 }

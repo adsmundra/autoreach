@@ -5,10 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSession } from "@/lib/auth-client";
 import { FileText, Settings, Code, HelpCircle } from "lucide-react";
+import { useCustomer, useRefreshCustomer } from "@/hooks/useAutumnCustomer";
+import { CREDITS_PER_FILE_GENERATION } from "@/config/constants";
 
 export function FilesTab({ prefill }: { prefill?: { url?: string; customerName?: string } | null }) {
   const { data: session } = useSession();
   const userEmail = session?.user?.email || "";
+  const { customer, isLoading: customerLoading } = useCustomer();
+  const refreshCustomer = useRefreshCustomer();
+  const creditsAvailable = customer?.features?.messages ? (customer.features.messages.balance || 0) : 0;
 
   const [email, setEmail] = useState("");
   const [url, setUrl] = useState("");
@@ -60,28 +65,55 @@ export function FilesTab({ prefill }: { prefill?: { url?: string; customerName?:
       return;
     }
 
+    const currentCredits = customer?.features?.messages ? (customer.features.messages.balance || 0) : 0;
+    if (currentCredits < CREDITS_PER_FILE_GENERATION) {
+      setError(`Insufficient credits. You need at least ${CREDITS_PER_FILE_GENERATION} credits to generate files.`);
+      return;
+    }
+
+    setSending(true);
     try {
-      setSending(true);
       const body = { url, competitors, prompts: prompt, brand: brand.trim(), category: industry.trim() };
       const res = await fetch('/api/files/jobs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-      const data = await res.json();
 
-      if (!res.ok || !data.jobId) {
-        throw new Error(data?.error || 'Failed to create job');
+      let data: any = null;
+      try {
+        data = await res.json();
+      } catch (parseError) {
+        console.error('[FilesTab] Failed to parse response', parseError);
+      }
+
+      if (!res.ok || !data?.jobId) {
+        const apiMessage =
+          data?.error?.message ||
+          (typeof data?.error === 'string' ? data.error : null);
+        throw new Error(apiMessage || 'Failed to create job');
       }
 
       // Show success message and files info
-      setSuccessMessage('Files have been sent to your email and will be received in 30 minutes.');
+      const remainingCredits =
+        typeof data?.remainingCredits === 'number' ? data.remainingCredits : null;
+      const baseSuccess =
+        'Files have been sent to your email and will be received in 30 minutes.';
+      const creditsNote = remainingCredits !== null
+        ? ` ${CREDITS_PER_FILE_GENERATION} credits were deducted. Remaining credits: ${remainingCredits}.`
+        : ` ${CREDITS_PER_FILE_GENERATION} credits were deducted.`;
+      setSuccessMessage(baseSuccess + creditsNote);
       setShowFilesInfo(true);
       setShowForm(false);
 
-      setSending(false);
+      try {
+        await refreshCustomer();
+      } catch (refreshError) {
+        console.error('[FilesTab] Failed to refresh customer data', refreshError);
+      }
     } catch (err: any) {
-      setError(err.message || 'Unexpected error');
+      setError(err?.message || 'Unexpected error');
+    } finally {
       setSending(false);
     }
   }
@@ -274,8 +306,12 @@ export function FilesTab({ prefill }: { prefill?: { url?: string; customerName?:
             <textarea id="filesPrompt" value={prompt} onChange={e=>setPrompt(e.target.value)} className="mt-1 w-full border rounded px-3 py-2" rows={4} placeholder="Describe what files you want generated..." />
           </div>
 
-          <div className="flex items-center justify-between">
-            <Button type="submit" disabled={sending} className="btn-firecrawl-default h-9 px-4">{sending ? 'Sending…' : 'Send Request'}</Button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <Button type="submit" disabled={sending} className="btn-firecrawl-default h-9 px-4">{sending ? 'Generating…' : 'Generate Files'}</Button>
+            <p className="text-sm text-gray-500">
+              Requires {CREDITS_PER_FILE_GENERATION} credits. Available:{' '}
+              {customerLoading ? '...' : creditsAvailable}
+            </p>
           </div>
         </form>
       )}
