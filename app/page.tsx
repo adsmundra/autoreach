@@ -225,6 +225,13 @@ function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefi
   const [loadingReports, setLoadingReports] = useState(false);
   const [handledPrefillKey, setHandledPrefillKey] = useState<string | null>(null);
   const [prefillLookupState, setPrefillLookupState] = useState<'idle' | 'looking' | 'no-match'>('idle');
+  // Credits pre-check and refresh
+  const { customer } = useCustomer();
+  const refreshCustomer = useRefreshCustomer();
+  const router = useRouter();
+  const messageUsage = customer?.features?.messages;
+  const credits = messageUsage ? (messageUsage.balance || 0) : 0;
+  const REQUIRED_CREDITS_AEO = 30;
 
   const fetchReports = async () => {
     setLoadingReports(true);
@@ -296,6 +303,14 @@ function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefi
 
   const generateReport = async () => {
     if (!customerName.trim() || !url.trim()) return;
+
+    // Frontend pre-check for credits (30)
+    if (credits < REQUIRED_CREDITS_AEO) {
+      const go = window.confirm(`Insufficient credits. You need ${REQUIRED_CREDITS_AEO} credits to generate an AEO report. Your balance is ${credits}. Go to pricing?`);
+      if (go) router.push('/pricing-public');
+      return;
+    }
+
     setIsGenerating(true);
     try {
       const res = await fetch('/api/aeo-report', {
@@ -304,9 +319,20 @@ function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefi
         body: JSON.stringify({ customerName: customerName.trim(), url: url.trim(), reportType: 'combined' })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to generate report');
+      if (!res.ok) {
+        if (data?.error?.code === 'INSUFFICIENT_CREDITS') {
+          const required = data?.error?.metadata?.creditsRequired ?? REQUIRED_CREDITS_AEO;
+          const available = data?.error?.metadata?.creditsAvailable ?? credits;
+          const go = window.confirm(`Insufficient credits. Requires ${required}. You have ${available}. Go to pricing?`);
+          if (go) router.push('/pricing-public');
+          return;
+        }
+        throw new Error(data.error || 'Failed to generate report');
+      }
       setReportData(data);
       fetchReports();
+      // Refresh navbar credits to reflect deduction
+      await refreshCustomer();
     } finally {
       setIsGenerating(false);
     }

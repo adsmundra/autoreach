@@ -9,6 +9,8 @@ import { db } from '../../../lib/db';
 import { aeoReports, notifications } from '../../../lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { auth } from '../../../lib/auth';
+import { Autumn } from 'autumn-js';
+import { InsufficientCreditsError, ExternalServiceError, handleApiError } from '@/lib/api-errors';
 
 interface AEOReportRequest {
   url: string;
@@ -95,7 +97,6 @@ export async function POST(request: NextRequest) {
     // Normalize customerName for consistency
     if (!customerName || !customerName.trim()) customerName = deriveCustomerNameFromUrl(url);
     customerName = customerName.trim();
-    // Title-case basic normalization (keep original if already formatted)
     customerName = customerName
       .split(/\s+/)
       .map(part => part.charAt(0).toUpperCase() + part.slice(1))
@@ -110,79 +111,86 @@ export async function POST(request: NextRequest) {
         userId = session.user.id || null;
         userEmail = session.user.email || null;
       }
-    } catch {
-      // no session, continue
+    } catch {}
+
+    // Enforce credits via Autumn
+    const REQUIRED_CREDITS = 30;
+    if (!userId) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    const autumn = new Autumn({ apiKey: process.env.AUTUMN_SECRET_KEY! });
+    const idempotencyKey = `${userId}:aeo:${encodeURIComponent(url)}`;
+
+    // Check allowance
+    try {
+      const access = await autumn.check({ customer_id: userId, feature_id: 'messages' });
+      const balance = access.data?.balance || 0;
+      const allowed = access.data?.allowed || false;
+      if (!allowed || balance < REQUIRED_CREDITS) {
+        const err = new InsufficientCreditsError('Insufficient credits for AEO report generation', { required: REQUIRED_CREDITS, available: balance });
+        return NextResponse.json(handleApiError(err), { status: err.statusCode });
+      }
+    } catch (err) {
+      console.error('[AEO] Credit check error:', err);
+      const apiErr = new ExternalServiceError('Unable to verify credits. Please try again', 'autumn');
+      return NextResponse.json(handleApiError(apiErr), { status: apiErr.statusCode });
+    }
+
+    // Deduct credits: 30 single-unit idempotent calls
+    try {
+      for (let i = 0; i < REQUIRED_CREDITS; i++) {
+        await autumn.track({
+          customer_id: userId,
+          feature_id: 'messages',
+          usage: 1,
+          idempotency_key: `${idempotencyKey}:${i}`,
+          metadata: { type: 'AEO_REPORT', url, customerName, part: i + 1 }
+        });
+      }
+    } catch (err) {
+      console.error('[AEO] Credit deduction error (loop):', err);
+      const apiErr = new ExternalServiceError('Unable to deduct credits. Please try again', 'autumn');
+      return NextResponse.json(handleApiError(apiErr), { status: apiErr.statusCode });
     }
 
     // Insert into DB with empty HTML
     let insertedReport;
     try {
       insertedReport = await db.insert(aeoReports).values({
-        userId: userId || null,
-        userEmail: userEmail || null,
+        userId,
+        userEmail,
         customerName,
         url,
-        html: null, // HTML column is initially null
-        read: false, // Default to unread
-      }).returning({ id: aeoReports.id }); // Get the ID of the newly inserted record
+        html: null,
+        read: false,
+      }).returning({ id: aeoReports.id });
     } catch (e) {
       console.error('Failed to insert aeo_report:', e);
       return NextResponse.json({ error: 'Failed to initiate AEO report generation' }, { status: 500 });
     }
 
     const reportId = insertedReport[0]?.id;
+    if (!reportId) {
+      return NextResponse.json({ error: 'Failed to get report ID after insertion' }, { status: 500 });
+    }
 
-        if (!reportId) {
+    // Send data to webhook
+    try {
+      await fetch("https://n8n.welz.in/webhook/2f48da23-976e-4fd0-97da-2cb24c0b3e39", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reportId, url, userEmail: userEmail || null, brand: customerName }),
+      });
+    } catch (e) {
+      console.error('Failed to send webhook for aeo_report:', e);
+    }
 
-          return NextResponse.json({ error: 'Failed to get report ID after insertion' }, { status: 500 });
-
-        }
-
-    
-
-        // Send data to webhook
-
-        try {
-
-          await fetch("https://n8n.welz.in/webhook/2f48da23-976e-4fd0-97da-2cb24c0b3e39", {
-
-            method: "POST",
-
-            headers: {
-
-              "Content-Type": "application/json",
-
-            },
-
-            body: JSON.stringify({
-
-              reportId,
-
-              url,
-
-              userEmail: userEmail || null,
-
-              brand: customerName,
-
-            }),
-
-          });
-
-        } catch (e) {
-
-          console.error('Failed to send webhook for aeo_report:', e);
-
-          // Optionally, handle webhook failure more robustly, e.g., mark report as failed
-
-        }
-
-    
-
-        // Insert notification entry
+    // Insert notification entry
     try {
       await db.insert(notifications).values({
-        userId: userId || null,
-        userEmail: userEmail || null,
+        userId,
+        userEmail,
         type: 'aeo_report_generated',
         message: `Your AEO report for ${customerName} is being generated. We will notify you when it's ready.`,
         link: `/brand-monitor?tab=aeo&id=${reportId}`,
