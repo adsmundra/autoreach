@@ -55,6 +55,7 @@ export interface Company {
   url: string;
   description?: string;
   industry?: string;
+  location?: string;
   logo?: string;
   favicon?: string;
   scraped?: boolean;

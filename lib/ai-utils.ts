@@ -210,6 +210,7 @@ export async function generatePromptsForCompany(
     const mainProducts = scrapedData?.mainProducts || [];
     const description = scrapedData?.description || company.description || '';
     const industry = company.industry || "";
+    const location = company.location;
 
     const configuredProviders = getConfiguredProviders();
     if (configuredProviders.length === 0) {
@@ -229,6 +230,7 @@ export async function generatePromptsForCompany(
 
     const systemPrompt = PROMPT_GENERATION_SYSTEM_PROMPT({
         brandName,
+        location,
         industry,
         mainProducts: mainProducts.join(", "),
         keywords: keywords.join(", "),

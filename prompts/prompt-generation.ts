@@ -6,6 +6,7 @@ export interface PromptGenerationParams {
     keywords: string;
     description: string;
     competitors: string;
+    location?: string;
 }
 
 export const PROMPT_GENERATION_SYSTEM_PROMPT = (params: PromptGenerationParams) => `
@@ -22,6 +23,7 @@ Create 3 prompts for each of these categories:
 - recommendations
 
 Rules:
+- 6 prompt should be based on the location of the company,if location is not provided then use search to get details
 - DO NOT USE THE NAME OF THE BRAND IN THE PROMPTS YOU WILL BE GENERATING
 - Focus on the company's main products, industry, keywords, and competitors
 - Make prompts relevant to the brand's specific market and offerings
@@ -32,6 +34,7 @@ Rules:
 
 Company Info:
 Name: ${params.brandName}
+${params.location ? `Location: ${params.location}` : ''}
 Industry: ${params.industry}
 Main Products: ${params.mainProducts}
 Keywords: ${params.keywords}

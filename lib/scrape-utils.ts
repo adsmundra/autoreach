@@ -76,6 +76,7 @@ const CompanyInfoSchema = z.object({
   keywords: z.array(z.string()),
   industry: z.string(),
   mainProducts: z.array(z.string()),
+  location: z.string().optional().describe('The physical location of the company, e.g., "Austin, TX"'),
   competitors: z.array(z.string()).optional(),
 });
 
@@ -194,7 +195,7 @@ export async function scrapeCompanyInfo(url: string, maxAge?: number): Promise<C
           URL: ${normalizedUrl}
           Content: ${html}
           
-          Extract the company name, a brief description, relevant keywords, and identify the PRIMARY industry category. 
+          Extract the company name, location (city and state/country), a brief description, relevant keywords, and identify the PRIMARY industry category. 
           
           Industry detection rules:
           - Outdoor gear: coolers, drinkware, outdoor equipment, camping gear, fishing, hiking, survival gear.  
@@ -231,6 +232,7 @@ export async function scrapeCompanyInfo(url: string, maxAge?: number): Promise<C
             name: extractedData.name,
             description: extractedData.description,
             industry: extractedData.industry,
+            location:extractedData.location,
             logo: metadata?.ogImage || undefined,
             favicon: undefined, // Note: faviconUrl is defined later in this function
             scraped: true,
