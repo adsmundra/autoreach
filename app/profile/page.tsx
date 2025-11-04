@@ -172,10 +172,10 @@ export default function ProfilePage() {
           <button
             onClick={() => router.push('/')}
             className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium transition-colors mr-4"
-            title="Back to Home"
+            title="Back"
           >
             <ArrowLeft className="h-5 w-5" />
-            <span>Back to Home</span>
+            <span>Back</span>
           </button>
         </div>
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Profile Settings</h1>
