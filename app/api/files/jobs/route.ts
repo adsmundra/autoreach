@@ -151,11 +151,13 @@ export async function POST(req: NextRequest) {
     // Deduct credits now that the workflow has been started
     let remainingCredits = balance;
     try {
-      await autumn.track({
+      for(let i = 0; i < CREDITS_PER_FILE_GENERATION; i++){
+        await autumn.track({
         customer_id: userId,
         feature_id: FEATURE_ID_MESSAGES,
         count: CREDITS_PER_FILE_GENERATION,
       });
+      }
     } catch (error) {
       console.error('[files/jobs] Failed to deduct credits:', error);
 
