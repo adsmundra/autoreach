@@ -338,16 +338,9 @@ export function BrandMonitor({
     
     // Extract competitors from scraped data or use industry defaults
     const extractedCompetitors = company.scrapedData?.competitors || [];
-    const industryCompetitors = getIndustryCompetitors(company.industry || '');
     
     // Merge extracted competitors with industry defaults, keeping URLs where available
     const competitorMap = new Map<string, IdentifiedCompetitor>();
-    
-    // Add industry competitors first (they have URLs)
-    industryCompetitors.forEach(comp => {
-      const normalizedName = normalizeCompetitorName(comp.name);
-      competitorMap.set(normalizedName, comp as IdentifiedCompetitor);
-    });
     
     // Add extracted competitors and try to match them with known URLs
     extractedCompetitors.forEach(name => {

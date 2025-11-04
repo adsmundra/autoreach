@@ -23,7 +23,7 @@ Create 3 prompts for each of these categories:
 - recommendations
 
 Rules:
-- 6 prompt should be based on the location of the company,if location is not provided then use search to get details
+- If a location is provided, generate at least 6 prompts that are location-specific (e.g., "best outdoor gear brands in Austin, TX").
 - DO NOT USE THE NAME OF THE BRAND IN THE PROMPTS YOU WILL BE GENERATING
 - Focus on the company's main products, industry, keywords, and competitors
 - Make prompts relevant to the brand's specific market and offerings

@@ -75,7 +75,8 @@ export async function identifyCompetitors(company: Company, progressCallback?: P
             industry: company.industry,
             description: company.description,
             keywords: company.scrapedData?.keywords?.join(', '),
-            knownCompetitors: company.scrapedData?.competitors?.join(', ')
+            knownCompetitors: company.scrapedData?.competitors?.join(', '),
+            location: company.location
         });
 
         const { object } = await generateObject({
