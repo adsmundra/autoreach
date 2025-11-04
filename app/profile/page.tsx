@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useSession } from '@/lib/auth-client';
 import { UserProfileCard } from '@/components/ui/user-profile-card';
-import { redirect } from 'next/navigation';
+import { redirect, useRouter } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -29,6 +30,7 @@ interface UserProfileData {
 
 export default function ProfilePage() {
   const { data: session, isPending } = useSession();
+  const router = useRouter();
   const [profileData, setProfileData] = useState<UserProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -166,6 +168,16 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center mb-8">
+          <button
+            onClick={() => router.push('/')}
+            className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium transition-colors mr-4"
+            title="Back to Home"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span>Back to Home</span>
+          </button>
+        </div>
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Profile Settings</h1>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
