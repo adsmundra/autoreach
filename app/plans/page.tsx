@@ -70,11 +70,6 @@ export default function PricingPage() {
           <p className="text-xl text-zinc-600 max-w-2xl mx-auto">
             Choose the perfect plan for your needs. Always flexible to scale up or down.
           </p>
-          {session && (
-            <p className="text-sm text-zinc-500 mt-4">
-              Logged in as: {session.user?.email}
-            </p>
-          )}
         </div>
 
         <div className="bg-white rounded-[20px] shadow-xl p-8 border border-zinc-200">
