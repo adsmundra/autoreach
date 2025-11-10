@@ -15,19 +15,11 @@ interface UserProfile {
   updatedAt: string;
 }
 
-interface UserSettings {
-  id: string;
-  userId: string;
-  theme: 'light' | 'dark';
-  emailNotifications: boolean;
-  marketingEmails: boolean;
-  defaultModel: string;
-  metadata?: any;
-}
+
 
 interface UserProfileData {
   profile: UserProfile | null;
-  settings: UserSettings | null;
+
   user: {
     id: string;
     email: string;
@@ -150,25 +142,6 @@ export function UserProfileCard() {
         </div>
       )}
 
-      {profileData?.settings && (
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <h4 className="text-sm font-medium text-gray-700 mb-2">Preferences</h4>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="font-medium text-gray-700">Theme:</span>
-              <span className="ml-2 text-gray-600 capitalize">
-                {profileData.settings.theme}
-              </span>
-            </div>
-            <div>
-              <span className="font-medium text-gray-700">Default Model:</span>
-              <span className="ml-2 text-gray-600">
-                {profileData.settings.defaultModel}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

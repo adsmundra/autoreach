@@ -19,7 +19,7 @@ interface UserProfile {
 
 interface UserProfileData {
   profile: UserProfile | null;
-  settings: any;
+
   user: {
     id: string;
     email: string;
