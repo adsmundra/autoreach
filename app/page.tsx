@@ -454,6 +454,200 @@ function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefi
   );
 }
 
+function UGCTab() {
+  const [companyUrl, setCompanyUrl] = useState("");
+  const [topic, setTopic] = useState("");
+  const [brandName, setBrandName] = useState("");
+  const [emailId, setEmailId] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [items, setItems] = useState<Array<{ id: string; companyUrl: string; brandName: string | null; topic?: string | null; createdAt: string }>>([]);
+  const [loadingItems, setLoadingItems] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [blogContent, setBlogContent] = useState<string>("");
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  const canSubmit = companyUrl.trim() && topic.trim();
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch('/api/auth/session');
+        const data = await res.json();
+        const email = data?.session?.user?.email || '';
+        if (email) setEmailId(email);
+      } catch {}
+    };
+    load();
+  }, []);
+
+  const fetchHistory = async () => {
+    setLoadingItems(true);
+    try {
+      const res = await fetch('/api/write-blog/list');
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.items)) setItems(data.items);
+    } catch {}
+    setLoadingItems(false);
+  };
+
+  useEffect(() => { fetchHistory(); }, []);
+
+  const handleSubmit = async () => {
+    setError(null);
+    if (!canSubmit) {
+      setError("Please fill at least Company URL and Topic.");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        company_url: companyUrl.trim(),
+        topic: topic.trim(),
+        brand_name: brandName.trim() || undefined,
+        email_id: emailId.trim() || undefined,
+      } as any;
+
+      const res = await fetch("/api/write-blog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to generate blog");
+      }
+      setBlogContent(data.blog || "");
+      setSelectedId(data.id || null);
+      fetchHistory();
+    } catch (e: any) {
+      setError(e.message || "Request failed");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(blogContent || '');
+    } catch {}
+  };
+
+  const downloadMarkdown = () => {
+    const blob = new Blob([blogContent || ''], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (brandName?.trim() ? brandName.trim() + '-' : '') + 'blog.md';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="flex h-[calc(100vh-12rem)] relative">
+      <button onClick={() => setSidebarOpen(!sidebarOpen)} className={`absolute top-2 z-10 p-2 bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 ${sidebarOpen ? 'left-[324px]' : 'left-4'}`} aria-label="Toggle sidebar">{sidebarOpen ? (<X className="h-5 w-5 text-gray-600" />) : (<Menu className="h-5 w-5 text-gray-600" />)}</button>
+
+      <div className={`${sidebarOpen ? 'w-80' : 'w-0'} bg-white border-r overflow-hidden flex flex-col transition-all duration-200`}>
+        <div className="p-4 border-b"><div className="font-semibold">Your Blogs</div></div>
+        <div className="overflow-y-auto flex-1">
+          {loadingItems ? (
+            <div className="p-4 text-center text-gray-500">Loading...</div>
+          ) : items.length === 0 ? (
+            <div className="p-4 text-center text-gray-500">No blogs yet</div>
+          ) : (
+            <div className="space-y-1 p-2">
+              {items.map(it => (
+                <div key={it.id} className={`p-3 rounded-lg hover:bg-gray-100 cursor-pointer ${selectedId === it.id ? 'bg-gray-100' : ''}`} onClick={async () => {
+                  const res = await fetch(`/api/write-blog/view?id=${encodeURIComponent(it.id)}`);
+                  const data = await res.json();
+                  if (res.ok) {
+                    setCompanyUrl(data.company_url);
+                    setTopic(data.topic || '');
+                    setBrandName(data.brand_name || '');
+                    setBlogContent(data.blog || '');
+                    setSelectedId(Number(it.id));
+                    setSidebarOpen(false);
+                  }
+                }}>
+                  <p className="font-medium truncate">{it.brandName || 'Untitled'} </p>
+                  <p className="text-sm text-gray-500 truncate">{it.companyUrl}</p>
+                  {it.topic && <p className="text-xs text-gray-500 truncate">Topic: {it.topic}</p>}
+                  <p className="text-xs text-gray-400">{new Date(it.createdAt).toLocaleDateString()}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto">
+        <div className="bg-white rounded-lg border p-6 max-w-7xl mx-auto">
+          <h2 className="text-2xl font-semibold mb-4">UGC Blog Generator</h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="ugc-company-url">Company URL *</Label>
+          <Input id="ugc-company-url" placeholder="https://example.com" value={companyUrl} onChange={e=>setCompanyUrl(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="ugc-topic">Topic *</Label>
+          <Input id="ugc-topic" placeholder="Topic for the blog" value={topic} onChange={e=>setTopic(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="ugc-brand-name">Brand Name</Label>
+          <Input id="ugc-brand-name" placeholder="e.g., Acme Corp" value={brandName} onChange={e=>setBrandName(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="ugc-email-id">Email</Label>
+          <Input id="ugc-email-id" value={emailId} disabled />
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center gap-3">
+        <Button className="btn-firecrawl-default h-9 px-4" onClick={handleSubmit} disabled={isSubmitting || !canSubmit}>
+          {isSubmitting ? "Generating..." : "Generate Blog"}
+        </Button>
+        {error && <span className="text-sm text-red-600">{error}</span>}
+      </div>
+
+      {/* Editor */}
+      <div className="mt-6">
+        <Label htmlFor="ugc-editor">Blog Editor</Label>
+        <textarea
+          id="ugc-editor"
+          className="mt-2 w-full min-h-[320px] p-3 border rounded-md font-mono text-sm"
+          placeholder="Generated blog content will appear here..."
+          value={blogContent}
+          onChange={(e) => setBlogContent(e.target.value)}
+        />
+        <div className="mt-3 flex gap-3">
+          <Button variant="outline" onClick={copyToClipboard}>Copy to clipboard</Button>
+          <Button variant="secondary" onClick={downloadMarkdown}>Download .md</Button>
+          <Button onClick={async () => {
+            if (!selectedId) return;
+            const res = await fetch('/api/write-blog/update', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: selectedId, company_url: companyUrl, brand_name: brandName || null, topic: topic || null, blog: blogContent })
+            });
+            const data = await res.json();
+            if (res.ok) {
+              fetchHistory();
+            } else {
+              console.error('Failed to save', data?.error);
+            }
+          }}>Save Changes</Button>
+        </div>
+        <p className="text-xs text-gray-500 mt-2">You can edit the blog directly in this editor. Copy or save as needed.</p>
+      </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function BrandMonitorPage() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
@@ -571,10 +765,7 @@ export default function BrandMonitorPage() {
           <FilesTab prefill={pendingFiles} />
         )}
         {activeTab === "ugc" && (
-          <div className="bg-white rounded-lg border p-8 min-h-[50vh]">
-            <h2 className="text-2xl font-semibold mb-4">UGC (coming soon)</h2>
-            <p className="text-gray-600">This section is under development.</p>
-          </div>
+          <UGCTab />
         )}
       </div>
     </div>
