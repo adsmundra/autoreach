@@ -467,6 +467,7 @@ function UGCTab() {
   const [blogContent, setBlogContent] = useState<string>("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [isSuggesting, setIsSuggesting] = useState(false);
 
   const canSubmit = companyUrl.trim() && topic.trim();
 
@@ -624,24 +625,30 @@ function UGCTab() {
           <Input id="ugc-company-url" placeholder="https://example.com" value={companyUrl} onChange={e=>setCompanyUrl(e.target.value)} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="ugc-topic" className="flex items-center justify-between">
-            <span>Topic *</span>
-            <Button type="button" className="btn-firecrawl-default h-9 px-4" onClick={async () => {
+          <Label htmlFor="ugc-topic">Topic *</Label>
+          <div className="flex items-center gap-2">
+            <Input id="ugc-topic" placeholder="Topic for the blog" value={topic} onChange={e=>setTopic(e.target.value)} className="flex-1" />
+            <Button type="button" disabled={isSuggesting} className="btn-firecrawl-default h-9 px-4" onClick={async () => {
               const name = brandName?.trim();
               if (!name) { alert('Please enter Brand Name first'); return; }
-              const res = await fetch('/api/topic-suggestion', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ brand_name: name }) });
-              const data = await res.json();
-              if (res.ok && Array.isArray(data.topics)) {
-                const cleaned = data.topics
-                  .map((t: any) => String(t).trim())
-                  .filter((t: string) => t && !/^```/.test(t) && t !== '[' && t !== ']' && t.toLowerCase() !== '```json' && t !== '```');
-                setSuggestions(cleaned);
-              } else {
-                alert(data.error || 'Failed to get suggestions');
+              setIsSuggesting(true);
+              try {
+                const res = await fetch('/api/topic-suggestion', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ brand_name: name }) });
+                const data = await res.json();
+                if (res.ok && Array.isArray(data.topics)) {
+                  const cleaned = data.topics
+                    .map((t: any) => String(t).trim())
+                    .filter((t: string) => t && !/^```/.test(t) && t !== '[' && t !== ']' && t.toLowerCase() !== '```json' && t !== '```');
+                  setSuggestions(cleaned);
+                } else {
+                  alert(data.error || 'Failed to get suggestions');
+                }
+              } finally {
+                setIsSuggesting(false);
               }
-            }}>Suggestion</Button>
-          </Label>
-          <Input id="ugc-topic" placeholder="Topic for the blog" value={topic} onChange={e=>setTopic(e.target.value)} />
+            }}>{isSuggesting ? 'Suggesting…' : 'Suggest Topic'}</Button>
+            {isSuggesting && <span className="inline-block h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" aria-label="Loading" />}
+          </div>
           {suggestions.length > 0 && (
             <div className="mt-2 space-y-1">
               <div className="text-xs text-gray-600">Suggested topics:</div>
