@@ -466,6 +466,7 @@ function UGCTab() {
   const [error, setError] = useState<string | null>(null);
   const [blogContent, setBlogContent] = useState<string>("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
   const canSubmit = companyUrl.trim() && topic.trim();
 
@@ -493,6 +494,25 @@ function UGCTab() {
 
   useEffect(() => { fetchHistory(); }, []);
 
+  // Load saved suggestions when brand name changes
+  useEffect(() => {
+    const load = async () => {
+      const name = brandName?.trim();
+      if (!name) { setSuggestions([]); return; }
+      try {
+        const res = await fetch(`/api/topic-suggestion?brand_name=${encodeURIComponent(name)}`);
+        const data = await res.json();
+        if (res.ok && Array.isArray(data.topics)) {
+          const cleaned = data.topics
+            .map((t: any) => String(t).trim())
+            .filter((t: string) => t && !/^```/.test(t) && t !== '[' && t !== ']' && t.toLowerCase() !== '```json' && t !== '```');
+          setSuggestions(cleaned);
+        }
+      } catch {}
+    };
+    load();
+  }, [brandName]);
+
   const handleSubmit = async () => {
     setError(null);
     if (!canSubmit) {
@@ -519,6 +539,18 @@ function UGCTab() {
       }
       setBlogContent(data.blog || "");
       setSelectedId(data.id || null);
+      // If used topic is a suggestion, remove it from DB and local state
+      try {
+        const used = topic.trim();
+        if (used && suggestions.includes(used) && brandName.trim()) {
+          await fetch('/api/topic-suggestion', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ brand_name: brandName.trim(), topic: used })
+          });
+          setSuggestions(prev => prev.filter(t => t !== used));
+        }
+      } catch {}
       fetchHistory();
     } catch (e: any) {
       setError(e.message || "Request failed");
@@ -592,8 +624,34 @@ function UGCTab() {
           <Input id="ugc-company-url" placeholder="https://example.com" value={companyUrl} onChange={e=>setCompanyUrl(e.target.value)} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="ugc-topic">Topic *</Label>
+          <Label htmlFor="ugc-topic" className="flex items-center justify-between">
+            <span>Topic *</span>
+            <Button type="button" className="btn-firecrawl-default h-9 px-4" onClick={async () => {
+              const name = brandName?.trim();
+              if (!name) { alert('Please enter Brand Name first'); return; }
+              const res = await fetch('/api/topic-suggestion', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ brand_name: name }) });
+              const data = await res.json();
+              if (res.ok && Array.isArray(data.topics)) {
+                const cleaned = data.topics
+                  .map((t: any) => String(t).trim())
+                  .filter((t: string) => t && !/^```/.test(t) && t !== '[' && t !== ']' && t.toLowerCase() !== '```json' && t !== '```');
+                setSuggestions(cleaned);
+              } else {
+                alert(data.error || 'Failed to get suggestions');
+              }
+            }}>Suggestion</Button>
+          </Label>
           <Input id="ugc-topic" placeholder="Topic for the blog" value={topic} onChange={e=>setTopic(e.target.value)} />
+          {suggestions.length > 0 && (
+            <div className="mt-2 space-y-1">
+              <div className="text-xs text-gray-600">Suggested topics:</div>
+              <div className="flex flex-wrap gap-2">
+                {suggestions.map((t, idx) => (
+                  <button key={idx} type="button" className="text-xs px-2 py-1 rounded border border-blue-200 bg-blue-50 text-blue-800 hover:bg-blue-100" onClick={() => setTopic(t)}>{t}</button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="ugc-brand-name">Brand Name</Label>
