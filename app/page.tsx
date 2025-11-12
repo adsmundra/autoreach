@@ -802,12 +802,12 @@ export default function BrandMonitorPage() {
                   onClick={() => setActiveTab("brand")}
                 />
                 <TabButton
-                  title="AEO Report"
+                  title="AEO Audit"
                   active={activeTab === "aeo"}
                   onClick={() => setActiveTab("aeo")}
                 />
                 <TabButton
-                  title="Aeo-Geo Quick Fixes"
+                  title="GEO Files"
                   active={activeTab === "files"}
                   onClick={() => setActiveTab("files")}
                 />
