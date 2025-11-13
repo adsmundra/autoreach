@@ -213,7 +213,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
         supportsWebSearch: true,
       },
     ],
-    defaultModel: 'gemini-2.5-pro',
+    defaultModel: 'gemini-2.5-flash',
     capabilities: {
       webSearch: true, // Native search grounding
       functionCalling: true,
@@ -226,7 +226,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       
       // Try the requested model first, then fallback to known working models
       const requestedModel = modelId || PROVIDER_CONFIGS.google.defaultModel;
-      const fallbackModels = ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-pro'];
+      const fallbackModels = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-pro'];
       
       // If requested model is not in fallback list, try it first
       const modelsToTry = requestedModel && !fallbackModels.includes(requestedModel) 
