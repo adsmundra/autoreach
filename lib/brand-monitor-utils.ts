@@ -1,6 +1,6 @@
 import { Company } from './types';
 import { AI_COMPETITOR_DETECTION_PROMPT } from '@/prompts';
-export function validateUrl(url: string): boolean {
+export function isValidUrlFormat(url: string): boolean {
     try {
         const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
 
@@ -24,7 +24,21 @@ export function validateUrl(url: string): boolean {
 
         return true;
     } catch (e) {
-        console.error('URL validation error:', e);
+        // console.error('URL format validation error:', e); // Keep this for debugging if needed
+        return false;
+    }
+}
+
+export async function validateUrl(url: string): Promise<boolean> {
+    if (!isValidUrlFormat(url)) {
+        return false;
+    }
+    try {
+        const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
+        const response = await fetch(urlObj.toString(), { method: 'HEAD', redirect: 'follow' });
+        return response.ok;
+    } catch (e) {
+        console.error('URL existence check error:', e);
         return false;
     }
 }

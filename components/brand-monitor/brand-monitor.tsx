@@ -18,7 +18,8 @@ import {
   normalizeCompetitorName,
   assignUrlToCompetitor,
   detectServiceType,
-  getIndustryCompetitors
+  getIndustryCompetitors,
+  isValidUrlFormat
 } from '@/lib/brand-monitor-utils';
 import { getEnabledProviders } from '@/lib/provider-config';
 import { useSaveBrandAnalysis } from '@/hooks/useBrandAnalyses';
@@ -164,7 +165,7 @@ export function BrandMonitor({
   }, [selectedAnalysis]);
   
   // Handlers
-  const handleUrlChange = useCallback((newUrl: string) => {
+  const handleUrlChange = useCallback(async (newUrl: string) => {
     dispatch({ type: 'SET_URL', payload: newUrl });
     
     // Clear any existing error when user starts typing
@@ -174,7 +175,7 @@ export function BrandMonitor({
     
     // Validate URL on change
     if (newUrl.length > 0) {
-      const isValid = validateUrl(newUrl);
+      const isValid = isValidUrlFormat(newUrl);
       dispatch({ type: 'SET_URL_VALID', payload: isValid });
     } else {
       dispatch({ type: 'SET_URL_VALID', payload: null });
@@ -187,9 +188,9 @@ export function BrandMonitor({
       return;
     }
 
-    // Validate URL
-    if (!validateUrl(url)) {
-      dispatch({ type: 'SET_ERROR', payload: 'Please enter a valid URL (e.g., example.com or https://example.com)' });
+    // Validate URL format first
+    if (!isValidUrlFormat(url)) {
+      dispatch({ type: 'SET_ERROR', payload: 'Please enter a valid URL format (e.g., example.com or https://example.com)' });
       dispatch({ type: 'SET_URL_VALID', payload: false });
       return;
     }

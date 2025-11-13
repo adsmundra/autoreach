@@ -59,9 +59,9 @@ export async function POST(request: NextRequest) {
     }
     
     // Add robust URL validation here
-    if (!validateUrl(url)) {
-      throw new ValidationError('Invalid URL provided', {
-        url: 'Please provide a valid URL (e.g., example.com or https://example.com)'
+    if (!await validateUrl(url)) {
+      throw new ValidationError('Invalid or non-existent URL provided', {
+        url: 'Please provide a valid and existing URL (e.g., example.com or https://example.com)'
       });
     }
 
