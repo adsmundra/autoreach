@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { Autumn } from 'autumn-js';
 import { scrapeCompanyInfo } from '@/lib/scrape-utils';
+import { FEATURE_ID_MESSAGES } from '@/config/constants';
 import { generatePromptsForCompany } from '@/lib/ai-utils';
 import { 
   handleApiError, 
@@ -10,7 +11,7 @@ import {
   InsufficientCreditsError,
   ExternalServiceError 
 } from '@/lib/api-errors';
-import { FEATURE_ID_MESSAGES } from '@/config/constants';
+import { validateUrl } from '@/lib/brand-monitor-utils';
 
 const autumn = new Autumn({
   apiKey: process.env.AUTUMN_SECRET_KEY!,
@@ -57,13 +58,41 @@ export async function POST(request: NextRequest) {
       });
     }
     
+    // Add robust URL validation here
+    if (!validateUrl(url)) {
+      throw new ValidationError('Invalid URL provided', {
+        url: 'Please provide a valid URL (e.g., example.com or https://example.com)'
+      });
+    }
+
     // Ensure URL has protocol
     let normalizedUrl = url.trim();
     if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
       normalizedUrl = `https://${normalizedUrl}`;
     }
 
-    // Track usage (1 credit for scraping)
+    // Check if user has enough credits (1 credit for URL scraping) - MOVED HERE
+    try {
+      const access = await autumn.check({
+        customer_id: sessionResponse.user.id,
+        feature_id: FEATURE_ID_MESSAGES,
+      });
+      
+      if (!access.data?.allowed || (access.data?.balance && access.data.balance < 1)) {
+        throw new InsufficientCreditsError(
+          'Insufficient credits. You need at least 1 credit to analyze a URL.',
+          { required: 1, available: access.data?.balance || 0 }
+        );
+      }
+    } catch (error) {
+      if (error instanceof InsufficientCreditsError) {
+        throw error;
+      }
+      console.error('[Brand Monitor Scrape] Credit check error:', error);
+      throw new ExternalServiceError('Unable to verify credits. Please try again', 'autumn');
+    }
+
+    // Track usage (1 credit for scraping) - MOVED HERE
     try {
       await autumn.track({
         customer_id: sessionResponse.user.id,
@@ -74,51 +103,6 @@ export async function POST(request: NextRequest) {
       console.error('[Brand Monitor Scrape] Error tracking usage:', err);
       // Continue even if tracking fails - we don't want to block the user
     }
-
-    try {
-      await autumn.track({
-        customer_id: sessionResponse.user.id,
-        feature_id: FEATURE_ID_MESSAGES,
-        count: 1,
-      });
-    } catch (err) {
-      console.error('[Brand Monitor Scrape] Error tracking usage:', err);
-      // Continue even if tracking fails - we don't want to block the user
-    }
-
-    try {
-      await autumn.track({
-        customer_id: sessionResponse.user.id,
-        feature_id: FEATURE_ID_MESSAGES,
-        count: 1,
-      });
-    } catch (err) {
-      console.error('[Brand Monitor Scrape] Error tracking usage:', err);
-      // Continue even if tracking fails - we don't want to block the user
-    }
-
-    try {
-      await autumn.track({
-        customer_id: sessionResponse.user.id,
-        feature_id: FEATURE_ID_MESSAGES,
-        count: 1,
-      });
-    } catch (err) {
-      console.error('[Brand Monitor Scrape] Error tracking usage:', err);
-      // Continue even if tracking fails - we don't want to block the user
-    }
-
-    try {
-      await autumn.track({
-        customer_id: sessionResponse.user.id,
-        feature_id: FEATURE_ID_MESSAGES,
-        count: 1,
-      });
-    } catch (err) {
-      console.error('[Brand Monitor Scrape] Error tracking usage:', err);
-      // Continue even if tracking fails - we don't want to block the user
-    }
-
 
     // 1) Scrape company info
     const company = await scrapeCompanyInfo(normalizedUrl, maxAge);
