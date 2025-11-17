@@ -1,5 +1,7 @@
 import { pgTable, text, timestamp, uuid, boolean, jsonb, integer, pgEnum } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+import { metadata } from '@/app/layout';
+import { array } from 'better-auth';
 export * from './schema.files';
 export * from './schema.notifications';
 
@@ -63,10 +65,28 @@ export const userSettings = pgTable('user_settings', {
   updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
 });
 
+//
+
+export const brandprofile = pgTable('brand_profile',{
+  id: uuid('id').primaryKey().notNull().unique(),
+  userId: text('user_id').notNull(),
+  name: text('brand_name').notNull(),
+  url: text('brandurl').notNull().unique(),
+  industry: text('industry').notNull(),
+  location: text('location').default('Global'),
+  email: text("email"),
+})
+
+// export const scrapedData = pgTable('Metadata',{
+//   id: uuid('id').primaryKey().unique().defaultRandom(),
+
+// })
+
 // Define relations without user table reference
 export const userProfileRelations = relations(userProfile, ({ many }) => ({
   conversations: many(conversations),
   brandAnalyses: many(brandAnalyses),
+  brandProfiles: many(brandprofile),
 }));
 
 export const conversationsRelations = relations(conversations, ({ one, many }) => ({
@@ -95,7 +115,7 @@ export const messageFeedbackRelations = relations(messageFeedback, ({ one }) => 
 // Brand Monitor Analyses
 export const brandAnalyses = pgTable('brand_analyses', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: text('user_id').notNull(),
+  userId: text('us  r_id').notNull(),
   url: text('url').notNull(),
   companyName: text('company_name'),
   industry: text('industry'),
@@ -133,6 +153,8 @@ export const aeoReportsRelations = relations(aeoReports, ({ one }) => ({
     references: [userProfile.userId],
   }),
 }));
+
+
 
 // Type exports for use in application
 export type UserProfile = typeof userProfile.$inferSelect;
