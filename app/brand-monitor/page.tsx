@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Sparkles, Menu, X, Plus, Trash2, Loader2 } from "lucide-react";
 import { useCustomer, useRefreshCustomer } from "@/hooks/useAutumnCustomer";
 import {
@@ -16,6 +16,7 @@ import { useSession } from "@/lib/auth-client";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { FilesTabPrefill } from "@/types/files";
 
 const BrandMonitor = dynamic(() => import("@/components/brand-monitor/brand-monitor").then(m => m.BrandMonitor), { ssr: false });
 const FilesTab = dynamic(() => import("@/components/brand-monitor/files-tab").then(m => m.FilesTab), { ssr: false });
@@ -34,7 +35,7 @@ const FilesTab = dynamic(() => import("@/components/brand-monitor/files-tab").th
  */
 
 /* --------------------- BrandMonitorContent (unchanged logic) --------------------- */
-function BrandMonitorContent({ session, onOpenAeoForUrl, onOpenFilesForUrl, prefillBrand }: { session: any; onOpenAeoForUrl: (url: string, customerName?: string) => void; onOpenFilesForUrl: (url: string, customerName?: string) => void; prefillBrand?: { url: string; customerName: string } | null; }) {
+function BrandMonitorContent({ session, onOpenAeoForUrl, onOpenFilesForUrl, prefillBrand }: { session: any; onOpenAeoForUrl: (url: string, customerName?: string) => void; onOpenFilesForUrl: (payload: FilesTabPrefill) => void; prefillBrand?: { url: string; customerName: string } | null; }) {
   const router = useRouter();
   const { customer, isLoading, error } = useCustomer();
   const refreshCustomer = useRefreshCustomer();
@@ -169,14 +170,17 @@ function BrandMonitorContent({ session, onOpenAeoForUrl, onOpenFilesForUrl, pref
                         >
                           AEO Report
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onOpenFilesForUrl(analysis.url, analysis.companyName || "autouser");
-                          }}
-                        >
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOpenFilesForUrl({
+                            url: analysis.url,
+                            customerName: analysis.companyName || "autouser",
+                          });
+                        }}
+                      >
                           Files
                         </Button>
                       </div>
@@ -215,7 +219,7 @@ function BrandMonitorContent({ session, onOpenAeoForUrl, onOpenFilesForUrl, pref
 
 /* --------------------- Tabbed Page wrapper --------------------- */
 
-function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefill: { url: string; customerName: string } | null; onOpenBrandForUrl: (url: string, customerName?: string) => void; onOpenFilesForUrl: (url: string, customerName?: string) => void; }) {
+function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefill: { url: string; customerName: string } | null; onOpenBrandForUrl: (url: string, customerName?: string) => void; onOpenFilesForUrl: (payload: FilesTabPrefill) => void; }) {
   const [customerName, setCustomerName] = useState('');
   const [url, setUrl] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -375,7 +379,19 @@ function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefi
                     </div>
                     <div className="flex-shrink-0 flex gap-2">
                       <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); onOpenBrandForUrl(r.url, r.customerName || 'autouser'); }}>Brand Monitor</Button>
-                      <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); onOpenFilesForUrl(r.url, r.customerName || 'autouser'); }}>Files</Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOpenFilesForUrl({
+                            url: r.url,
+                            customerName: r.customerName || "autouser",
+                          });
+                        }}
+                      >
+                        Files
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -626,11 +642,17 @@ function UGCTab() {
 export default function BrandMonitorPage() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const brandProfileIdFromQuery = searchParams.get("brandId");
 
   // tabs: 'brand' | 'aeo' | 'files' | 'ugc'
   const [activeTab, setActiveTab] = useState<"brand" | "aeo" | "files" | "ugc">(
     "brand"
   );
+  const [prefillAeo, setPrefillAeo] = useState<{ url: string; customerName: string } | null>(null);
+  const [prefillBrand, setPrefillBrand] = useState<{ url: string; customerName: string } | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<FilesTabPrefill | null>(null);
+  const [appliedBrandPrefill, setAppliedBrandPrefill] = useState<string | null>(null);
 
   // Auto-select tab from hash
   useEffect(() => {
@@ -648,6 +670,53 @@ export default function BrandMonitorPage() {
       router.push("/login");
     }
   }, [session, isPending, router]);
+
+  useEffect(() => {
+    if (!session || !brandProfileIdFromQuery) return;
+    if (appliedBrandPrefill === brandProfileIdFromQuery) return;
+
+    let isCancelled = false;
+
+    const hydrateFromBrandProfile = async () => {
+      try {
+        const response = await fetch(`/api/brands/${brandProfileIdFromQuery}`);
+        if (!response.ok) {
+          console.error(`[BrandMonitor] Failed to fetch brand profile ${brandProfileIdFromQuery}`);
+          return;
+        }
+        const data = await response.json();
+        if (isCancelled) return;
+
+        const brandRecord = data?.brand;
+        if (!brandRecord?.url) return;
+
+        const scrapedCompetitors = Array.isArray(brandRecord?.scrapedData?.competitors)
+          ? brandRecord.scrapedData.competitors
+              .map((entry: any) =>
+                typeof entry === "string" ? entry : entry?.name,
+              )
+              .filter((name: string | undefined): name is string => Boolean(name))
+          : [];
+
+        setPendingFiles({
+          url: brandRecord.url,
+          customerName: brandRecord.name,
+          industry: brandRecord.industry,
+          competitors: scrapedCompetitors,
+        });
+        setAppliedBrandPrefill(brandProfileIdFromQuery);
+        setActiveTab("files");
+      } catch (err) {
+        console.error("[BrandMonitor] Unable to hydrate Files tab from brand profile", err);
+      }
+    };
+
+    hydrateFromBrandProfile();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [appliedBrandPrefill, brandProfileIdFromQuery, session]);
 
   if (isPending) {
     return (
@@ -667,17 +736,18 @@ export default function BrandMonitorPage() {
     );
   }
 
-  // cross-tab state for orchestration
-  const [prefillAeo, setPrefillAeo] = useState<{ url: string; customerName: string } | null>(null);
-  const [prefillBrand, setPrefillBrand] = useState<{ url: string; customerName: string } | null>(null);
-  const [pendingFiles, setPendingFiles] = useState<{ url: string; customerName: string } | null>(null);
-
   const handleOpenAeoForUrl = (url: string, customerName?: string) => {
     setPrefillAeo({ url, customerName: (customerName && customerName.trim()) ? customerName : "autouser" });
     setActiveTab("aeo");
   };
-  const handleOpenFilesForUrl = (url: string, customerName?: string) => {
-    setPendingFiles({ url, customerName: (customerName && customerName.trim()) ? customerName : "autouser" });
+  const handleOpenFilesForUrl = (payload: FilesTabPrefill) => {
+    if (!payload?.url) return;
+    setPendingFiles({
+      url: payload.url,
+      customerName: payload.customerName && payload.customerName.trim() ? payload.customerName : "autouser",
+      industry: payload.industry,
+      competitors: payload.competitors,
+    });
     setActiveTab("files");
   };
 

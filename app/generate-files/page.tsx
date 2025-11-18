@@ -1,6 +1,17 @@
 import { redirect } from "next/navigation";
 
-export default function GenerateFilesRedirect() {
-  // Unconditional redirect to the Files tab in Brand Monitor
-  redirect("/brand-monitor#files");
+type GenerateFilesRedirectProps = {
+  searchParams: Record<string, string | string[] | undefined>;
+};
+
+export default function GenerateFilesRedirect({ searchParams }: GenerateFilesRedirectProps) {
+  const params = new URLSearchParams();
+
+  const brandId = searchParams.brandId;
+  if (typeof brandId === "string" && brandId.trim()) {
+    params.set("brandId", brandId.trim());
+  }
+
+  const query = params.toString();
+  redirect(`/brand-monitor${query ? `?${query}` : ""}#files`);
 }

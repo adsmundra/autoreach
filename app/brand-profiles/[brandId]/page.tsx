@@ -290,6 +290,14 @@ export default function BrandProfilePage() {
       .slice(0, 2);
   };
 
+  const sectionLinks = [
+    { title: 'Brand Monitor', color: 'bg-blue-500', href: brand ? `/brand-monitor?brandId=${brand.id}` : '/brand-monitor' },
+    { title: 'AEO Audit', color: 'bg-purple-500', href: '/aeo-report' },
+    { title: 'GEO Files', color: 'bg-orange-500', href: brand ? `/generate-files?brandId=${brand.id}` : '/generate-files' },
+    { title: 'IntelliWrite', color: 'bg-green-500', href: '/blog-writer' },
+    { title: 'End 2 End', color: 'bg-indigo-500', href: '/chat' },
+  ];
+
   return (
     <div className="w-full min-h-screen bg-[#f5f6fb] p-6 font-sans text-[#1a1a1a]">
       {/* Header with breadcrumb */}
@@ -405,13 +413,7 @@ export default function BrandProfilePage() {
 
       {/* Sections */}
       <main className="grid grid-cols-1 md:grid-cols-5 gap-6 mt-12 max-w-6xl mx-auto" role="main">
-        {[
-          { title: 'Brand Monitor', color: 'bg-blue-500', href: '/brand-monitor' },
-          { title: 'AEO Audit', color: 'bg-purple-500', href: '/aeo-report' },
-          { title: 'GEO Files', color: 'bg-orange-500', href: '/generate-files' },
-          { title: 'IntelliWrite', color: 'bg-green-500', href: '/blog-writer' },
-          { title: 'End 2 End', color: 'bg-indigo-500', href: '/chat' },
-        ].map((section) => (
+        {sectionLinks.map((section) => (
           <section key={section.title}>
             {/* Top Button */}
             <Link
