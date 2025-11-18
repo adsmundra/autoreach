@@ -115,7 +115,7 @@ export const messageFeedbackRelations = relations(messageFeedback, ({ one }) => 
 // Brand Monitor Analyses
 export const brandAnalyses = pgTable('brand_analyses', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: text('us  r_id').notNull(),
+  userId: text('user_id').notNull(),
   url: text('url').notNull(),
   companyName: text('company_name'),
   industry: text('industry'),

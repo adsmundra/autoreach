@@ -14,7 +14,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:drop": "drizzle-kit drop"
+    "db:drop": "drizzle-kit drop",
+    "seed:brands": "tsx scripts/seed-brands.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.12",
