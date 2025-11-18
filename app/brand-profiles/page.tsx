@@ -12,6 +12,10 @@ interface BrandProfile {
   industry: string;
   location: string;
   email?: string;
+  logo?: string;
+  favicon?: string;
+  description?: string;
+  isScraped?: boolean;
 }
 
 // Fallback dummy brands data (in case DB is not set up)
@@ -449,9 +453,17 @@ export default function BrandProfilesPage() {
                 {/* Card Header with Logo */}
                 <div className="p-6 pb-0">
                   <div className="flex items-start justify-between mb-4">
-                    <div className={`w-16 h-16 ${getDomainColor(brand.name)} rounded-lg flex items-center justify-center text-white text-xl font-bold shadow-md`}>
-                      {getInitials(brand.name)}
-                    </div>
+                    {brand.logo ? (
+                      <img
+                        src={brand.logo}
+                        alt={brand.name}
+                        className="w-16 h-16 rounded-lg shadow-md object-contain bg-gray-50 p-1"
+                      />
+                    ) : (
+                      <div className={`w-16 h-16 ${getDomainColor(brand.name)} rounded-lg flex items-center justify-center text-white text-xl font-bold shadow-md`}>
+                        {getInitials(brand.name)}
+                      </div>
+                    )}
                     <button
                       onClick={() => handleDelete(brand.id, brand.name)}
                       aria-label="Delete brand"
@@ -466,6 +478,9 @@ export default function BrandProfilesPage() {
                 <div className="p-6 pt-4">
                   <h2 className="text-xl font-bold text-slate-900 mb-1">{brand.name}</h2>
                   <p className="text-sm text-slate-600 mb-4">{brand.industry}</p>
+                  {brand.description && (
+                    <p className="text-xs text-slate-500 mb-3 line-clamp-2">{brand.description}</p>
+                  )}
 
                   {/* Tags */}
                   <div className="flex flex-wrap gap-2 mb-4">

@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { randomUUID } from 'crypto';
+import { scrapeCompanyInfo } from '@/lib/scrape-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -65,14 +66,48 @@ export async function POST(request: NextRequest) {
     const brandId = randomUUID();
     console.log('Inserting brand with ID:', brandId);
 
+    // Normalize URL
+    let normalizedUrl = url.trim();
+    if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
+      normalizedUrl = `https://${normalizedUrl}`;
+    }
+
+    // Try to scrape brand data - this is non-blocking, if it fails the brand is still created
+    let scrapedData = null;
+    let logo = null;
+    let favicon = null;
+    let description = null;
+    let isScraped = false;
+
+    try {
+      console.log('Attempting to scrape brand data from:', normalizedUrl);
+      const company = await scrapeCompanyInfo(normalizedUrl);
+      if (company) {
+        scrapedData = company.scrapedData || null;
+        logo = company.logo || null;
+        favicon = company.favicon || null;
+        description = company.description || null;
+        isScraped = true;
+        console.log('Brand scraped successfully:', { logo, favicon, isScraped });
+      }
+    } catch (scrapeError) {
+      console.warn('Failed to scrape brand data:', scrapeError);
+      // Continue with brand creation even if scraping fails
+    }
+
     await db.insert(brandprofile).values({
       id: brandId,
       userId: session.user.id,
       name, // Maps to 'brand_name' column
-      url,  // Maps to 'brandurl' column
+      url: normalizedUrl,  // Maps to 'brandurl' column
       industry,
       location: location || 'Global',
       email: email || null,
+      logo,
+      favicon,
+      description,
+      scrapedData,
+      isScraped,
     });
 
     console.log('Brand inserted successfully');

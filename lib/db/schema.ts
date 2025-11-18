@@ -75,6 +75,13 @@ export const brandprofile = pgTable('brand_profile',{
   industry: text('industry').notNull(),
   location: text('location').default('Global'),
   email: text("email"),
+  logo: text('logo'), // Stores logo URL from scraping
+  favicon: text('favicon'), // Stores favicon URL
+  description: text('description'), // Company description from scraping
+  scrapedData: jsonb('scraped_data'), // Full scraped data (keywords, products, competitors, etc)
+  isScraped: boolean('is_scraped').default(false), // Whether scraping was completed
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
 })
 
 // export const scrapedData = pgTable('Metadata',{

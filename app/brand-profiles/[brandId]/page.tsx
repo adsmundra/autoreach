@@ -14,6 +14,13 @@ interface BrandData {
   email?: string;
   description?: string;
   competitors?: string[];
+  logo?: string;
+  favicon?: string;
+  isScraped?: boolean;
+  scrapedData?: {
+    keywords?: string[];
+    [key: string]: any;
+  };
 }
 
 interface Analysis {
@@ -119,6 +126,29 @@ export default function BrandProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    url: '',
+    industry: '',
+    location: '',
+    email: '',
+    description: '',
+  });
+
+  // Initialize edit form when editing starts
+  useEffect(() => {
+    if (isEditing && brand) {
+      setEditFormData({
+        name: brand.name,
+        url: brand.url,
+        industry: brand.industry,
+        location: brand.location,
+        email: brand.email || '',
+        description: brand.description || '',
+      });
+    }
+  }, [isEditing, brand]);
 
   useEffect(() => {
     const fetchBrandData = async () => {
@@ -164,6 +194,43 @@ export default function BrandProfilePage() {
       fetchBrandData();
     }
   }, [brandId]);
+
+  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setEditFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      setIsSubmitting(true);
+
+      const response = await fetch(`/api/brands/${brandId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editFormData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update brand');
+      }
+
+      const data = await response.json();
+      setBrand(data.brand);
+      setIsEditing(false);
+    } catch (err) {
+      console.error('Error updating brand:', err);
+      alert('Failed to update brand. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this brand profile?')) return;
@@ -234,13 +301,19 @@ export default function BrandProfilePage() {
 
       {/* Profile Card */}
       <section className="bg-white w-full max-w-5xl mx-auto rounded-2xl shadow-md p-6 flex gap-6 relative">
-        {/* Logo + Brand Name */}
-        <div className="w-40 flex flex-col items-center">
-          <div className={`${getDomainColor()} w-40 h-40 rounded-xl flex items-center justify-center text-white text-4xl font-bold`}>
-            {getInitials()}
-          </div>
-          <p className="mt-2 text-2xl text-center font-bold text-[#1a1a1a]">{brand.industry}</p>
-          <p className="mt-1 text-xs text-center text-[#666]">{brand.location}</p>
+        {/* Logo */}
+        <div>
+          {brand.logo ? (
+            <img
+              src={brand.logo}
+              alt={brand.name}
+              className="w-40 h-40 rounded-xl shadow-md object-contain bg-gray-50 p-2"
+            />
+          ) : (
+            <div className={`${getDomainColor()} w-40 h-40 rounded-xl flex items-center justify-center text-white text-4xl font-bold`}>
+              {getInitials()}
+            </div>
+          )}
         </div>
 
         {/* Edit button */}
@@ -267,34 +340,66 @@ export default function BrandProfilePage() {
         <div className="flex-1">
           <h2 className="text-3xl font-bold mb-2">{brand.name}</h2>
 
-          <p className="text-sm leading-relaxed mb-4">
-            {brand.description}
-          </p>
+          {brand.description && (
+            <p className="text-sm leading-relaxed mb-4 text-[#555] line-clamp-3">
+              {brand.description}
+            </p>
+          )}
 
-          {/* AI/ML Tags */}
+          {/* Industry & Location Tags */}
           <div className="flex flex-wrap gap-2 mb-4">
-            {[brand.industry, brand.location].map((tag) => (
-              <span
-                key={tag}
-                className="px-2 py-1 bg-[#dfe3f0] text-[#333] text-xs rounded-lg shadow-sm"
-              >
-                {tag}
+            {/* Industry Tag */}
+            <span className="px-3 py-1.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-lg">
+              {brand.industry}
+            </span>
+
+            {/* Location Tag */}
+            <span className="px-3 py-1.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-lg">
+              {brand.location}
+            </span>
+
+            {/* Scraped Location Tag - Show if different from stored location */}
+            {brand.scrapedData?.location && brand.scrapedData.location !== brand.location && (
+              <span className="px-3 py-1.5 bg-cyan-100 text-cyan-700 text-xs font-medium rounded-lg border border-cyan-300" title="Location from website">
+                📍 {brand.scrapedData.location}
               </span>
-            ))}
+            )}
           </div>
+
+          {/* Keywords Section - Show scraped keywords */}
+          {brand.scrapedData?.keywords && Array.isArray(brand.scrapedData.keywords) && brand.scrapedData.keywords.length > 0 && (
+            <div className="mb-4">
+              <p className="text-xs font-semibold text-[#666] mb-2">Keywords</p>
+              <div className="flex flex-wrap gap-2">
+                {brand.scrapedData.keywords.slice(0, 8).map((keyword, i) => (
+                  <span
+                    key={i}
+                    className="px-2.5 py-1 bg-green-50 text-green-700 text-xs rounded-md border border-green-200"
+                  >
+                    {keyword}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Competitor Buttons */}
-          <div className="flex flex-wrap gap-3">
-            {brand.competitors && brand.competitors.slice(0, 6).map((competitor, i) => (
-              <button
-                key={i}
-                type="button"
-                className="bg-[#e5e5e5] text-[#111] px-3 py-1 text-sm rounded-xl shadow hover:bg-[#dcdcdc] transition"
-              >
-                {competitor}
-              </button>
-            ))}
-          </div>
+          {brand.competitors && brand.competitors.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-[#666] mb-2">Competitors</p>
+              <div className="flex flex-wrap gap-2">
+                {brand.competitors.slice(0, 6).map((competitor, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className="bg-purple-100 text-purple-700 px-3 py-1.5 text-xs font-medium rounded-lg hover:bg-purple-200 transition border border-purple-200"
+                  >
+                    {competitor}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -371,17 +476,143 @@ export default function BrandProfilePage() {
       )}
 
       {/* Edit Modal */}
-      {isEditing && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
-            <h2 className="text-2xl font-bold mb-4 text-[#1a1a1a]">Edit Brand Profile</h2>
-            <p className="text-[#666] mb-6">Edit functionality coming soon</p>
-            <button
-              onClick={() => setIsEditing(false)}
-              className="w-full bg-[#0a57ff] text-white py-2 rounded-lg hover:bg-[#0047cc] transition font-semibold"
-            >
-              Close
-            </button>
+      {isEditing && brand && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-2xl w-full my-8">
+            <h2 className="text-2xl font-bold mb-6 text-[#1a1a1a]">Edit Brand Profile</h2>
+
+            <form onSubmit={handleEditSubmit} className="space-y-5">
+              {/* Brand Name */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Brand Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={editFormData.name}
+                  onChange={handleEditFormChange}
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  required
+                />
+              </div>
+
+              {/* Website URL */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Website URL
+                </label>
+                <input
+                  type="url"
+                  name="url"
+                  value={editFormData.url}
+                  onChange={handleEditFormChange}
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  required
+                />
+              </div>
+
+              {/* Industry */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Industry
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="industry"
+                    value={editFormData.industry}
+                    onChange={handleEditFormChange}
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    required
+                  />
+                  {brand.scrapedData?.industry && brand.scrapedData.industry !== editFormData.industry && (
+                    <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                      💡 Scraped: {brand.scrapedData.industry}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Location */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Location
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="location"
+                    value={editFormData.location}
+                    onChange={handleEditFormChange}
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    required
+                  />
+                  {brand.scrapedData?.location && brand.scrapedData.location !== editFormData.location && (
+                    <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                      💡 Scraped: {brand.scrapedData.location}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Email (Optional)
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={editFormData.email}
+                  onChange={handleEditFormChange}
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Description
+                </label>
+                <div className="relative">
+                  <textarea
+                    name="description"
+                    value={editFormData.description}
+                    onChange={handleEditFormChange}
+                    rows={3}
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
+                  />
+                  {brand.description && brand.description !== editFormData.description && (
+                    <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                      💡 Scraped: {brand.description.substring(0, 80)}...
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Form Actions */}
+              <div className="flex gap-4 pt-6 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  className="flex-1 px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`flex-1 px-6 py-2.5 font-semibold rounded-lg transition ${
+                    isSubmitting
+                      ? 'bg-blue-400 text-white cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
