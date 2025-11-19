@@ -32,6 +32,19 @@ interface Analysis {
   createdAt: string;
 }
 
+interface AEOReport {
+  id: string;
+  customerName: string;
+  url: string;
+  createdAt: string;
+}
+
+interface SectionData {
+  aeoReports: AEOReport[];
+  brandMonitorReports: any[];
+  geoFileReports: any[];
+}
+
 // Dummy data mapping
 const DUMMY_BRANDS_MAP: { [key: string]: BrandData } = {
   '550e8400-e29b-41d4-a716-446655440001': {
@@ -127,6 +140,11 @@ export default function BrandProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sectionData, setSectionData] = useState<SectionData>({
+    aeoReports: [],
+    brandMonitorReports: [],
+    geoFileReports: [],
+  });
   const [editFormData, setEditFormData] = useState({
     name: '',
     url: '',
@@ -194,6 +212,51 @@ export default function BrandProfilePage() {
       fetchBrandData();
     }
   }, [brandId]);
+
+  // Fetch section-specific data (AEO reports, etc.)
+  useEffect(() => {
+    const fetchSectionData = async () => {
+      if (!brand) return;
+
+      try {
+        console.log('[Brand Profile] Fetching AEO reports for:', brand.name);
+        // Fetch AEO reports for this brand with cache busting
+        const aeoResponse = await fetch(
+          `/api/aeo-reports-by-customer?customerName=${encodeURIComponent(brand.name)}&t=${Date.now()}`,
+          {
+            method: 'GET',
+            headers: {
+              'Cache-Control': 'no-cache',
+            },
+          }
+        );
+
+        console.log('[Brand Profile] AEO response status:', aeoResponse.status);
+
+        if (aeoResponse.ok) {
+          const aeoData = await aeoResponse.json();
+          console.log('[Brand Profile] Received reports:', aeoData.reports?.length || 0);
+          console.log('[Brand Profile] Debug info:', aeoData.debug);
+          setSectionData(prev => ({
+            ...prev,
+            aeoReports: aeoData.reports || [],
+          }));
+        } else if (aeoResponse.status === 401) {
+          console.log('[Brand Profile] Not authenticated for AEO reports');
+          const errorData = await aeoResponse.json();
+          console.log('[Brand Profile] Auth error:', errorData);
+        } else {
+          console.error('[Brand Profile] Failed to fetch AEO reports:', aeoResponse.status);
+          const errorData = await aeoResponse.json();
+          console.log('[Brand Profile] Error response:', errorData);
+        }
+      } catch (err) {
+        console.error('[Brand Profile] Error fetching section data:', err);
+      }
+    };
+
+    fetchSectionData();
+  }, [brand]);
 
   const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -292,7 +355,7 @@ export default function BrandProfilePage() {
 
   const sectionLinks = [
     { title: 'Brand Monitor', color: 'bg-blue-500', href: brand ? `/brand-monitor?brandId=${brand.id}` : '/brand-monitor' },
-    { title: 'AEO Audit', color: 'bg-purple-500', href: '/aeo-report' },
+    { title: 'AEO Audit', color: 'bg-purple-500', href: brand ? `/aeo-report?customerName=${encodeURIComponent(brand.name)}&url=${encodeURIComponent(brand.url)}&auto=true` : '/aeo-report' },
     { title: 'GEO Files', color: 'bg-orange-500', href: brand ? `/generate-files?brandId=${brand.id}` : '/generate-files' },
     { title: 'IntelliWrite', color: 'bg-green-500', href: '/blog-writer' },
     { title: 'End 2 End', color: 'bg-indigo-500', href: '/chat' },
@@ -413,33 +476,69 @@ export default function BrandProfilePage() {
 
       {/* Sections */}
       <main className="grid grid-cols-1 md:grid-cols-5 gap-6 mt-12 max-w-6xl mx-auto" role="main">
-        {sectionLinks.map((section) => (
-          <section key={section.title}>
-            {/* Top Button */}
-            <Link
-              href={section.href}
-              type="button"
-              className={`${section.color} w-full text-white shadow-md rounded-xl py-5 text-center font-semibold hover:scale-[1.02] transition block`}
-            >
-              {section.title}
-            </Link>
+        {sectionLinks.map((section) => {
+          // Get reports for this section
+          const reports = section.title === 'AEO Audit' ? sectionData.aeoReports : [];
 
-            {/* Scrollable List */}
-            <div className="mt-8 h-80 overflow-y-scroll bg-white shadow-md rounded-xl p-3 space-y-4">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i}>
-                  <a
-                    href="#"
-                    className="block p-2 bg-[#e5e5e5] rounded-lg hover:bg-[#ececec] transition text-sm text-[#111] cursor-pointer"
-                    role="link"
-                  >
-                    {section.title} Item {i + 1}
-                  </a>
-                </div>
-              ))}
-            </div>
-          </section>
-        ))}
+          return (
+            <section key={section.title}>
+              {/* Top Button */}
+              <Link
+                href={section.href}
+                type="button"
+                className={`${section.color} w-full text-white shadow-md rounded-xl py-5 text-center font-semibold hover:scale-[1.02] transition block`}
+              >
+                {section.title}
+              </Link>
+
+              {/* Scrollable List */}
+              <div className="mt-8 h-80 overflow-y-scroll bg-white shadow-md rounded-xl p-3 space-y-4">
+                {section.title === 'AEO Audit' && reports.length > 0 ? (
+                  // Show actual AEO reports
+                  reports.map((report) => (
+                    <div key={report.id}>
+                      <Link
+                        href={`/aeo-report?reportId=${report.id}`}
+                        className="block p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition text-sm text-purple-900 cursor-pointer border border-purple-200"
+                        role="link"
+                      >
+                        <p className="font-medium truncate">{report.customerName}</p>
+                        <p className="text-xs text-purple-600 truncate mt-1">{report.url}</p>
+                        <p className="text-xs text-purple-500 mt-1">
+                          {new Date(report.createdAt).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                      </Link>
+                    </div>
+                  ))
+                ) : section.title === 'AEO Audit' ? (
+                  // Empty state for AEO reports
+                  <div className="p-4 text-center text-slate-500 text-sm">
+                    <p>No AEO reports yet</p>
+                    <p className="text-xs mt-1">Click the AEO Audit button to generate one</p>
+                  </div>
+                ) : (
+                  // Dummy data for other sections
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i}>
+                      <a
+                        href="#"
+                        className="block p-2 bg-[#e5e5e5] rounded-lg hover:bg-[#ececec] transition text-sm text-[#111] cursor-pointer"
+                        role="link"
+                      >
+                        {section.title} Item {i + 1}
+                      </a>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+          );
+        })}
       </main>
 
       {/* Recent Analyses Section */}

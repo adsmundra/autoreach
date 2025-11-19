@@ -3,9 +3,9 @@ import { db } from '@/lib/db';
 import { aeoReports } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     if (!id) {
       return new NextResponse('AEO Report ID is required', { status: 400 });
