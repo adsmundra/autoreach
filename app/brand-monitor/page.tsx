@@ -34,12 +34,26 @@ const FilesTab = dynamic(() => import("@/components/brand-monitor/files-tab").th
  */
 
 /* --------------------- BrandMonitorContent (unchanged logic) --------------------- */
-function BrandMonitorContent({ session, onOpenAeoForUrl, onOpenFilesForUrl, prefillBrand }: { session: any; onOpenAeoForUrl: (url: string, customerName?: string) => void; onOpenFilesForUrl: (payload: FilesTabPrefill) => void; prefillBrand?: { url: string; customerName: string } | null; }) {
+function BrandMonitorContent({ 
+  session, 
+  onOpenAeoForUrl, 
+  onOpenFilesForUrl, 
+  prefillBrand,
+  initialAnalysisId,
+  forceNew 
+}: { 
+  session: any; 
+  onOpenAeoForUrl: (url: string, customerName?: string) => void; 
+  onOpenFilesForUrl: (payload: FilesTabPrefill) => void; 
+  prefillBrand?: { url: string; customerName: string } | null; 
+  initialAnalysisId?: string | null;
+  forceNew?: boolean;
+}) {
   const router = useRouter();
   const { customer, isLoading, error } = useCustomer();
   const refreshCustomer = useRefreshCustomer();
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<string | null>(
-    null
+    initialAnalysisId || null
   );
 
 
@@ -61,13 +75,16 @@ function BrandMonitorContent({ session, onOpenAeoForUrl, onOpenFilesForUrl, pref
 
   // If prefillBrand is provided, try to open existing analysis by exact URL
   useEffect(() => {
+    if (forceNew) return;
+    if (initialAnalysisId) return; // prioritized
+
     if (prefillBrand?.url && analyses && analyses.length > 0) {
       const found = analyses.find(a => a.url === prefillBrand.url);
       if (found) {
         setSelectedAnalysisId(found.id);
       }
     }
-  }, [prefillBrand?.url, analyses]);
+  }, [prefillBrand?.url, analyses, forceNew, initialAnalysisId]);
 
   const handleCreditsUpdate = async () => {
     // Use the global refresh to update customer data everywhere
@@ -85,7 +102,7 @@ function BrandMonitorContent({ session, onOpenAeoForUrl, onOpenFilesForUrl, pref
             selectedAnalysis={selectedAnalysisId ? currentAnalysis : null}
             onSaveAnalysis={(analysis) => {}}
             initialUrl={prefillBrand?.url || null}
-            autoRun={!!prefillBrand?.url && !selectedAnalysisId}
+            autoRun={!!prefillBrand?.url && !selectedAnalysisId && !forceNew}
             onRequireCreditsConfirm={(required, balance, proceed) => {
               // Use native confirm for simplicity here; can swap to ConfirmationDialog if preferred
               const ok = window.confirm(`Starting a brand analysis may use up to ${required} credits. Your balance is ${balance}. Proceed?`);
@@ -528,6 +545,8 @@ export default function BrandMonitorPage() {
   const searchParams = useSearchParams();
   const brandProfileIdFromQuery = searchParams.get("brandId");
   const blogIdFromQuery = searchParams.get("blogId");
+  const analysisIdFromQuery = searchParams.get("analysisId");
+  const viewMode = searchParams.get("view");
 
   // tabs: 'brand' | 'aeo' | 'files' | 'ugc'
   const [activeTab, setActiveTab] = useState<"brand" | "aeo" | "files" | "ugc">(
@@ -538,6 +557,7 @@ export default function BrandMonitorPage() {
   const [pendingFiles, setPendingFiles] = useState<FilesTabPrefill | null>(null);
   const [prefillUgc, setPrefillUgc] = useState<{ url: string; brandName: string } | null>(null);
   const [appliedBrandPrefill, setAppliedBrandPrefill] = useState<string | null>(null);
+  const [currentBrand, setCurrentBrand] = useState<{ id: string; name: string; logo?: string } | null>(null);
 
   // Auto-select tab from hash or params
   useEffect(() => {
@@ -576,6 +596,12 @@ export default function BrandMonitorPage() {
 
         const brandRecord = data?.brand;
         if (!brandRecord?.url) return;
+
+        setCurrentBrand({
+            id: brandRecord.id,
+            name: brandRecord.name,
+            logo: brandRecord.logo
+        });
 
         const scrapedCompetitors = Array.isArray(brandRecord?.scrapedData?.competitors)
           ? brandRecord.scrapedData.competitors
@@ -661,7 +687,27 @@ export default function BrandMonitorPage() {
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === "brand" && <BrandMonitorContent session={session} onOpenAeoForUrl={handleOpenAeoForUrl} onOpenFilesForUrl={handleOpenFilesForUrl} prefillBrand={prefillBrand} />}
+        {currentBrand && (
+            <div className="flex items-center gap-4 mb-6">
+                <Link 
+                    href={`/brand-profiles/${currentBrand.id}`} 
+                    className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors"
+                >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back to Profile
+                </Link>
+            </div>
+        )}
+        {activeTab === "brand" && (
+          <BrandMonitorContent 
+            session={session} 
+            onOpenAeoForUrl={handleOpenAeoForUrl} 
+            onOpenFilesForUrl={handleOpenFilesForUrl} 
+            prefillBrand={prefillBrand} 
+            initialAnalysisId={analysisIdFromQuery}
+            forceNew={viewMode === 'new'}
+          />
+        )}
         {activeTab === "aeo" && <AeoReportTab prefill={prefillAeo} onOpenBrandForUrl={(url, customerName) => { setPrefillBrand({ url, customerName: (customerName && customerName.trim()) ? customerName : "autouser" }); setActiveTab("brand"); }} onOpenFilesForUrl={handleOpenFilesForUrl} />}
         {activeTab === "files" && (
           <FilesTab prefill={pendingFiles} />

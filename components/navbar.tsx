@@ -149,15 +149,8 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <button
-              type="button"
-              onClick={() => {
-                // Navigate to Brand Monitor and reset its state
-                // Using a distinct path with hash so the page mounts the BrandMonitor and can reset internally
-                router.push('/#brand');
-                // Force a refresh to ensure any lingering state clears
-                router.refresh();
-              }}
+            <Link
+              href="/brand-profiles"
               className="flex items-center focus:outline-none"
             >
               <Image
@@ -167,7 +160,7 @@ export function Navbar() {
                 height={25}
                 priority
               />
-            </button>
+            </Link>
           </div>
 
           <div className="flex items-center space-x-4">

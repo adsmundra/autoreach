@@ -271,10 +271,44 @@ export default function BrandProfilePage() {
           console.error('Error fetching blogs', err);
         }
 
+        // Fetch Brand Monitor Reports
+        let fetchedBrandMonitorReports = [];
+        try {
+          const monitorResponse = await fetch('/api/brand-monitor/analyses');
+          if (monitorResponse.ok) {
+            const allAnalyses = await monitorResponse.json();
+            const bName = brand.name.toLowerCase().trim();
+            const bUrl = brand.url.toLowerCase().trim().replace(/\/+$/, '');
+            
+            fetchedBrandMonitorReports = allAnalyses.filter((a: any) => {
+               const aUrl = (a.url || '').toLowerCase().trim().replace(/\/+$/, '');
+               const aName = (a.companyName || '').toLowerCase().trim();
+
+               // Name match
+               if (aName && aName === bName) return true;
+               if (aName && bName.includes(aName)) return true;
+
+               // URL match
+               if (aUrl && aUrl === bUrl) return true;
+               if (aUrl && bUrl && (aUrl.includes(bUrl) || bUrl.includes(aUrl))) return true;
+
+               return false;
+            });
+            
+            // Sort by created date desc
+            fetchedBrandMonitorReports.sort((a: any, b: any) => 
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+          }
+        } catch (err) {
+          console.error('Error fetching brand monitor reports', err);
+        }
+
         setSectionData(prev => ({
           ...prev,
           aeoReports: fetchedAeoReports,
           blogReports: fetchedBlogReports,
+          brandMonitorReports: fetchedBrandMonitorReports,
         }));
       } catch (err) {
         console.error('[Brand Profile] Error fetching section data:', err);
@@ -380,7 +414,7 @@ export default function BrandProfilePage() {
   };
 
   const sectionLinks = [
-    { title: 'Brand Monitor', color: 'bg-blue-500', href: brand ? `/brand-monitor?brandId=${brand.id}` : '/brand-monitor' },
+    { title: 'Brand Monitor', color: 'bg-blue-500', href: brand ? `/brand-monitor?brandId=${brand.id}&view=new` : '/brand-monitor' },
     { title: 'AEO Audit', color: 'bg-purple-500', href: brand ? `/aeo-report?customerName=${encodeURIComponent(brand.name)}&url=${encodeURIComponent(brand.url)}&auto=true&brandId=${brand.id}` : '/aeo-report' },
     { title: 'GEO Files', color: 'bg-orange-500', href: brand ? `/generate-files?brandId=${brand.id}` : '/generate-files' },
     { title: 'IntelliWrite', color: 'bg-green-500', href: brand ? `/blog-writer?brandId=${brand.id}` : '/blog-writer' },
@@ -505,7 +539,8 @@ export default function BrandProfilePage() {
         {sectionLinks.map((section) => {
           // Get reports for this section
           const reports = section.title === 'AEO Audit' ? sectionData.aeoReports : 
-                          section.title === 'IntelliWrite' ? sectionData.blogReports : [];
+                          section.title === 'IntelliWrite' ? sectionData.blogReports : 
+                          section.title === 'Brand Monitor' ? sectionData.brandMonitorReports : [];
 
           return (
             <section key={section.title}>
@@ -564,6 +599,28 @@ export default function BrandProfilePage() {
                       </Link>
                     </div>
                   ))
+                ) : section.title === 'Brand Monitor' && reports.length > 0 ? (
+                  // Show actual Brand Monitor reports
+                  reports.map((report: any) => (
+                    <div key={report.id}>
+                      <Link
+                        href={`/brand-monitor?brandId=${brandId}&analysisId=${report.id}`}
+                        className="block p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition text-sm text-blue-900 cursor-pointer border border-blue-200"
+                        role="link"
+                      >
+                        <p className="font-medium truncate">{report.companyName || 'Brand Analysis'}</p>
+                        <p className="text-xs text-blue-600 truncate mt-1">{report.url}</p>
+                        <p className="text-xs text-blue-500 mt-1">
+                          {new Date(report.createdAt).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                      </Link>
+                    </div>
+                  ))
                 ) : section.title === 'AEO Audit' ? (
                   // Empty state for AEO reports
                   <div className="p-4 text-center text-slate-500 text-sm">
@@ -575,6 +632,12 @@ export default function BrandProfilePage() {
                   <div className="p-4 text-center text-slate-500 text-sm">
                     <p>No blogs yet</p>
                     <p className="text-xs mt-1">Click the IntelliWrite button to write one</p>
+                  </div>
+                ) : section.title === 'Brand Monitor' ? (
+                  // Empty state for Brand Monitor
+                  <div className="p-4 text-center text-slate-500 text-sm">
+                    <p>No brand analyses yet</p>
+                    <p className="text-xs mt-1">Click the Brand Monitor button to start one</p>
                   </div>
                 ) : (
                   // Dummy data for other sections
