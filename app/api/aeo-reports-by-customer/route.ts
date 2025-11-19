@@ -71,23 +71,6 @@ export async function GET(request: NextRequest) {
     // If no reports found, try without userId filter to debug
     if (reports.length === 0) {
       console.log('[AEO Reports] No reports found with userId filter, trying without userId...');
-      const allReports = await db
-        .select()
-        .from(aeoReports)
-        .where(aeoReports.customerName === customerName)
-        .orderBy(desc(aeoReports.createdAt));
-
-      console.log('[AEO Reports] All reports for customer (any user):', allReports.length);
-      allReports.forEach((report, index) => {
-        console.log(`[AEO Reports] All Report ${index + 1}:`, {
-          id: report.id,
-          userId: report.userId,
-          customerName: report.customerName,
-          url: report.url,
-          hasHtml: !!report.html,
-          createdAt: report.createdAt,
-        });
-      });
     }
 
     // Filter to only include completed reports (those with html content)
