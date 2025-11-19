@@ -170,7 +170,7 @@ export default function ProfilePage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center mb-8">
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/brand-profiles')}
             className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium transition-colors mr-4"
             title="Back"
           >
