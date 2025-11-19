@@ -33,7 +33,7 @@ function LoginForm() {
   useEffect(() => {
     if (!isPending && session) {
       setIsRedirecting(true);
-      const returnUrl = searchParams.get('from') || '/';
+      const returnUrl = searchParams.get('from') || '/brand-profiles';
       if (typeof window !== 'undefined') {
         window.location.replace(returnUrl);
       } else {
@@ -60,7 +60,7 @@ function LoginForm() {
       }
       
       // Use router for client-side navigation after successful login
-      const returnUrl = searchParams.get('from') || '/';
+      const returnUrl = searchParams.get('from') || '/brand-profiles';
       if (typeof window !== 'undefined') {
         window.location.replace(returnUrl);
       }

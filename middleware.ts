@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSessionCookie } from 'better-auth/cookies';
 
 // Define protected routes
-const protectedRoutes = ['/dashboard', '/chat', '/brand-monitor', '/profile'];
+const protectedRoutes = ['/dashboard', '/chat', '/brand-monitor', '/profile', '/brand-profiles'];
 
 // Define auth-related routes that should be skipped
 const authRoutes = ['/login', '/register', '/forgot-password', '/reset-password'];

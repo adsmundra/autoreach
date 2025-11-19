@@ -22,9 +22,9 @@ export default function RegisterPage() {
     if (!isPending && session) {
       setIsRedirecting(true);
       if (typeof window !== 'undefined') {
-        window.location.replace('/');
+        window.location.replace('/brand-profiles');
       } else {
-        router.replace('/');
+        router.replace('/brand-profiles');
       }
     }
   }, [session, isPending, router]);
@@ -49,7 +49,7 @@ export default function RegisterPage() {
         
         // Force a hard navigation to ensure cookies are sent
         if (typeof window !== 'undefined') {
-          window.location.href = '/';
+          window.location.href = '/brand-profiles';
         }
       } else {
         throw response.error;
@@ -262,7 +262,7 @@ export default function RegisterPage() {
                 onError={(error) => setError(error)}
                 onSuccess={() => {
                   if (typeof window !== 'undefined') {
-                    window.location.href = '/';
+                    window.location.href = '/brand-profiles';
                   }
                 }}
                 disabled={loading}

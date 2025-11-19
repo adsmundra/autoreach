@@ -18,81 +18,13 @@ interface BrandProfile {
   isScraped?: boolean;
 }
 
-// Fallback dummy brands data (in case DB is not set up)
-const DUMMY_BRANDS: BrandProfile[] = [
-  {
-    id: '550e8400-e29b-41d4-a716-446655440001',
-    name: 'Welzin',
-    url: 'https://welzin.com',
-    industry: 'AI/ML Consultancy',
-    location: 'San Francisco, CA',
-    email: 'info@welzin.com',
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440002',
-    name: 'TechVision',
-    url: 'https://techvision.io',
-    industry: 'Software Development',
-    location: 'New York, NY',
-    email: 'contact@techvision.io',
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440003',
-    name: 'DataFlow Analytics',
-    url: 'https://dataflow-analytics.com',
-    industry: 'Data Analytics',
-    location: 'Austin, TX',
-    email: 'hello@dataflow-analytics.com',
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440004',
-    name: 'CloudNine Systems',
-    url: 'https://cloudnine-systems.com',
-    industry: 'Cloud Infrastructure',
-    location: 'Seattle, WA',
-    email: 'support@cloudnine-systems.com',
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440005',
-    name: 'NeuralPath AI',
-    url: 'https://neuralpath.ai',
-    industry: 'Artificial Intelligence',
-    location: 'Boston, MA',
-    email: 'team@neuralpath.ai',
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440006',
-    name: 'DigitalForge',
-    url: 'https://digitalforge.co',
-    industry: 'Digital Marketing',
-    location: 'Los Angeles, CA',
-    email: 'hello@digitalforge.co',
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440007',
-    name: 'QuantumLeap',
-    url: 'https://quantumleap.dev',
-    industry: 'Quantum Computing',
-    location: 'Cambridge, MA',
-    email: 'info@quantumleap.dev',
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440008',
-    name: 'VelocityStudio',
-    url: 'https://velocitystudio.com',
-    industry: 'Design & Creative',
-    location: 'Miami, FL',
-    email: 'contact@velocitystudio.com',
-  },
-];
-
 export default function BrandProfilesPage() {
   const router = useRouter();
-  const [brands, setBrands] = useState<BrandProfile[]>(DUMMY_BRANDS);
+  const [brands, setBrands] = useState<BrandProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredBrands, setFilteredBrands] = useState<BrandProfile[]>(DUMMY_BRANDS);
+  const [filteredBrands, setFilteredBrands] = useState<BrandProfile[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -115,18 +47,17 @@ export default function BrandProfilesPage() {
       const response = await fetch('/api/brands');
 
       if (response.status === 401) {
-        // User not authenticated, use dummy data
-        setBrands(DUMMY_BRANDS);
+        // User not authenticated
+        setBrands([]);
       } else if (!response.ok) {
         throw new Error('Failed to fetch brands');
       } else {
         const data = await response.json();
-        setBrands(data.brands || DUMMY_BRANDS);
+        setBrands(data.brands || []);
       }
     } catch (err) {
       console.error('Error fetching brands:', err);
-      // Fallback to dummy data if API fails
-      setBrands(DUMMY_BRANDS);
+      setBrands([]);
     } finally {
       setLoading(false);
     }
@@ -205,16 +136,8 @@ export default function BrandProfilesPage() {
       });
 
       if (response.status === 401) {
-        // Not authenticated, create locally
-        const newBrand: BrandProfile = {
-          id: `brand-${Date.now()}`,
-          name: formData.name,
-          url: formData.url,
-          industry: formData.industry,
-          location: formData.location,
-          email: formData.email || undefined,
-        };
-        setBrands([...brands, newBrand]);
+        // Not authenticated
+        throw new Error('You must be logged in to create a brand');
       } else if (!response.ok) {
         try {
           const errorData = await response.json();
@@ -288,13 +211,15 @@ export default function BrandProfilesPage() {
             <h1 className="text-4xl font-bold text-slate-900">Brand Profiles</h1>
             <p className="text-slate-600 mt-2">Manage and view all your brand profiles</p>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-all hover:scale-105 shadow-lg"
-          >
-            <Plus className="w-5 h-5" />
-            New Brand
-          </button>
+          {brands.length > 0 && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-all hover:scale-105 shadow-lg"
+            >
+              <Plus className="w-5 h-5" />
+              New Brand
+            </button>
+          )}
         </div>
 
         {/* Error Message */}
@@ -330,7 +255,7 @@ export default function BrandProfilesPage() {
                   <Plus className="w-8 h-8 text-blue-600" />
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900 mb-2">
-                  Create Your First Brand
+                  Add a New Brand
                 </h3>
                 <p className="text-slate-600">
                   Get started by creating your first brand profile to unlock all features

@@ -13,7 +13,7 @@ function AuthSuccessContent() {
     if (!isPending) {
       if (session?.user) {
         // User is authenticated, redirect to intended destination
-        const returnUrl = searchParams.get('from') || '/dashboard';
+        const returnUrl = searchParams.get('from') || '/brand-profiles';
         console.log('Auth successful, redirecting to:', returnUrl);
         router.replace(returnUrl);
       } else {
