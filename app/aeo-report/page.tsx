@@ -304,17 +304,14 @@ export default function AEOReportPage() {
             </Card>
 
             <section className="rounded-2xl border bg-white p-8 shadow-sm">
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">What's inside your AEO Report</h3>
-              <p className="text-sm text-slate-600 mb-6">
-                You will receive a comprehensive PDF report containing deep insights to improve your brand's visibility on AI-driven search engines.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <h3 className="text-xl font-semibold text-slate-900 mb-6">What's included in your AEO Report</h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className="border rounded-lg p-4 flex gap-3">
                   <BarChart3 className="w-8 h-8 text-blue-600 flex-shrink-0" />
                   <div>
-                    <h4 className="font-semibold text-lg">Brand Visibility</h4>
+                    <h4 className="font-semibold text-lg">Brand Visibility Analysis</h4>
                     <p className="text-sm text-slate-600">
-                      Deep dive into how your brand appears across major search engines and AI platforms.
+                      Deep dive into how your brand appears across major search engines and AI platforms. Get detailed metrics on visibility scores and positioning.
                     </p>
                   </div>
                 </div>
@@ -323,25 +320,25 @@ export default function AEOReportPage() {
                   <div>
                     <h4 className="font-semibold text-lg">AEO Score & Metrics</h4>
                     <p className="text-sm text-slate-600">
-                      Quantitative scoring of your Answer Engine Optimization performance and key metrics.
+                      Quantitative scoring of your Answer Engine Optimization performance including visibility score, sentiment analysis, and share of voice metrics.
                     </p>
                   </div>
                 </div>
                 <div className="border rounded-lg p-4 flex gap-3">
                   <Code className="w-8 h-8 text-slate-600 flex-shrink-0" />
                   <div>
-                    <h4 className="font-semibold text-lg">Schema Validation</h4>
+                    <h4 className="font-semibold text-lg">Technical & Schema Analysis</h4>
                     <p className="text-sm text-slate-600">
-                      Technical analysis of your structured data implementation to ensure AI readability.
+                      Technical analysis of your website structure and schema.org markup implementation to ensure proper AI readability and indexing.
                     </p>
                   </div>
                 </div>
                 <div className="border rounded-lg p-4 flex gap-3">
                   <CheckCircle className="w-8 h-8 text-emerald-600 flex-shrink-0" />
                   <div>
-                    <h4 className="font-semibold text-lg">Actionable Insights</h4>
+                    <h4 className="font-semibold text-lg">Actionable Recommendations</h4>
                     <p className="text-sm text-slate-600">
-                      Step-by-step recommendations and strategies to improve your standing in AI search results.
+                      Step-by-step optimization strategies and prioritized action items to improve your standing in AI search results.
                     </p>
                   </div>
                 </div>
@@ -362,44 +359,90 @@ export default function AEOReportPage() {
         )}
 
         {reportData && (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>AEO Report - {reportData.customerName}</CardTitle>
-                  <CardDescription>
-                    Generated on {new Date(reportData.generatedAt).toLocaleString()} | Type: {reportData.reportType}
-                  </CardDescription>
+          <div className="space-y-6">
+            {/* Report Header */}
+            <Card>
+              <CardHeader>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div>
+                    <CardTitle className="text-2xl">AEO Report - {reportData.customerName}</CardTitle>
+                    <CardDescription className="mt-2">
+                      Generated on {new Date(reportData.generatedAt).toLocaleString()}
+                    </CardDescription>
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button
+                      onClick={() => {
+                        const newWindow = window.open('', '_blank');
+                        if (newWindow) {
+                          newWindow.document.write(reportData.htmlContent);
+                          newWindow.document.close();
+                        }
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <FileText className="mr-2 h-4 w-4" />
+                      View Full Report
+                    </Button>
+                    <Button onClick={downloadPDF} variant="outline">
+                      <Download className="mr-2 h-4 w-4" />
+                      Download PDF
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => {
-                      const newWindow = window.open('', '_blank');
-                      if (newWindow) {
-                        newWindow.document.write(reportData.htmlContent);
-                        newWindow.document.close();
-                      }
-                    }}
-                    variant="outline"
-                  >
-                    <FileText className="mr-2 h-4 w-4" />
-                    View Full Report
-                  </Button>
-                  <Button onClick={downloadPDF} variant="outline">
-                    <Download className="mr-2 h-4 w-4" />
-                    Download PDF
-                  </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-900">
+                    📄 <strong>Report ready!</strong> Click "View Full Report" to open it in a new tab with full rendering and interactivity, or "Download PDF" to save it.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Report Contents Tabs */}
+            <section className="rounded-2xl border bg-white p-8 shadow-sm">
+              <h3 className="text-xl font-semibold text-slate-900 mb-6">What's in this Report</h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="border rounded-lg p-4 flex gap-3 hover:shadow-md transition">
+                  <BarChart3 className="w-8 h-8 text-blue-600 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-lg">Brand Visibility Analysis</h4>
+                    <p className="text-sm text-slate-600 mt-1">
+                      Comprehensive analysis of how your brand appears across search engines and AI platforms, including visibility scores, ranking positions, and competitive benchmarking.
+                    </p>
+                  </div>
+                </div>
+                <div className="border rounded-lg p-4 flex gap-3 hover:shadow-md transition">
+                  <Activity className="w-8 h-8 text-purple-600 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-lg">AEO Score & Metrics</h4>
+                    <p className="text-sm text-slate-600 mt-1">
+                      Quantitative performance metrics including Answer Engine Optimization score, sentiment analysis, share of voice, and competitive positioning data.
+                    </p>
+                  </div>
+                </div>
+                <div className="border rounded-lg p-4 flex gap-3 hover:shadow-md transition">
+                  <Code className="w-8 h-8 text-slate-600 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-lg">Technical & Schema Analysis</h4>
+                    <p className="text-sm text-slate-600 mt-1">
+                      Technical audit of your website structure, schema.org markup validation, structured data implementation, and AI crawler readability assessment.
+                    </p>
+                  </div>
+                </div>
+                <div className="border rounded-lg p-4 flex gap-3 hover:shadow-md transition">
+                  <CheckCircle className="w-8 h-8 text-emerald-600 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-lg">Actionable Recommendations</h4>
+                    <p className="text-sm text-slate-600 mt-1">
+                      Prioritized optimization strategies and step-by-step action items to improve your brand visibility and performance in AI-driven search results.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-900">
-                  📄 <strong>Report ready!</strong> Click "View Full Report" to open it in a new tab with full rendering and interactivity.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+            </section>
+          </div>
         )}
       </div>
     </div>
