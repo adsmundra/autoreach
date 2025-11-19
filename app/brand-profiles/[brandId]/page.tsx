@@ -355,7 +355,7 @@ export default function BrandProfilePage() {
 
   const sectionLinks = [
     { title: 'Brand Monitor', color: 'bg-blue-500', href: brand ? `/brand-monitor?brandId=${brand.id}` : '/brand-monitor' },
-    { title: 'AEO Audit', color: 'bg-purple-500', href: brand ? `/aeo-report?customerName=${encodeURIComponent(brand.name)}&url=${encodeURIComponent(brand.url)}&auto=true` : '/aeo-report' },
+    { title: 'AEO Audit', color: 'bg-purple-500', href: brand ? `/aeo-report?customerName=${encodeURIComponent(brand.name)}&url=${encodeURIComponent(brand.url)}&auto=true&brandId=${brand.id}` : '/aeo-report' },
     { title: 'GEO Files', color: 'bg-orange-500', href: brand ? `/generate-files?brandId=${brand.id}` : '/generate-files' },
     { title: 'IntelliWrite', color: 'bg-green-500', href: '/blog-writer' },
     { title: 'End 2 End', color: 'bg-indigo-500', href: '/chat' },
@@ -498,7 +498,7 @@ export default function BrandProfilePage() {
                   reports.map((report) => (
                     <div key={report.id}>
                       <Link
-                        href={`/aeo-report?reportId=${report.id}`}
+                        href={`/aeo-report?reportId=${report.id}&brandId=${brandId}`}
                         className="block p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition text-sm text-purple-900 cursor-pointer border border-purple-200"
                         role="link"
                       >

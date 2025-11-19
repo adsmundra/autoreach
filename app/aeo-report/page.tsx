@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Download, FileText, Loader2, AlertCircle, BarChart3, Code, CheckCircle, Activity } from 'lucide-react';
+import { Download, FileText, Loader2, AlertCircle, BarChart3, Code, CheckCircle, Activity, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ReportData {
@@ -30,6 +31,8 @@ export default function AEOReportPage() {
   const [error, setError] = useState<string | null>(null);
   const [generationSuccess, setGenerationSuccess] = useState(false);
   const [reportId, setReportId] = useState<string | null>(null);
+
+  const brandId = searchParams.get('brandId');
 
   const generateReport = useCallback(async (nameOverride?: string, urlOverride?: string) => {
     const nameToUse = typeof nameOverride === 'string' ? nameOverride : customerName;
@@ -84,45 +87,102 @@ export default function AEOReportPage() {
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
+    let timeoutId: NodeJS.Timeout;
+    let attempts = 0;
+    const POLL_INTERVAL = 15000; // 15 seconds
+    // Max attempts: covers ~15 minutes after the delay
+    const MAX_ATTEMPTS = 60; 
+
+    const fetchFullReport = async () => {
+      try {
+        const res = await fetch(`/api/aeo-reports/${reportId}/view`, {
+          headers: { 'Cache-Control': 'no-cache' },
+        });
+        if (res.status === 200) {
+          const html = await res.text();
+          setReportData({
+            htmlContent: html,
+            customerName: customerName, 
+            reportType: 'combined',
+            generatedAt: new Date().toISOString()
+          });
+          setGenerationSuccess(false);
+          setIsFetchingReport(false);
+          toast.success('Report ready!');
+        } else {
+          setError(`Failed to fetch report content (Status: ${res.status})`);
+        }
+      } catch (e) {
+        setError('Error downloading report content');
+      }
+    };
+
+    const startPolling = () => {
+      // Poll immediately on start
+      pollCheck();
+      intervalId = setInterval(pollCheck, POLL_INTERVAL);
+    };
+
+    const pollCheck = async () => {
+      attempts++;
+      try {
+        // Use lightweight check
+        const res = await fetch(`/api/aeo-reports/${reportId}/view?check=true`, {
+          headers: { 'Cache-Control': 'no-cache' },
+        });
+
+        if (res.status === 200) {
+          const data = await res.json();
+          if (data.ready) {
+            // Report is ready! Stop polling and get content.
+            clearInterval(intervalId);
+            fetchFullReport();
+          } else {
+            // Not ready yet (ready: false)
+            if (attempts >= MAX_ATTEMPTS) {
+              clearInterval(intervalId);
+              setIsFetchingReport(false);
+              setGenerationSuccess(false);
+              setError('Report generation timed out. Please try again.');
+            }
+            console.log('Report processing... (Check Only)');
+          }
+        } else if (res.status === 404) {
+          // Not found
+           clearInterval(intervalId);
+           setIsFetchingReport(false);
+           setGenerationSuccess(false);
+           setError('Report not found.');
+        } else {
+          // Other error
+           console.error('Polling check error:', res.status);
+        }
+      } catch (e) {
+        console.error('Polling check failed', e);
+        // Don't stop for one network blip, but maybe count errors?
+      }
+    };
 
     if (reportId && !reportData) {
       setIsFetchingReport(true);
-      const pollReport = async () => {
-        try {
-          const res = await fetch(`/api/aeo-reports/${reportId}/view`);
-          if (res.status === 200) {
-            const html = await res.text();
-            setReportData({
-              htmlContent: html,
-              customerName: customerName, // We might want to fetch the actual name if changed
-              reportType: 'combined',
-              generatedAt: new Date().toISOString()
-            });
-            setGenerationSuccess(false); // Hide the "Started" card, show report
-            setIsFetchingReport(false);
-            toast.success('Report ready!');
-            clearInterval(intervalId);
-          } else if (res.status === 202) {
-            // Still processing, continue polling
-            console.log('Report still processing...');
-          } else {
-            // Error or 404
-            console.error('Polling error:', res.status);
-          }
-        } catch (e) {
-          console.error('Polling failed', e);
-        }
-      };
 
-      // Poll immediately then every 3s
-      pollReport();
-      intervalId = setInterval(pollReport, 3000);
+      // If we just started generation (generationSuccess is true), wait 2 mins before first poll
+      // If we are just reloading the page (generationSuccess might be false but reportId exists), poll immediately
+      // We can use a ref or just check generationSuccess state
+      
+      if (generationSuccess) {
+         console.log('Report started. Waiting 2 minutes before starting poll...');
+         timeoutId = setTimeout(startPolling, 120000); 
+      } else {
+         startPolling();
+      }
     }
 
     return () => {
       if (intervalId) clearInterval(intervalId);
+      if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [reportId, reportData, customerName]);
+  }, [reportId, reportData, customerName, generationSuccess]);
 
   useEffect(() => {
     const paramName = searchParams.get('customerName');
@@ -241,6 +301,15 @@ export default function AEOReportPage() {
       <div className="min-h-screen pl-16 md:pl-0">
           <div className="container mx-auto py-8 px-4">
           <div className="mb-8">
+          {brandId && (
+            <Link 
+              href={`/brand-profiles/${brandId}`}
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Profile
+            </Link>
+          )}
           <h1 className="text-3xl font-bold mb-2">AEO Report Generator</h1>
           <p className="text-muted-foreground">
             Generate comprehensive AEO (Answer Engine Optimization) reports for your clients
@@ -275,7 +344,7 @@ export default function AEOReportPage() {
           </Card>
         )}
 
-        {isFetchingReport && (
+        {isFetchingReport && !generationSuccess && (
           <div className="flex flex-col items-center justify-center py-20 space-y-6">
             <Loader2 className="h-16 w-16 animate-spin text-purple-600" />
             <div className="text-center space-y-2">

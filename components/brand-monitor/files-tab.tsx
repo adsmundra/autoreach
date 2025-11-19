@@ -1,16 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { useRefreshCustomer } from "@/hooks/useAutumnCustomer";
 import { CREDITS_PER_FILE_GENERATION } from "@/config/constants";
-import { FileText, Code, Settings, HelpCircle } from "lucide-react";
+import { FileText, Code, Settings, HelpCircle, ArrowLeft } from "lucide-react";
 import type { FilesTabPrefill } from "@/types/files";
 
 export function FilesTab({ prefill }: { prefill?: FilesTabPrefill | null }) {
   const { data: session } = useSession();
   const refreshCustomer = useRefreshCustomer();
   const userEmail = session?.user?.email || "";
+  const searchParams = useSearchParams();
+  const brandId = searchParams.get("brandId");
 
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -98,6 +102,16 @@ export function FilesTab({ prefill }: { prefill?: FilesTabPrefill | null }) {
 
   return (
     <div className="space-y-6">
+      {brandId && (
+        <Link
+          href={`/brand-profiles/${brandId}`}
+          className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors mb-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Profile
+        </Link>
+      )}
+
       <section className="rounded-2xl border bg-white p-8 shadow-sm">
         <h2 className="text-2xl font-semibold text-slate-900 mb-4">GEO Files Delivery</h2>
         <p className="text-base text-slate-600">{headline}</p>
