@@ -43,6 +43,7 @@ interface SectionData {
   aeoReports: AEOReport[];
   brandMonitorReports: any[];
   geoFileReports: any[];
+  blogReports: any[];
 }
 
 // Dummy data mapping
@@ -144,6 +145,7 @@ export default function BrandProfilePage() {
     aeoReports: [],
     brandMonitorReports: [],
     geoFileReports: [],
+    blogReports: [],
   });
   const [editFormData, setEditFormData] = useState({
     name: '',
@@ -233,23 +235,47 @@ export default function BrandProfilePage() {
 
         console.log('[Brand Profile] AEO response status:', aeoResponse.status);
 
+        let fetchedAeoReports = [];
         if (aeoResponse.ok) {
           const aeoData = await aeoResponse.json();
-          console.log('[Brand Profile] Received reports:', aeoData.reports?.length || 0);
-          console.log('[Brand Profile] Debug info:', aeoData.debug);
-          setSectionData(prev => ({
-            ...prev,
-            aeoReports: aeoData.reports || [],
-          }));
-        } else if (aeoResponse.status === 401) {
-          console.log('[Brand Profile] Not authenticated for AEO reports');
-          const errorData = await aeoResponse.json();
-          console.log('[Brand Profile] Auth error:', errorData);
-        } else {
-          console.error('[Brand Profile] Failed to fetch AEO reports:', aeoResponse.status);
-          const errorData = await aeoResponse.json();
-          console.log('[Brand Profile] Error response:', errorData);
+          fetchedAeoReports = aeoData.reports || [];
         }
+
+        // Fetch Blog Reports
+        let fetchedBlogReports = [];
+        try {
+          const blogResponse = await fetch('/api/write-blog/list');
+          if (blogResponse.ok) {
+             const blogData = await blogResponse.json();
+             const allBlogs = blogData.items || [];
+             // Filter for this brand
+             const bName = brand.name.toLowerCase().trim();
+             const bUrl = brand.url.toLowerCase().trim().replace(/\/+$/, '');
+             
+             fetchedBlogReports = allBlogs.filter((b: any) => {
+                const iName = (b.brandName || '').toLowerCase().trim();
+                const iUrl = (b.companyUrl || '').toLowerCase().trim().replace(/\/+$/, '');
+                
+                // Name match
+                if (iName && iName === bName) return true;
+                if (iName && bName.includes(iName)) return true; // e.g. "Acme" in "Acme Corp"
+
+                // URL match
+                if (iUrl && iUrl === bUrl) return true;
+                if (iUrl && bUrl && (iUrl.includes(bUrl) || bUrl.includes(iUrl))) return true;
+
+                return false;
+             });
+          }
+        } catch (err) {
+          console.error('Error fetching blogs', err);
+        }
+
+        setSectionData(prev => ({
+          ...prev,
+          aeoReports: fetchedAeoReports,
+          blogReports: fetchedBlogReports,
+        }));
       } catch (err) {
         console.error('[Brand Profile] Error fetching section data:', err);
       }
@@ -357,7 +383,7 @@ export default function BrandProfilePage() {
     { title: 'Brand Monitor', color: 'bg-blue-500', href: brand ? `/brand-monitor?brandId=${brand.id}` : '/brand-monitor' },
     { title: 'AEO Audit', color: 'bg-purple-500', href: brand ? `/aeo-report?customerName=${encodeURIComponent(brand.name)}&url=${encodeURIComponent(brand.url)}&auto=true&brandId=${brand.id}` : '/aeo-report' },
     { title: 'GEO Files', color: 'bg-orange-500', href: brand ? `/generate-files?brandId=${brand.id}` : '/generate-files' },
-    { title: 'IntelliWrite', color: 'bg-green-500', href: '/blog-writer' },
+    { title: 'IntelliWrite', color: 'bg-green-500', href: brand ? `/blog-writer?brandId=${brand.id}` : '/blog-writer' },
     { title: 'End 2 End', color: 'bg-indigo-500', href: '/chat' },
   ];
 
@@ -478,7 +504,8 @@ export default function BrandProfilePage() {
       <main className="grid grid-cols-1 md:grid-cols-5 gap-6 mt-12 max-w-6xl mx-auto" role="main">
         {sectionLinks.map((section) => {
           // Get reports for this section
-          const reports = section.title === 'AEO Audit' ? sectionData.aeoReports : [];
+          const reports = section.title === 'AEO Audit' ? sectionData.aeoReports : 
+                          section.title === 'IntelliWrite' ? sectionData.blogReports : [];
 
           return (
             <section key={section.title}>
@@ -515,11 +542,39 @@ export default function BrandProfilePage() {
                       </Link>
                     </div>
                   ))
+                ) : section.title === 'IntelliWrite' && reports.length > 0 ? (
+                  // Show actual Blog reports
+                  reports.map((report: any) => (
+                    <div key={report.id}>
+                      <Link
+                        href={`/blog-writer?brandId=${brandId}&blogId=${report.id}`}
+                        className="block p-3 bg-green-50 rounded-lg hover:bg-green-100 transition text-sm text-green-900 cursor-pointer border border-green-200"
+                        role="link"
+                      >
+                        <p className="font-medium truncate">{report.topic || 'Untitled Blog'}</p>
+                        <p className="text-xs text-green-600 truncate mt-1">{report.brandName || report.companyUrl}</p>
+                        <p className="text-xs text-green-500 mt-1">
+                          {new Date(report.createdAt).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                      </Link>
+                    </div>
+                  ))
                 ) : section.title === 'AEO Audit' ? (
                   // Empty state for AEO reports
                   <div className="p-4 text-center text-slate-500 text-sm">
                     <p>No AEO reports yet</p>
                     <p className="text-xs mt-1">Click the AEO Audit button to generate one</p>
+                  </div>
+                ) : section.title === 'IntelliWrite' ? (
+                  // Empty state for Blogs
+                  <div className="p-4 text-center text-slate-500 text-sm">
+                    <p>No blogs yet</p>
+                    <p className="text-xs mt-1">Click the IntelliWrite button to write one</p>
                   </div>
                 ) : (
                   // Dummy data for other sections

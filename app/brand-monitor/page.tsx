@@ -3,7 +3,8 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, Menu, X, Plus, Trash2, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { Sparkles, Menu, X, Plus, Trash2, Loader2, ArrowLeft } from "lucide-react";
 import { useCustomer, useRefreshCustomer } from "@/hooks/useAutumnCustomer";
 import {
   useBrandAnalyses,
@@ -444,7 +445,9 @@ function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefi
   );
 }
 
-function UGCTab() {
+function UGCTab({ prefill, prefillBlogId }: { prefill?: { url: string; brandName: string } | null; prefillBlogId?: string | null }) {
+  const searchParams = useSearchParams();
+  const brandId = searchParams.get("brandId");
   const [companyUrl, setCompanyUrl] = useState("");
   const [topic, setTopic] = useState("");
   const [brandName, setBrandName] = useState("");
@@ -457,7 +460,74 @@ function UGCTab() {
   const [blogContent, setBlogContent] = useState<string>("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
+  const [suggestingTopics, setSuggestingTopics] = useState(false);
+  const [suggestedTopics, setSuggestedTopics] = useState<string[]>([]);
+
+  const fetchSuggestions = async (bName: string) => {
+    if (!bName) return;
+    try {
+      const res = await fetch(`/api/topic-suggestion?brand_name=${encodeURIComponent(bName)}`);
+      const data = await res.json();
+      if (data.topics) setSuggestedTopics(data.topics);
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (brandName) fetchSuggestions(brandName);
+  }, [brandName]);
+
+  const handleSuggest = async () => {
+    if (!brandName.trim()) {
+      setError("Please enter a Brand Name first to generate suggestions.");
+      return;
+    }
+    setSuggestingTopics(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/topic-suggestion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brand_name: brandName }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      if (data.topics) setSuggestedTopics(data.topics);
+    } catch (e: any) {
+      setError(e.message || "Failed to suggest topics");
+    } finally {
+      setSuggestingTopics(false);
+    }
+  };
+
   const canSubmit = companyUrl.trim() && topic.trim();
+
+  useEffect(() => {
+    if (prefill) {
+      if (prefill.url) setCompanyUrl(prefill.url);
+      if (prefill.brandName) setBrandName(prefill.brandName);
+    }
+  }, [prefill]);
+
+  useEffect(() => {
+    const loadBlog = async () => {
+      if (!prefillBlogId) return;
+      try {
+        const res = await fetch(`/api/write-blog/view?id=${encodeURIComponent(prefillBlogId)}`);
+        const data = await res.json();
+        if (res.ok) {
+          setCompanyUrl(data.company_url || '');
+          setTopic(data.topic || '');
+          setBrandName(data.brand_name || '');
+          setBlogContent(data.blog || '');
+          setSelectedId(Number(prefillBlogId));
+          // Sidebar closed by default
+        }
+      } catch (e) {
+        console.error("Failed to load prefilled blog", e);
+      }
+    };
+    loadBlog();
+  }, [prefillBlogId]);
 
   useEffect(() => {
     // Prefill email from session if available (read-only)
@@ -575,6 +645,15 @@ function UGCTab() {
 
       <div className="flex-1 overflow-y-auto">
         <div className="bg-white rounded-lg border p-6 max-w-7xl mx-auto">
+          {brandId && (
+            <Link
+              href={`/brand-profiles/${brandId}`}
+              className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors mb-4"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Profile
+            </Link>
+          )}
           <h2 className="text-2xl font-semibold mb-4">UGC Blog Generator</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -583,8 +662,37 @@ function UGCTab() {
           <Input id="ugc-company-url" placeholder="https://example.com" value={companyUrl} onChange={e=>setCompanyUrl(e.target.value)} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="ugc-topic">Topic *</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="ugc-topic">Topic *</Label>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-6 text-xs text-blue-600 hover:text-blue-700 px-2"
+              onClick={handleSuggest}
+              disabled={suggestingTopics}
+            >
+              {suggestingTopics ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Sparkles className="w-3 h-3 mr-1" />}
+              Suggest Topics
+            </Button>
+          </div>
           <Input id="ugc-topic" placeholder="Topic for the blog" value={topic} onChange={e=>setTopic(e.target.value)} />
+          
+          {suggestedTopics.length > 0 && (
+            <div className="mt-2">
+              <p className="text-xs text-gray-500 mb-1">Suggestions:</p>
+              <div className="flex flex-wrap gap-2">
+                {suggestedTopics.slice(0, 5).map((t, i) => (
+                  <button
+                    key={i}
+                    className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md border border-blue-100 hover:bg-blue-100 transition text-left"
+                    onClick={() => setTopic(t)}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="ugc-brand-name">Brand Name</Label>
@@ -644,6 +752,7 @@ export default function BrandMonitorPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const brandProfileIdFromQuery = searchParams.get("brandId");
+  const blogIdFromQuery = searchParams.get("blogId");
 
   // tabs: 'brand' | 'aeo' | 'files' | 'ugc'
   const [activeTab, setActiveTab] = useState<"brand" | "aeo" | "files" | "ugc">(
@@ -652,9 +761,10 @@ export default function BrandMonitorPage() {
   const [prefillAeo, setPrefillAeo] = useState<{ url: string; customerName: string } | null>(null);
   const [prefillBrand, setPrefillBrand] = useState<{ url: string; customerName: string } | null>(null);
   const [pendingFiles, setPendingFiles] = useState<FilesTabPrefill | null>(null);
+  const [prefillUgc, setPrefillUgc] = useState<{ url: string; brandName: string } | null>(null);
   const [appliedBrandPrefill, setAppliedBrandPrefill] = useState<string | null>(null);
 
-  // Auto-select tab from hash
+  // Auto-select tab from hash or params
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#','');
@@ -662,8 +772,10 @@ export default function BrandMonitorPage() {
       if (hash === 'aeo') setActiveTab('aeo');
       if (hash === 'brand') setActiveTab('brand');
       if (hash === 'ugc') setActiveTab('ugc');
+      
+      if (blogIdFromQuery) setActiveTab('ugc');
     }
-  }, []);
+  }, [blogIdFromQuery]);
 
   useEffect(() => {
     if (!isPending && !session) {
@@ -704,8 +816,20 @@ export default function BrandMonitorPage() {
           industry: brandRecord.industry,
           competitors: scrapedCompetitors,
         });
+        setPrefillUgc({
+          url: brandRecord.url,
+          brandName: brandRecord.name,
+        });
         setAppliedBrandPrefill(brandProfileIdFromQuery);
-        setActiveTab("files");
+
+        // Respect hash or params if present
+        if (blogIdFromQuery) {
+          setActiveTab("ugc");
+        } else if (typeof window !== 'undefined' && window.location.hash === '#ugc') {
+          setActiveTab("ugc");
+        } else {
+          setActiveTab("files");
+        }
       } catch (err) {
         console.error("[BrandMonitor] Unable to hydrate Files tab from brand profile", err);
       }
@@ -716,7 +840,7 @@ export default function BrandMonitorPage() {
     return () => {
       isCancelled = true;
     };
-  }, [appliedBrandPrefill, brandProfileIdFromQuery, session]);
+  }, [appliedBrandPrefill, brandProfileIdFromQuery, session, blogIdFromQuery]);
 
   if (isPending) {
     return (
@@ -798,7 +922,7 @@ export default function BrandMonitorPage() {
           <FilesTab prefill={pendingFiles} />
         )}
         {activeTab === "ugc" && (
-          <UGCTab />
+          <UGCTab prefill={prefillUgc} prefillBlogId={blogIdFromQuery} />
         )}
       </div>
     </div>
