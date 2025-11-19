@@ -438,15 +438,6 @@ function UGCTab({ prefill, prefillBlogId }: { prefill?: { url: string; brandName
     <div className="flex h-full relative flex-col">
       <div className="flex-1 overflow-y-auto">
         <div className="bg-white rounded-lg border p-6 max-w-7xl mx-auto">
-          {brandId && (
-            <Link
-              href={`/brand-profiles/${brandId}`}
-              className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors mb-4"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Profile
-            </Link>
-          )}
           <h2 className="text-2xl font-semibold mb-4">UGC Blog Generator</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
