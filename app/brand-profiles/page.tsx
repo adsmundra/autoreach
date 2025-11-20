@@ -259,9 +259,6 @@ export default function BrandProfilesPage() {
                         {getInitials(brand.name)}
                       </div>
                     )}
-                    {brand.isScraped && (
-                      <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full" title="Data Synced" />
-                    )}
                   </div>
                   <button
                     onClick={(e) => {
