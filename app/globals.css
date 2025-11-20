@@ -384,3 +384,17 @@ html, body, #__next {
   transform: translateY(2px) scale(0.97) !important;
   box-shadow: inset 0px 1px 1px 0px #18181b, 0px 1px 2px 0px rgba(24, 24, 27, 30%) !important;
 }
+
+/* Indeterminate Progress Bar */
+@keyframes indeterminate-bar {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-indeterminate-bar {
+  animation: indeterminate-bar 1.5s infinite linear;
+}
