@@ -76,6 +76,19 @@ function NotificationBell() {
     },
   });
 
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/notifications/mark-all-read', {
+        method: 'POST',
+      });
+      if (!res.ok) throw new Error('Failed to mark all as read');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['unreadNotificationsCount'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
+
   const handleNotificationClick = (notification: any) => {
     if (!notification.read) {
       markAsReadMutation.mutate(notification.id);
@@ -103,8 +116,17 @@ function NotificationBell() {
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0 shadow-xl border-slate-200 rounded-xl overflow-hidden" align="end">
         <div className="bg-white">
-          <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+          <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
             <h4 className="text-sm font-semibold text-slate-900">Notifications</h4>
+            {unreadCount > 0 && (
+              <button
+                onClick={() => markAllAsReadMutation.mutate()}
+                disabled={markAllAsReadMutation.isPending}
+                className="text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors disabled:opacity-50"
+              >
+                {markAllAsReadMutation.isPending ? 'Marking...' : 'Mark all read'}
+              </button>
+            )}
           </div>
           <div className="max-h-[24rem] overflow-y-auto">
             {notificationsList.length === 0 ? (
