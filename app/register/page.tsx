@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { signUp, useSession } from '@/lib/auth-client';
 import { GoogleSignInButton } from '@/components/ui/google-signin-button';
+import { Zap, BarChart3, LineChart } from 'lucide-react';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -74,76 +75,93 @@ export default function RegisterPage() {
 
   if (isRedirecting || (!isPending && session)) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-600">Redirecting...</div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center">
+           <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+           <p className="text-slate-600 font-medium">Redirecting to dashboard...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left side - blue gradient */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 p-12 items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-400/90 via-blue-500/90 to-blue-600/90" />
-        <div className="relative z-10 max-w-md text-white">
-          <h1 className="text-4xl font-bold mb-4">Join thousands of developers</h1>
-          <p className="text-lg opacity-90">
-            Start building with our powerful API and unlock new possibilities for your applications.
-          </p>
-          <div className="mt-8 space-y-4">
-            <div className="flex items-center space-x-3">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>Unlimited API access</span>
+    <div className="min-h-screen flex bg-slate-50">
+      {/* Left side - Feature Showcase */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-b from-blue-600 to-blue-800 p-12 items-center justify-center relative overflow-hidden">
+        {/* Abstract shapes/gradient */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,_rgba(255,255,255,0.1),_transparent_70%)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_70%,_rgba(255,255,255,0.05),_transparent_70%)]"></div>
+        
+        <div className="relative z-10 max-w-lg text-white">
+          <div className="mb-12">
+             <h1 className="text-5xl font-bold mb-6 leading-tight tracking-tight">
+               Join the future of brand intelligence
+             </h1>
+             <p className="text-xl text-blue-100 leading-relaxed">
+               Get started today to unlock powerful insights, monitor your digital footprint, and outpace the competition.
+             </p>
+          </div>
+
+          <div className="space-y-6">
+            <div className="flex items-start gap-4 p-4 rounded-xl bg-white/10 border border-white/10 backdrop-blur-sm">
+              <div className="p-2 bg-white/10 rounded-lg text-white">
+                <Zap className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-white">Real-Time AI Monitoring</h3>
+                <p className="text-sm text-blue-100 mt-1">Track how often your brand is mentioned across AI platforms.</p>
+              </div>
             </div>
-            <div className="flex items-center space-x-3">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>Real-time collaboration</span>
+            
+            <div className="flex items-start gap-4 p-4 rounded-xl bg-white/10 border border-white/10 backdrop-blur-sm">
+              <div className="p-2 bg-white/10 rounded-lg text-white">
+                <BarChart3 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-white">Actionable Visibility Insights</h3>
+                <p className="text-sm text-blue-100 mt-1">Get clear recommendations to boost your AI presence.</p>
+              </div>
             </div>
-            <div className="flex items-center space-x-3">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>24/7 support</span>
+            
+            <div className="flex items-start gap-4 p-4 rounded-xl bg-white/10 border border-white/10 backdrop-blur-sm">
+              <div className="p-2 bg-white/10 rounded-lg text-white">
+                <LineChart className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-white">Competitor Benchmarking</h3>
+                <p className="text-sm text-blue-100 mt-1">See how you stack up against competitors instantly.</p>
+              </div>
             </div>
           </div>
         </div>
-        {/* Decorative elements */}
-        <div className="absolute top-20 right-20 w-64 h-64 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob" />
-        <div className="absolute bottom-20 left-20 w-64 h-64 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000" />
       </div>
 
-      {/* Right side - Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-md w-full space-y-8">
-          <div>
+      {/* Right side - Register Form */}
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[400px] w-full space-y-8 bg-white p-8 sm:p-10 rounded-2xl shadow-xl border border-slate-100">
+          <div className="text-center">
             <div className="lg:hidden mb-8 flex justify-center">
               <Image
                 src="/firecrawl-logo-with-fire.png"
-                alt="Firecrawl"
-                width={180}
-                height={37}
+                alt="AutoReach"
+                width={160}
+                height={32}
                 priority
               />
             </div>
-            <h2 className="text-center text-3xl font-extrabold text-gray-900">
+            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
               Create your account
             </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              Or{' '}
-              <Link href="/login" className="font-medium text-blue-600 hover:text-blue-700">
-                sign in to existing account
-              </Link>
+            <p className="mt-2 text-sm text-slate-500">
+              Start your free trial today. No credit card required.
             </p>
           </div>
-          <form className="mt-8 space-y-6" onSubmit={handleRegister}>
+
+          <form className="mt-8 space-y-5" onSubmit={handleRegister}>
             <div className="space-y-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Full name
+              <div className="space-y-1.5">
+                <label htmlFor="name" className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
+                  Full Name
                 </label>
                 <input
                   id="name"
@@ -153,12 +171,13 @@ export default function RegisterPage() {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Enter your full name"
+                  className="appearance-none block w-full px-3 py-2.5 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all sm:text-sm bg-slate-50/50"
+                  placeholder="John Doe"
                 />
               </div>
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              
+              <div className="space-y-1.5">
+                <label htmlFor="email" className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
                   Email address
                 </label>
                 <input
@@ -169,12 +188,13 @@ export default function RegisterPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Enter your email"
+                  className="appearance-none block w-full px-3 py-2.5 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all sm:text-sm bg-slate-50/50"
+                  placeholder="name@company.com"
                 />
               </div>
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              
+              <div className="space-y-1.5">
+                <label htmlFor="password" className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
                   Password
                 </label>
                 <input
@@ -185,76 +205,81 @@ export default function RegisterPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Choose a strong password"
+                  className="appearance-none block w-full px-3 py-2.5 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all sm:text-sm bg-slate-50/50"
+                  placeholder="At least 8 characters"
                 />
-                <p className="mt-1 text-xs text-gray-500">Must be at least 8 characters long</p>
+                <p className="text-[10px] text-slate-400 text-right">Must be at least 8 characters long</p>
               </div>
             </div>
 
             {error && (
-              <div className={`border px-4 py-3 rounded-lg ${showExistingAccountOptions ? 'bg-gray-900 border-gray-800' : 'bg-red-50 border-red-200'}`}>
-                <p className={showExistingAccountOptions ? 'text-white font-medium' : 'text-red-600'}>
-                  {error}
-                </p>
-                {showExistingAccountOptions && (
-                  <div className="mt-3 space-y-3">
-                    <p className="text-sm text-gray-300">
-                      It looks like you already have an account with this email address.
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <Link 
-                        href={`/login?email=${encodeURIComponent(email)}`}
-                        className="inline-flex items-center justify-center px-4 py-2 border border-blue-500 text-sm font-medium rounded-md text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-900 transition-colors"
-                      >
-                        Sign in instead
-                      </Link>
-                      <Link 
-                        href="/forgot-password"
-                        className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md text-blue-400 hover:text-blue-300 focus:outline-none focus:underline transition-colors"
-                      >
-                        Forgot password?
-                      </Link>
-                    </div>
+              <div className={`border px-4 py-3 rounded-lg text-sm ${showExistingAccountOptions ? 'bg-slate-800 border-slate-700 text-white' : 'bg-red-50 border-red-200 text-red-600'}`}>
+                <div className="flex items-start gap-2">
+                  <svg className={`w-5 h-5 flex-shrink-0 mt-0.5 ${showExistingAccountOptions ? 'text-slate-400' : 'text-red-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <div>
+                    <p className="font-medium">{error}</p>
+                    {showExistingAccountOptions && (
+                      <div className="mt-3 space-y-3">
+                        <p className="text-xs text-slate-300">
+                          It looks like you already have an account with this email.
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          <Link 
+                            href={`/login?email=${encodeURIComponent(email)}`}
+                            className="inline-flex items-center justify-center px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-md transition-colors"
+                          >
+                            Sign in instead
+                          </Link>
+                          <Link 
+                            href="/forgot-password"
+                            className="inline-flex items-center justify-center px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold rounded-md transition-colors"
+                          >
+                            Forgot password?
+                          </Link>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             )}
 
-            <div className="space-y-4">
-              <div className="flex items-center">
+            <div className="space-y-4 pt-2">
+              <div className="flex items-start gap-2">
                 <input
                   id="terms"
                   name="terms"
                   type="checkbox"
                   required
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded cursor-pointer"
                 />
-                <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
-                  I agree to the{' '}
-                  <Link href="#" className="text-blue-600 hover:text-blue-700">
-                    Terms of Service
-                  </Link>{' '}
-                  and{' '}
-                  <Link href="#" className="text-blue-600 hover:text-blue-700">
-                    Privacy Policy
-                  </Link>
+                <label htmlFor="terms" className="text-xs text-slate-500 leading-relaxed cursor-pointer select-none">
+                  By creating an account, I agree to the{' '}
+                  <Link href="#" className="text-blue-600 hover:text-blue-700 font-medium hover:underline">Terms of Service</Link>
+                  {' '}and{' '}
+                  <Link href="#" className="text-blue-600 hover:text-blue-700 font-medium hover:underline">Privacy Policy</Link>.
                 </label>
               </div>
+
               <button
                 type="submit"
                 disabled={loading}
-                className="btn-firecrawl-orange w-full inline-flex items-center justify-center whitespace-nowrap rounded-[10px] text-sm font-medium transition-all duration-200 disabled:pointer-events-none disabled:opacity-50 h-10 px-4"
+                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
               >
-                {loading ? 'Creating account...' : 'Create account'}
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                     Creating account...
+                  </div>
+                ) : 'Create account'}
               </button>
               
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-gray-300" />
+                  <span className="w-full border-t border-slate-200" />
                 </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="px-2 bg-white text-slate-400 font-medium tracking-wider">Or join with</span>
                 </div>
               </div>
               
@@ -269,6 +294,13 @@ export default function RegisterPage() {
               />
             </div>
           </form>
+
+          <p className="text-center text-sm text-slate-600">
+            Already have an account?{' '}
+            <Link href="/login" className="font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-all">
+              Sign in
+            </Link>
+          </p>
         </div>
       </div>
     </div>

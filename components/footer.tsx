@@ -1,117 +1,203 @@
+'use client';
+
 import Link from "next/link";
 import Image from "next/image";
+import { Twitter, Github, Linkedin, Mail, ArrowRight } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="bg-white text-zinc-600 border-t border-zinc-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Logo and description */}
-          <div className="col-span-1 md:col-span-2">
-            <div className="mb-4">
-              <Image
-                src="/firecrawl-logo-with-fire.png"
-                alt="Firecrawl"
-                width={120}
-                height={25}
-              />
+    <footer className="bg-slate-50 border-t border-slate-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8">
+          {/* Brand & Newsletter Column */}
+          <div className="col-span-1 lg:col-span-4 flex flex-col space-y-8">
+            <div className="space-y-4">
+              <Link href="/" className="inline-block">
+                <Image
+                  src="/firecrawl-logo-with-fire.png"
+                  alt="AutoReach"
+                  width={140}
+                  height={32}
+                  className="h-8 w-auto"
+                />
+              </Link>
+              <p className="text-slate-500 text-sm leading-relaxed max-w-xs">
+                Boost your Brand's AI Visibility
+                Move beyond analysis - deploy actionable fixes instantly
+              </p>
             </div>
-            <p className="text-sm mb-4">
-              Turn websites into structured data. Built for AI apps and LLMs.
-            </p>
-            <div className="flex space-x-4">
-              
-              <a
-                href="https://twitter.com/"
-                className="text-zinc-400 hover:text-zinc-900 transition-colors"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
-                </svg>
-              </a>
-              <a
-                href="https://discord.gg/"
-                className="text-zinc-400 hover:text-zinc-900 transition-colors"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z" />
-                </svg>
-              </a>
+
+            {/* Newsletter */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-slate-900">Subscribe to our newsletter</h4>
+              <form className="flex gap-2 max-w-sm" onSubmit={(e) => e.preventDefault()}>
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="flex-1 min-w-0 px-3 py-2 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400"
+                />
+                <button
+                  type="submit"
+                  className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
+                >
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </form>
+              <p className="text-xs text-slate-400">
+                We respect your privacy. Unsubscribe at any time.
+              </p>
             </div>
           </div>
 
-          {/* Product */}
-          <div>
-            <h3 className="text-zinc-900 font-semibold mb-4">Product</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/plans" className="hover:text-zinc-900 transition-colors">
-                  Plans
-                </Link>
-              </li>
-              <li>
-                <a href="#" className="hover:text-zinc-900 transition-colors">
-                  Documentation
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-zinc-900 transition-colors">
-                  API Reference
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-zinc-900 transition-colors">
-                  Demo
-                </a>
-              </li>
-            </ul>
-          </div>
+          {/* Navigation Columns */}
+          <div className="col-span-1 lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-8">
+            {/* Product */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-semibold text-slate-900">Product</h4>
+              <ul className="space-y-2.5 text-sm">
+                <li>
+                  <Link href="/plans" className="text-slate-500 hover:text-blue-600 transition-colors">
+                    Pricing
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="text-slate-500 hover:text-blue-600 transition-colors">
+                    Features
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="text-slate-500 hover:text-blue-600 transition-colors">
+                    Integrations
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="text-slate-500 hover:text-blue-600 transition-colors">
+                    Changelog
+                  </Link>
+                </li>
+              </ul>
+            </div>
 
-          {/* Company */}
-          <div>
-            <h3 className="text-zinc-900 font-semibold mb-4">Company</h3>
-            <ul className="space-y-2">
-              <li>
-                <a href="#" className="hover:text-zinc-900 transition-colors">
-                  About
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-zinc-900 transition-colors">
-                  Blog
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-zinc-900 transition-colors">
-                  Careers
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-zinc-900 transition-colors">
-                  Contact
-                </a>
-              </li>
-            </ul>
+            {/* Resources
+            <div className="space-y-4">
+              <h4 className="text-sm font-semibold text-slate-900">Resources</h4>
+              <ul className="space-y-2.5 text-sm">
+                <li>
+                  <Link href="#" className="text-slate-500 hover:text-blue-600 transition-colors">
+                    Documentation
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="text-slate-500 hover:text-blue-600 transition-colors">
+                    API Reference
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="text-slate-500 hover:text-blue-600 transition-colors">
+                    Blog
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="text-slate-500 hover:text-blue-600 transition-colors">
+                    Community
+                  </Link>
+                </li>
+              </ul>
+            </div> */}
+
+            {/* Company */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-semibold text-slate-900">Company</h4>
+              <ul className="space-y-2.5 text-sm">
+                <li>
+                  <Link href="#" className="text-slate-500 hover:text-blue-600 transition-colors">
+                    About
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="text-slate-500 hover:text-blue-600 transition-colors">
+                    Careers
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="text-slate-500 hover:text-blue-600 transition-colors">
+                    Contact
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="text-slate-500 hover:text-blue-600 transition-colors">
+                    Partners
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Legal */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-semibold text-slate-900">Legal</h4>
+              <ul className="space-y-2.5 text-sm">
+                <li>
+                  <Link href="#" className="text-slate-500 hover:text-blue-600 transition-colors">
+                    Privacy
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="text-slate-500 hover:text-blue-600 transition-colors">
+                    Terms
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="text-slate-500 hover:text-blue-600 transition-colors">
+                    Security
+                  </Link>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-zinc-200">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm">
-              © {new Date().getFullYear()} AutoReach. All rights reserved.
-            </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="#" className="text-sm hover:text-zinc-900 transition-colors">
-                Privacy Policy
-              </a>
-              <a href="#" className="text-sm hover:text-zinc-900 transition-colors">
-                Terms of Service
-              </a>
-            </div>
+        {/* Bottom Bar */}
+        <div className="mt-16 pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-slate-500">
+            © {new Date().getFullYear()} AutoReach. All rights reserved.
+          </p>
+          
+          {/* Social Links */}
+          <div className="flex items-center gap-4">
+            <a
+              href="https://twitter.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-full transition-all"
+              aria-label="Twitter"
+            >
+              <Twitter className="w-4 h-4" />
+            </a>
+            <a
+              href="https://github.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-all"
+              aria-label="GitHub"
+            >
+              <Github className="w-4 h-4" />
+            </a>
+            <a
+              href="https://www.linkedin.com/company/autoreachai/ "
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 text-slate-400 hover:text-blue-700 hover:bg-blue-50 rounded-full transition-all"
+              aria-label="LinkedIn"
+            >
+              <Linkedin className="w-4 h-4" />
+            </a>
+            <a
+              href="mailto:contact@autoreach.com"
+              className="p-2 text-slate-400 hover:text-orange-500 hover:bg-orange-50 rounded-full transition-all"
+              aria-label="Email"
+            >
+              <Mail className="w-4 h-4" />
+            </a>
           </div>
         </div>
       </div>
