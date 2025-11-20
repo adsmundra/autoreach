@@ -185,7 +185,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200/60 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo Section */}
           <div className="flex items-center gap-8">
@@ -196,10 +196,10 @@ export function Navbar() {
               <Image
                 src="/firecrawl-logo-with-fire.png"
                 alt="AutoReach"
-                width={150}
-                height={32}
+                width={200}
+                height={48}
                 priority
-                className="h-8 w-auto"
+                className="h-12 w-auto"
               />
             </Link>
 
@@ -234,7 +234,7 @@ export function Navbar() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center gap-2 p-1 pr-2 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all focus:outline-none focus:ring-2 focus:ring-slate-200">
-                    <UserAvatar size="sm" className="h-8 w-8 ring-2 ring-white" />
+                    <UserAvatar size="sm" className="h-8 w-8" />
                     <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
                   </button>
                 </DropdownMenuTrigger>

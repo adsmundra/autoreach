@@ -16,9 +16,9 @@ export function Footer() {
                 <Image
                   src="/firecrawl-logo-with-fire.png"
                   alt="AutoReach"
-                  width={140}
-                  height={32}
-                  className="h-8 w-auto"
+                  width={200}
+                  height={48}
+                  className="h-12 w-auto"
                 />
               </Link>
               <p className="text-slate-500 text-sm leading-relaxed max-w-xs">
