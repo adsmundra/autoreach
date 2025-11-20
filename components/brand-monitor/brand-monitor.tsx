@@ -46,6 +46,7 @@ interface BrandMonitorProps {
   selectedAnalysis?: any;
   onSaveAnalysis?: (analysis: any) => void;
   initialUrl?: string | null;
+  lockUrl?: boolean;
   autoRun?: boolean;
   onRequireCreditsConfirm?: (required: number, balance: number, proceed: () => void) => void;
 }
@@ -56,6 +57,7 @@ export function BrandMonitor({
   selectedAnalysis,
   onSaveAnalysis,
   initialUrl = null,
+  lockUrl = false,
   autoRun = false,
   onRequireCreditsConfirm,
 }: BrandMonitorProps = {}) {
@@ -278,14 +280,25 @@ export function BrandMonitor({
     }
   }, [url, creditsAvailable, onCreditsUpdate]);
 
-  // Auto-run pipeline when initialUrl/autoRun provided
+  // Handle initialUrl and autoRun
   useEffect(() => {
     const run = async () => {
       try {
-        if (!initialUrl || !autoRun) return;
+        if (!initialUrl) return;
+        
+        // Always set URL if provided
+        if (url !== initialUrl) {
+            dispatch({ type: 'SET_URL', payload: initialUrl });
+            // Validate immediately
+            const isValid = isValidUrlFormat(initialUrl);
+            dispatch({ type: 'SET_URL_VALID', payload: isValid });
+        }
+
+        // Only run pipeline if autoRun is true
+        if (!autoRun) return;
+        
         if (analysis || company || loading || analyzing || preparingAnalysis) return;
-        // set URL
-        dispatch({ type: 'SET_URL', payload: initialUrl });
+
         // confirm on low credits
         if (creditsAvailable < CREDITS_PER_BRAND_ANALYSIS) {
           if (onRequireCreditsConfirm) {
@@ -655,6 +668,7 @@ export function BrandMonitor({
             urlValid={urlValid}
             loading={loading}
             analyzing={analyzing}
+            locked={lockUrl}
             onUrlChange={handleUrlChange}
             onSubmit={handleScrape}
           />

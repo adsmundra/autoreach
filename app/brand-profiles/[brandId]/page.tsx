@@ -318,7 +318,7 @@ export default function BrandProfilePage() {
       icon: TrendingUp,
       colorClass: 'text-blue-600 bg-blue-50 border-blue-100 hover:bg-blue-100',
       buttonClass: 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-200',
-      link: `/brand-monitor?brandId=${brand.id}&view=new`,
+      link: `/brand-monitor?brandId=${brand.id}&view=new&url=${encodeURIComponent(brand.url)}`,
       data: sectionData.brandMonitorReports,
       renderItem: (report: any) => (
         <Link

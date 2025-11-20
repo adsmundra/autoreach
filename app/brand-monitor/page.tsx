@@ -102,6 +102,7 @@ function BrandMonitorContent({
             selectedAnalysis={selectedAnalysisId ? currentAnalysis : null}
             onSaveAnalysis={(analysis) => {}}
             initialUrl={prefillBrand?.url || null}
+            lockUrl={!!prefillBrand?.url && !selectedAnalysisId}
             autoRun={!!prefillBrand?.url && !selectedAnalysisId && !forceNew}
             onRequireCreditsConfirm={(required, balance, proceed) => {
               // Use native confirm for simplicity here; can swap to ConfirmationDialog if preferred
@@ -538,6 +539,7 @@ export default function BrandMonitorPage() {
   const blogIdFromQuery = searchParams.get("blogId");
   const analysisIdFromQuery = searchParams.get("analysisId");
   const viewMode = searchParams.get("view");
+  const urlFromQuery = searchParams.get("url");
 
   // tabs: 'brand' | 'aeo' | 'files' | 'ugc'
   const [activeTab, setActiveTab] = useState<"brand" | "aeo" | "files" | "ugc">(
@@ -549,6 +551,16 @@ export default function BrandMonitorPage() {
   const [prefillUgc, setPrefillUgc] = useState<{ url: string; brandName: string } | null>(null);
   const [appliedBrandPrefill, setAppliedBrandPrefill] = useState<string | null>(null);
   const [currentBrand, setCurrentBrand] = useState<{ id: string; name: string; logo?: string } | null>(null);
+
+  // Handle URL query param for "Create New" flow
+  useEffect(() => {
+    if (urlFromQuery && viewMode === 'new') {
+      setPrefillBrand({ 
+        url: urlFromQuery, 
+        customerName: "autouser" 
+      });
+    }
+  }, [urlFromQuery, viewMode]);
 
   // Auto-select tab from hash or params
   useEffect(() => {

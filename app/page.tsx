@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Sparkles, Menu, X, Plus, Trash2, Loader2 } from "lucide-react";
 import { useCustomer, useRefreshCustomer } from "@/hooks/useAutumnCustomer";
 import {
@@ -35,7 +35,19 @@ const FilesTab = dynamic(() => import("@/components/brand-monitor/files-tab").th
  */
 
 /* --------------------- BrandMonitorContent (unchanged logic) --------------------- */
-function BrandMonitorContent({ session, onOpenAeoForUrl, onOpenFilesForUrl, prefillBrand }: { session: any; onOpenAeoForUrl: (url: string, customerName?: string) => void; onOpenFilesForUrl: (payload: FilesTabPrefill) => void; prefillBrand?: { url: string; customerName: string } | null; }) {
+function BrandMonitorContent({ 
+  session, 
+  onOpenAeoForUrl, 
+  onOpenFilesForUrl, 
+  prefillBrand,
+  forceNew = false
+}: { 
+  session: any; 
+  onOpenAeoForUrl: (url: string, customerName?: string) => void; 
+  onOpenFilesForUrl: (payload: FilesTabPrefill) => void; 
+  prefillBrand?: { url: string; customerName: string } | null;
+  forceNew?: boolean;
+}) {
   const router = useRouter();
   const { customer, isLoading, error } = useCustomer();
   const refreshCustomer = useRefreshCustomer();
@@ -44,11 +56,10 @@ function BrandMonitorContent({ session, onOpenAeoForUrl, onOpenFilesForUrl, pref
     null
   );
 
-
   // Queries and mutations
   const { data: analyses, isLoading: analysesLoading } = useBrandAnalyses();
   const { data: currentAnalysis } = useBrandAnalysis(selectedAnalysisId);
-  const deleteAnalysis = useDeleteBrandAnalysis(); // kept for now if used elsewhere (no delete UI)
+  const deleteAnalysis = useDeleteBrandAnalysis();
 
   // Get credits from customer data
   const messageUsage = customer?.features?.messages;
@@ -62,21 +73,22 @@ function BrandMonitorContent({ session, onOpenAeoForUrl, onOpenFilesForUrl, pref
   }, [error, router]);
 
   // If prefillBrand is provided, try to open existing analysis by exact URL
+  // UNLESS forceNew is true
   useEffect(() => {
-    if (prefillBrand?.url && analyses && analyses.length > 0) {
+    if (prefillBrand?.url && analyses && analyses.length > 0 && !forceNew) {
       const found = analyses.find(a => a.url === prefillBrand.url);
       if (found) {
         setSelectedAnalysisId(found.id);
       }
+    } else if (forceNew) {
+      // Ensure we don't select an analysis if forcing new
+      setSelectedAnalysisId(null);
     }
-  }, [prefillBrand?.url, analyses]);
+  }, [prefillBrand?.url, analyses, forceNew]);
 
   const handleCreditsUpdate = async () => {
-    // Use the global refresh to update customer data everywhere
     await refreshCustomer();
   };
-
-
 
   const handleNewAnalysis = () => {
     setSelectedAnalysisId(null);
@@ -84,29 +96,12 @@ function BrandMonitorContent({ session, onOpenAeoForUrl, onOpenFilesForUrl, pref
           window.location.hash = '#brand';
       }, 0);
   };
+  
+  const shouldLockUrl = !!prefillBrand?.url && !selectedAnalysisId;
 
   return (
     <div className="bg-gray-50">
-      {/* Hero Header */}
-      {/* <div className="relative overflow-hidden bg-white border-b">
-        <div className="px-4 sm:px-6 lg:px-8 py-12">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between">
-              <div className="text-center flex-1">
-                <h1 className="text-4xl lg:text-5xl font-bold tracking-tight mb-2 animate-fade-in-up">
-                  <span className="block text-zinc-900">AutoReach Monitor</span>
-                  <span className="block bg-[#155DFC] bg-clip-text text-transparent">
-                    AI Brand Visibility Platform
-                  </span>
-                </h1>
-                <p className="text-lg text-zinc-600 animate-fade-in-up animation-delay-200">
-                  Track how AI models rank your brand against competitors
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div> */}
+      {/* ... (Hero Header removed in previous steps) ... */}
 
       {/* --- Main area: sidebar + content (existing) --- */}
       <div className="flex relative">
@@ -201,9 +196,9 @@ function BrandMonitorContent({ session, onOpenAeoForUrl, onOpenFilesForUrl, pref
               selectedAnalysis={selectedAnalysisId ? currentAnalysis : null}
               onSaveAnalysis={(analysis) => {}}
               initialUrl={prefillBrand?.url || null}
-              autoRun={!!prefillBrand?.url && !selectedAnalysisId}
+              lockUrl={shouldLockUrl}
+              autoRun={!!prefillBrand?.url && !selectedAnalysisId && !forceNew} 
               onRequireCreditsConfirm={(required, balance, proceed) => {
-                // Use native confirm for simplicity here; can swap to ConfirmationDialog if preferred
                 const ok = window.confirm(`Starting a brand analysis may use up to ${required} credits. Your balance is ${balance}. Proceed?`);
                 if (ok) proceed();
               }}
@@ -223,6 +218,7 @@ function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefi
   const [customerName, setCustomerName] = useState('');
   const [url, setUrl] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isOpeningReport, setIsOpeningReport] = useState(false);
   const [reportData, setReportData] = useState<{ htmlContent: string; customerName: string; reportType: string; generatedAt: string } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [reports, setReports] = useState<Array<{ id: string; customerName: string; url: string; createdAt: string }>>([]);
@@ -343,6 +339,7 @@ function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefi
   };
 
   const handleOpenReport = async (id: string) => {
+    setIsOpeningReport(true);
     try {
       const res = await fetch(`/api/aeo-report/view?id=${encodeURIComponent(id)}`);
       const data = await res.json();
@@ -351,6 +348,8 @@ function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefi
       setSidebarOpen(false);
     } catch (e) {
       // no-op
+    } finally {
+      setIsOpeningReport(false);
     }
   };
 
@@ -371,6 +370,8 @@ function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefi
     printWindow.document.close();
     printWindow.onload = () => { setTimeout(() => { printWindow.print(); printWindow.close(); }, 500); };
   };
+
+  const isGlobalLoading = isOpeningReport || (prefill && prefillLookupState === 'looking');
 
   return (
     <div className="flex h-[calc(100vh-12rem)] relative">
@@ -428,7 +429,16 @@ function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefi
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto relative">
+        {isGlobalLoading && (
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50">
+             <div className="flex flex-col items-center gap-3">
+               <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+               <p className="text-slate-600">Loading report...</p>
+             </div>
+          </div>
+        )}
+
         <div className="px-6 sm:px-8 lg:px-12 py-8 max-w-7xl mx-auto">
           {/* Use shared Inputs/Labels/Buttons for consistency */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -446,9 +456,6 @@ function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefi
           </Button>
 
           {/* Lookup status messages when coming from Brand Monitor button */}
-          {!reportData && prefillLookupState === 'looking' && (
-            <div className="mt-6 text-sm text-gray-600">Looking up existing report…</div>
-          )}
           {!reportData && prefillLookupState === 'no-match' && (
             <div className="mt-6 text-sm text-blue-700">No matching report found for the selected URL.</div>
           )}
@@ -732,6 +739,7 @@ function UGCTab() {
 export default function BrandMonitorPage() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // tabs: 'brand' | 'aeo' | 'files' | 'ugc'
   const [activeTab, setActiveTab] = useState<"brand" | "aeo" | "files" | "ugc">(
@@ -760,6 +768,27 @@ export default function BrandMonitorPage() {
     window.addEventListener('hashchange', applyHash);
     return () => window.removeEventListener('hashchange', applyHash);
   }, []);
+
+  // Handle URL query params for "Create New" flow
+  useEffect(() => {
+    const urlParam = searchParams.get('url');
+    const viewParam = searchParams.get('view');
+    
+    if (urlParam && viewParam === 'new') {
+      // Set prefill data
+      setPrefillBrand({ 
+        url: urlParam, 
+        customerName: "autouser" 
+      });
+      
+      // Switch to brand tab
+      setActiveTab('brand');
+      
+      // Ensure we start fresh
+      setResetBrandState(true);
+      setTimeout(() => setResetBrandState(false), 0);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!isPending && !session) {
@@ -846,7 +875,7 @@ export default function BrandMonitorPage() {
 
       {/* Tab content area */}
       <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === "brand" && <BrandMonitorContent session={session} onOpenAeoForUrl={handleOpenAeoForUrl} onOpenFilesForUrl={handleOpenFilesForUrl} prefillBrand={resetBrandState ? null : prefillBrand} />}
+        {activeTab === "brand" && <BrandMonitorContent session={session} onOpenAeoForUrl={handleOpenAeoForUrl} onOpenFilesForUrl={handleOpenFilesForUrl} prefillBrand={resetBrandState ? null : prefillBrand} forceNew={searchParams.get('view') === 'new'} />}
         {activeTab === "aeo" && <AeoReportTab prefill={prefillAeo} onOpenBrandForUrl={(url, customerName) => { setPrefillBrand({ url, customerName: (customerName && customerName.trim()) ? customerName : "autouser" }); setActiveTab("brand"); }} onOpenFilesForUrl={handleOpenFilesForUrl} />}
         {activeTab === "files" && (
           <FilesTab prefill={pendingFiles} />

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, Plus, Search, Trash2, ExternalLink } from 'lucide-react';
+import { Loader2, Plus, Search, Trash2, ExternalLink, Globe, MapPin, Building2 } from 'lucide-react';
 import Link from 'next/link';
 
 interface BrandProfile {
@@ -47,7 +47,6 @@ export default function BrandProfilesPage() {
       const response = await fetch('/api/brands');
 
       if (response.status === 401) {
-        // User not authenticated
         setBrands([]);
       } else if (!response.ok) {
         throw new Error('Failed to fetch brands');
@@ -64,7 +63,6 @@ export default function BrandProfilesPage() {
   };
 
   useEffect(() => {
-    // Filter brands based on search query
     if (searchQuery.trim() === '') {
       setFilteredBrands(brands);
     } else {
@@ -92,8 +90,6 @@ export default function BrandProfilesPage() {
       if (!response.ok) {
         throw new Error('Failed to delete brand');
       }
-
-      // Remove from local state
       setBrands(brands.filter((b) => b.id !== brandId));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete brand');
@@ -102,16 +98,11 @@ export default function BrandProfilesPage() {
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleAddBrand = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validate required fields
     if (!formData.name || !formData.url || !formData.industry || !formData.location) {
       setError('Please fill in all required fields');
       return;
@@ -123,9 +114,7 @@ export default function BrandProfilesPage() {
 
       const response = await fetch('/api/brands', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name,
           url: formData.url,
@@ -136,22 +125,15 @@ export default function BrandProfilesPage() {
       });
 
       if (response.status === 401) {
-        // Not authenticated
         throw new Error('You must be logged in to create a brand');
       } else if (!response.ok) {
-        try {
-          const errorData = await response.json();
-          throw new Error(errorData.error || `HTTP ${response.status}: Failed to create brand`);
-        } catch (parseErr) {
-          throw new Error(`HTTP ${response.status}: Failed to create brand. Please check your database connection.`);
-        }
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to create brand`);
       } else {
         const data = await response.json();
-        // Add to brands list
         setBrands([...brands, data.brand]);
       }
 
-      // Reset form and close modal
       setFormData({
         name: '',
         url: '',
@@ -170,51 +152,44 @@ export default function BrandProfilesPage() {
 
   const getDomainColor = (name: string) => {
     const colors = [
-      'bg-blue-500',
-      'bg-purple-500',
-      'bg-pink-500',
-      'bg-green-500',
-      'bg-orange-500',
-      'bg-red-500',
-      'bg-indigo-500',
-      'bg-cyan-500',
+      'bg-blue-500', 'bg-violet-500', 'bg-indigo-500', 'bg-sky-500',
+      'bg-cyan-500', 'bg-teal-500', 'bg-emerald-500', 'bg-rose-500'
     ];
     return colors[name.charCodeAt(0) % colors.length];
   };
 
   const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((word) => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+    return name.split(' ').map((word) => word[0]).join('').toUpperCase().slice(0, 2);
   };
 
   if (loading) {
     return (
-      <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          <p className="text-slate-600">Loading brand profiles...</p>
+      <div className="w-full min-h-screen bg-slate-50/50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-12 h-12 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
+          </div>
+          <p className="text-slate-500 font-medium animate-pulse">Loading your brands...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6 font-sans">
-      {/* Header */}
-      <div className="max-w-7xl mx-auto mb-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-slate-900">Brand Profiles</h1>
-            <p className="text-slate-600 mt-2">Manage and view all your brand profiles</p>
+    <div className="min-h-screen bg-slate-50/50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
+      <div className="max-w-7xl mx-auto space-y-10">
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-slate-200 pb-8">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">Brand Profiles</h1>
+            <p className="text-lg text-slate-500 max-w-2xl">
+              Manage your brand assets, monitor presence, and analyze competitors all in one place.
+            </p>
           </div>
           {brands.length > 0 && (
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-all hover:scale-105 shadow-lg"
+              className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold shadow-sm shadow-blue-600/20 transition-all duration-200 hover:scale-105 active:scale-95"
             >
               <Plus className="w-5 h-5" />
               New Brand
@@ -222,381 +197,251 @@ export default function BrandProfilesPage() {
           )}
         </div>
 
-        {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg mb-6">
+          <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
             {error}
           </div>
         )}
 
-        {/* Search Bar - Only show if there are brands */}
+        {/* Search & Filters */}
         {brands.length > 0 && (
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <div className="relative max-w-xl">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-slate-400" />
+            </div>
             <input
               type="text"
-              placeholder="Search brands by name, industry, location, or URL..."
+              placeholder="Search brands..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-6 py-3 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className="block w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm hover:shadow-md"
             />
           </div>
         )}
-      </div>
 
-      {/* Brands Grid */}
-      <div className="max-w-7xl mx-auto">
+        {/* Content Grid */}
         {brands.length === 0 ? (
-          // Empty State - Show Create Form
-          <div className="bg-white rounded-2xl shadow-lg p-12 border border-slate-200">
-            <div className="max-w-md mx-auto">
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Plus className="w-8 h-8 text-blue-600" />
-                </div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-2">
-                  Add a New Brand
-                </h3>
-                <p className="text-slate-600">
-                  Get started by creating your first brand profile to unlock all features
-                </p>
-              </div>
-
-              <form onSubmit={handleAddBrand} className="space-y-5">
-                {/* Name Field */}
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Brand Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleFormChange}
-                    placeholder="e.g., Welzin"
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    required
-                  />
-                </div>
-
-                {/* URL Field */}
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Website URL *
-                  </label>
-                  <input
-                    type="url"
-                    name="url"
-                    value={formData.url}
-                    onChange={handleFormChange}
-                    placeholder="https://example.com"
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    required
-                  />
-                </div>
-
-                {/* Industry Field */}
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Industry *
-                  </label>
-                  <input
-                    type="text"
-                    name="industry"
-                    value={formData.industry}
-                    onChange={handleFormChange}
-                    placeholder="e.g., AI/ML Consultancy"
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    required
-                  />
-                </div>
-
-                {/* Location Field */}
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Location *
-                  </label>
-                  <input
-                    type="text"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleFormChange}
-                    placeholder="e.g., San Francisco, CA"
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    required
-                  />
-                </div>
-
-                {/* Email Field */}
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Email (Optional)
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleFormChange}
-                    placeholder="info@example.com"
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  />
-                </div>
-
-                {/* Error Message */}
-                {error && (
-                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
-                    {error}
-                  </div>
-                )}
-
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className={`w-full py-2.5 font-semibold rounded-lg transition ${
-                    isSubmitting
-                      ? 'bg-blue-400 text-white cursor-not-allowed'
-                      : 'bg-blue-600 hover:bg-blue-700 text-white'
-                  }`}
-                >
-                  {isSubmitting ? 'Creating...' : 'Create Brand Profile'}
-                </button>
-              </form>
-
-              <p className="text-xs text-slate-500 text-center mt-6">
-                You can add more brands and manage them later using the "New Brand" button
-              </p>
+          <div className="flex flex-col items-center justify-center py-20 bg-white border border-dashed border-slate-300 rounded-3xl">
+            <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mb-6">
+              <Plus className="w-10 h-10 text-blue-600" />
             </div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Add a New Brand</h2>
+            <p className="text-slate-500 text-center max-w-md mb-8">
+              Get started by adding your first brand profile. We'll help you track its performance and visibility across AI platforms.
+            </p>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-600/30 transition-all duration-200 hover:scale-105"
+            >
+              <Plus className="w-5 h-5" />
+              Create Brand Profile
+            </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredBrands.map((brand) => (
               <div
                 key={brand.id}
-                className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all border border-slate-200 overflow-hidden hover:border-blue-300 group"
+                className="group relative bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
               >
-                {/* Card Header with Logo */}
-                <div className="p-6 pb-0">
-                  <div className="flex items-start justify-between mb-4">
+                {/* Card Header */}
+                <div className="flex items-start justify-between mb-6">
+                  <div className="relative">
                     {brand.logo ? (
                       <img
                         src={brand.logo}
                         alt={brand.name}
-                        className="w-16 h-16 rounded-lg shadow-md object-contain bg-gray-50 p-1"
+                        className="w-16 h-16 rounded-2xl object-contain bg-slate-50 border border-slate-100 p-2"
                       />
                     ) : (
-                      <div className={`w-16 h-16 ${getDomainColor(brand.name)} rounded-lg flex items-center justify-center text-white text-xl font-bold shadow-md`}>
+                      <div className={`w-16 h-16 ${getDomainColor(brand.name)} rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-inner`}>
                         {getInitials(brand.name)}
                       </div>
                     )}
-                    <button
-                      onClick={() => handleDelete(brand.id, brand.name)}
-                      aria-label="Delete brand"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 p-2 rounded-lg"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {brand.isScraped && (
+                      <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full" title="Data Synced" />
+                    )}
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleDelete(brand.id, brand.name);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 transition-all p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
+                    title="Delete Brand"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Card Body */}
+                <div className="space-y-4 mb-6">
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                      {brand.name}
+                    </h3>
+                    <p className="text-sm font-medium text-slate-500 flex items-center gap-1.5 mt-1">
+                      <Building2 className="w-3.5 h-3.5" />
+                      {brand.industry}
+                    </p>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                      <MapPin className="w-3 h-3 mr-1" />
+                      {brand.location}
+                    </span>
                   </div>
                 </div>
 
-                {/* Card Content */}
-                <div className="p-6 pt-4">
-                  <h2 className="text-xl font-bold text-slate-900 mb-1">{brand.name}</h2>
-                  <p className="text-sm text-slate-600 mb-4">{brand.industry}</p>
-                  {brand.description && (
-                    <p className="text-xs text-slate-500 mb-3 line-clamp-2">{brand.description}</p>
-                  )}
-
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {brand.location}
-                    </span>
-                    {brand.email && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        {brand.email}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* URL Preview */}
-                  <div className="mb-6 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                    <p className="text-xs text-slate-500 mb-1">Website</p>
-                    <a
-                      href={brand.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-blue-600 hover:underline truncate flex items-center gap-1 group/link"
-                    >
-                      {brand.url}
-                      <ExternalLink className="w-3 h-3 opacity-0 group-hover/link:opacity-100" />
-                    </a>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-3">
-                    <Link
-                      href={`/brand-profiles/${brand.id}`}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm font-semibold transition-all text-center"
-                    >
-                      View Profile
-                    </Link>
-                    <button
-                      className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-4 rounded-lg text-sm font-semibold transition-all"
-                    >
-                      Edit
-                    </button>
-                  </div>
+                {/* Card Footer */}
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-4">
+                  <a
+                    href={brand.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-blue-600 transition-colors truncate max-w-[50%]"
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span className="truncate">{brand.url.replace(/^https?:\/\//, '')}</span>
+                  </a>
+                  
+                  <Link
+                    href={`/brand-profiles/${brand.id}`}
+                    className="text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                  >
+                    View Profile
+                    <ExternalLink className="w-4 h-4" />
+                  </Link>
                 </div>
               </div>
             ))}
           </div>
         )}
-
-        {/* Results Counter */}
-        {filteredBrands.length > 0 && (
-          <div className="mt-8 text-center text-slate-600">
-            Showing {filteredBrands.length} of {brands.length} brand
-            {brands.length !== 1 ? 's' : ''}
-          </div>
-        )}
       </div>
 
-      {/* Add Brand Modal */}
+      {/* Modal Overlay */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-3xl font-bold mb-6 text-slate-900">Create New Brand Profile</h2>
-
-            <form onSubmit={handleAddBrand} className="space-y-6">
-              {/* Name Field */}
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+          <div 
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-panel-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Brand Name *
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleFormChange}
-                  placeholder="e.g., Welzin, TechVision"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  required
-                />
+                <h2 className="text-2xl font-bold text-slate-900">New Brand Profile</h2>
+                <p className="text-sm text-slate-500 mt-1">Add details about the brand you want to monitor.</p>
               </div>
+              <button 
+                onClick={() => setShowAddModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition-colors"
+              >
+                <Plus className="w-6 h-6 rotate-45" />
+              </button>
+            </div>
 
-              {/* URL Field */}
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Website URL *
-                </label>
-                <input
-                  type="url"
-                  name="url"
-                  value={formData.url}
-                  onChange={handleFormChange}
-                  placeholder="e.g., https://example.com"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  required
-                />
-              </div>
+            {/* Modal Body */}
+            <div className="p-8 overflow-y-auto">
+              <form onSubmit={handleAddBrand} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700">Brand Name <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleFormChange}
+                      placeholder="e.g. Acme Corp"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                      required
+                    />
+                  </div>
 
-              {/* Industry Field */}
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Industry *
-                </label>
-                <input
-                  type="text"
-                  name="industry"
-                  value={formData.industry}
-                  onChange={handleFormChange}
-                  placeholder="e.g., AI/ML Consultancy, Software Development"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  required
-                />
-              </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700">Website URL <span className="text-red-500">*</span></label>
+                    <input
+                      type="url"
+                      name="url"
+                      value={formData.url}
+                      onChange={handleFormChange}
+                      placeholder="https://..."
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                      required
+                    />
+                  </div>
 
-              {/* Location Field */}
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Location *
-                </label>
-                <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleFormChange}
-                  placeholder="e.g., San Francisco, CA"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  required
-                />
-              </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700">Industry <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      name="industry"
+                      value={formData.industry}
+                      onChange={handleFormChange}
+                      placeholder="e.g. SaaS"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                      required
+                    />
+                  </div>
 
-              {/* Email Field */}
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Email (Optional)
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleFormChange}
-                  placeholder="e.g., info@example.com"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                />
-              </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700">Location <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      name="location"
+                      value={formData.location}
+                      onChange={handleFormChange}
+                      placeholder="e.g. New York, NY"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                      required
+                    />
+                  </div>
+                </div>
 
-              {/* Competitors Field */}
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Competitors (Optional)
-                </label>
-                <textarea
-                  name="competitors"
-                  value={formData.competitors}
-                  onChange={handleFormChange}
-                  placeholder="Enter competitor names separated by commas&#10;e.g., Company A, Company B, Company C"
-                  rows={3}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
-                />
-                <p className="text-xs text-slate-500 mt-1">Separate multiple competitors with commas</p>
-              </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700">Email (Optional)</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleFormChange}
+                    placeholder="contact@example.com"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                  />
+                </div>
 
-              {/* Form Actions */}
-              <div className="flex gap-4 pt-6 border-t border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddModal(false);
-                    setError(null);
-                    setFormData({
-                      name: '',
-                      url: '',
-                      industry: '',
-                      location: '',
-                      email: '',
-                      competitors: '',
-                    });
-                  }}
-                  className="flex-1 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className={`flex-1 px-6 py-3 font-semibold rounded-lg transition ${
-                    isSubmitting
-                      ? 'bg-blue-400 text-white cursor-not-allowed'
-                      : 'bg-blue-600 hover:bg-blue-700 text-white'
-                  }`}
-                >
-                  {isSubmitting ? 'Creating...' : 'Create Brand Profile'}
-                </button>
-              </div>
-            </form>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700">Competitors (Optional)</label>
+                  <textarea
+                    name="competitors"
+                    value={formData.competitors}
+                    onChange={handleFormChange}
+                    placeholder="Enter competitor names, separated by commas"
+                    rows={3}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none resize-none"
+                  />
+                </div>
+
+                {/* Modal Footer */}
+                <div className="pt-6 mt-6 border-t border-slate-100 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddModal(false)}
+                    className="px-6 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-8 py-2.5 bg-blue-600 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/20 hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? 'Creating...' : 'Create Brand'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}

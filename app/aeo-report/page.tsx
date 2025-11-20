@@ -316,32 +316,20 @@ export default function AEOReportPage() {
           </p>
         </div>
 
-        {isGenerating && (
+        {(isGenerating || generationSuccess) && (
           <div className="flex flex-col items-center justify-center py-20 space-y-6">
             <Loader2 className="h-16 w-16 animate-spin text-blue-600" />
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold text-slate-800">Generating AEO Report</h2>
+              <h2 className="text-2xl font-bold text-slate-800">
+                {isGenerating ? 'Generating AEO Report' : 'Processing Report'}
+              </h2>
               <p className="text-slate-500 max-w-md mx-auto">
-                Analyzing {customerName ? customerName : 'brand'} presence and Answer Engine Optimization metrics...
+                {isGenerating 
+                  ? `Analyzing ${customerName ? customerName : 'brand'} presence and Answer Engine Optimization metrics...`
+                  : 'Your AEO report is being generated in the background. Please wait, this may take a few minutes.'}
               </p>
             </div>
           </div>
-        )}
-
-        {!isGenerating && generationSuccess && (
-          <Card className="border-green-200 bg-green-50">
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center space-y-4">
-              <div className="p-4 bg-green-100 rounded-full">
-                <Loader2 className="h-8 w-8 animate-spin text-green-600" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-green-800">Generating Report...</h3>
-                <p className="text-green-700 max-w-md">
-                  Your AEO report is being generated in the background. Please wait, this may take a few minutes.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
         )}
 
         {isFetchingReport && !generationSuccess && (
