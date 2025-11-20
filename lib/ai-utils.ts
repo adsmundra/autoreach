@@ -59,6 +59,13 @@ export async function identifyCompetitors(company: Company, progressCallback?: P
     try {
         // Use AI to identify real competitors - find first available provider
         const configuredProviders = getConfiguredProviders();
+        // Prioritize OpenAI for competitor identification
+        configuredProviders.sort((a, b) => {
+            if (a.id === 'openai') return -1;
+            if (b.id === 'openai') return 1;
+            return 0;
+        });
+
         if (configuredProviders.length === 0) {
             throw new Error('No AI providers configured and enabled');
         }
@@ -214,6 +221,13 @@ export async function generatePromptsForCompany(
     const location = company.location;
 
     const configuredProviders = getConfiguredProviders();
+    // Prioritize Google (Gemini) for prompt generation
+    configuredProviders.sort((a, b) => {
+        if (a.id === 'google') return -1;
+        if (b.id === 'google') return 1;
+        return 0;
+    });
+
     if (configuredProviders.length === 0) {
         throw new Error('No AI providers configured and enabled');
     }

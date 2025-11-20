@@ -1,9 +1,10 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Sparkles, Menu, X, Plus, Trash2, Loader2 } from "lucide-react";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { Sparkles, Loader2, ArrowLeft } from "lucide-react";
 import { useCustomer, useRefreshCustomer } from "@/hooks/useAutumnCustomer";
 import {
   useBrandAnalyses,
@@ -11,11 +12,10 @@ import {
   useDeleteBrandAnalysis,
 } from "@/hooks/useBrandAnalyses";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
 import { useSession } from "@/lib/auth-client";
-import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { FilesTabPrefill } from "@/types/files";
 
 const BrandMonitor = dynamic(() => import("@/components/brand-monitor/brand-monitor").then(m => m.BrandMonitor), { ssr: false });
 const FilesTab = dynamic(() => import("@/components/brand-monitor/files-tab").then(m => m.FilesTab), { ssr: false });
@@ -34,13 +34,26 @@ const FilesTab = dynamic(() => import("@/components/brand-monitor/files-tab").th
  */
 
 /* --------------------- BrandMonitorContent (unchanged logic) --------------------- */
-function BrandMonitorContent({ session, onOpenAeoForUrl, onOpenFilesForUrl, prefillBrand }: { session: any; onOpenAeoForUrl: (url: string, customerName?: string) => void; onOpenFilesForUrl: (url: string, customerName?: string) => void; prefillBrand?: { url: string; customerName: string } | null; }) {
+function BrandMonitorContent({ 
+  session, 
+  onOpenAeoForUrl, 
+  onOpenFilesForUrl, 
+  prefillBrand,
+  initialAnalysisId,
+  forceNew 
+}: { 
+  session: any; 
+  onOpenAeoForUrl: (url: string, customerName?: string) => void; 
+  onOpenFilesForUrl: (payload: FilesTabPrefill) => void; 
+  prefillBrand?: { url: string; customerName: string } | null; 
+  initialAnalysisId?: string | null;
+  forceNew?: boolean;
+}) {
   const router = useRouter();
   const { customer, isLoading, error } = useCustomer();
   const refreshCustomer = useRefreshCustomer();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<string | null>(
-    null
+    initialAnalysisId || null
   );
 
 
@@ -62,160 +75,50 @@ function BrandMonitorContent({ session, onOpenAeoForUrl, onOpenFilesForUrl, pref
 
   // If prefillBrand is provided, try to open existing analysis by exact URL
   useEffect(() => {
+    if (forceNew) return;
+    if (initialAnalysisId) return; // prioritized
+
     if (prefillBrand?.url && analyses && analyses.length > 0) {
       const found = analyses.find(a => a.url === prefillBrand.url);
       if (found) {
         setSelectedAnalysisId(found.id);
       }
     }
-  }, [prefillBrand?.url, analyses]);
+  }, [prefillBrand?.url, analyses, forceNew, initialAnalysisId]);
 
   const handleCreditsUpdate = async () => {
     // Use the global refresh to update customer data everywhere
     await refreshCustomer();
   };
 
-
-
-  const handleNewAnalysis = () => {
-    setSelectedAnalysisId(null);
-      setTimeout(() => {
-          window.location.hash = '#brand';
-      }, 0);
-  };
-
   return (
-    <div className="bg-gray-50">
-      {/* Hero Header */}
-      {/* <div className="relative overflow-hidden bg-white border-b">
-        <div className="px-4 sm:px-6 lg:px-8 py-12">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between">
-              <div className="text-center flex-1">
-                <h1 className="text-4xl lg:text-5xl font-bold tracking-tight mb-2 animate-fade-in-up">
-                  <span className="block text-zinc-900">AutoReach Monitor</span>
-                  <span className="block bg-[#155DFC] bg-clip-text text-transparent">
-                    AI Brand Visibility Platform
-                  </span>
-                </h1>
-                <p className="text-lg text-zinc-600 animate-fade-in-up animation-delay-200">
-                  Track how AI models rank your brand against competitors
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div> */}
-
-      {/* --- Main area: sidebar + content (existing) --- */}
-      <div className="flex relative">
-        {/* Sidebar Toggle Button - Always visible */}
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className={`absolute top-2 z-10 p-2 bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 ${
-            sidebarOpen ? "left-[324px]" : "left-4"
-          }`}
-          aria-label="Toggle sidebar"
-        >
-          {sidebarOpen ? (
-            <X className="h-5 w-5 text-gray-600" />
-          ) : (
-            <Menu className="h-5 w-5 text-gray-600" />
-          )}
-        </button>
-
-        {/* Sidebar */}
-        <div
-          className={`${sidebarOpen ? "w-80" : "w-0"} bg-white border-r overflow-hidden flex flex-col transition-all duration-200`}
-        >
-          <div className="p-4 border-b">
-            <Button onClick={handleNewAnalysis} className="w-full btn-firecrawl-orange">
-              <Plus className="w-4 h-4 mr-2" />
-              New Analysis
-            </Button>
-          </div>
-
-          <div className="overflow-y-auto flex-1 max-h-[calc(100vh-15rem)]">
-            {analysesLoading ? (
-              <div className="p-4 text-center text-gray-500">Loading analyses...</div>
-            ) : analyses?.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">No analyses yet</div>
-            ) : (
-              <div className="space-y-1 p-2">
-                {analyses?.slice(0, 9).map((analysis) => (
-                  <div
-                    key={analysis.id}
-                    className={`p-3 rounded-lg cursor-pointer hover:bg-gray-100 ${
-                      selectedAnalysisId === analysis.id ? "bg-gray-100" : ""
-                    }`}
-                    onClick={() => setSelectedAnalysisId(analysis.id)}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{analysis.companyName || "Untitled Analysis"}</p>
-                        <p className="text-sm text-gray-500 truncate">{analysis.url}</p>
-                        <p className="text-xs text-gray-400">
-                          {analysis.createdAt && format(new Date(analysis.createdAt), "MMM d, yyyy")}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 ml-2">
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onOpenAeoForUrl(analysis.url, analysis.companyName || "autouser");
-                          }}
-                        >
-                          AEO Report
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onOpenFilesForUrl(analysis.url, analysis.companyName || "autouser");
-                          }}
-                        >
-                          Files
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="px-6 sm:px-8 lg:px-12 py-8">
-            <BrandMonitor
-              creditsAvailable={credits}
-              onCreditsUpdate={handleCreditsUpdate}
-              selectedAnalysis={selectedAnalysisId ? currentAnalysis : null}
-              onSaveAnalysis={(analysis) => {}}
-              initialUrl={prefillBrand?.url || null}
-              autoRun={!!prefillBrand?.url && !selectedAnalysisId}
-              onRequireCreditsConfirm={(required, balance, proceed) => {
-                // Use native confirm for simplicity here; can swap to ConfirmationDialog if preferred
-                const ok = window.confirm(`Starting a brand analysis may use up to ${required} credits. Your balance is ${balance}. Proceed?`);
-                if (ok) proceed();
-              }}
-            />
-          </div>
+    <div className="flex h-full relative flex-col">
+      {/* Main Content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-6 sm:px-8 lg:px-12 py-8">
+          <BrandMonitor
+            creditsAvailable={credits}
+            onCreditsUpdate={handleCreditsUpdate}
+            selectedAnalysis={selectedAnalysisId ? currentAnalysis : null}
+            onSaveAnalysis={(analysis) => {}}
+            initialUrl={prefillBrand?.url || null}
+            lockUrl={!!prefillBrand?.url && !selectedAnalysisId}
+            autoRun={!!prefillBrand?.url && !selectedAnalysisId && !forceNew}
+            onRequireCreditsConfirm={(required, balance, proceed) => {
+              // Use native confirm for simplicity here; can swap to ConfirmationDialog if preferred
+              const ok = window.confirm(`Starting a brand analysis may use up to ${required} credits. Your balance is ${balance}. Proceed?`);
+              if (ok) proceed();
+            }}
+          />
         </div>
       </div>
-
-
     </div>
   );
 }
 
 /* --------------------- Tabbed Page wrapper --------------------- */
 
-function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefill: { url: string; customerName: string } | null; onOpenBrandForUrl: (url: string, customerName?: string) => void; onOpenFilesForUrl: (url: string, customerName?: string) => void; }) {
+function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefill: { url: string; customerName: string } | null; onOpenBrandForUrl: (url: string, customerName?: string) => void; onOpenFilesForUrl: (payload: FilesTabPrefill) => void; }) {
   const [customerName, setCustomerName] = useState('');
   const [url, setUrl] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -343,48 +246,7 @@ function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefi
   };
 
   return (
-    <div className="flex h-[calc(100vh-12rem)] relative">
-      {/* Sidebar Toggle Button - Always visible */}
-      <button
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className={`absolute top-2 z-10 p-2 bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 ${sidebarOpen ? 'left-[324px]' : 'left-4'}`}
-        aria-label="Toggle sidebar"
-      >
-        {sidebarOpen ? (<X className="h-5 w-5 text-gray-600" />) : (<Menu className="h-5 w-5 text-gray-600" />)}
-      </button>
-
-      {/* Sidebar (inline like Brand Monitor) */}
-      <div className={`${sidebarOpen ? 'w-80' : 'w-0'} bg-white border-r overflow-hidden flex flex-col transition-all duration-200`}>
-        <div className="p-4 border-b">
-          <div className="font-semibold">AEO Reports</div>
-        </div>
-        <div className="overflow-y-auto flex-1">
-          {loadingReports ? (
-            <div className="p-4 text-center text-gray-500">Loading...</div>
-          ) : reports.length === 0 ? (
-            <div className="p-4 text-center text-gray-500">No reports yet</div>
-          ) : (
-            <div className="space-y-1 p-2">
-              {reports.map(r => (
-                <div key={r.id} className="p-3 rounded-lg hover:bg-gray-100">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleOpenReport(r.id)}>
-                      <p className="font-medium truncate">{r.customerName || 'Untitled'} {r.read === false && <span className="ml-2 inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">New</span>}</p>
-                      <p className="text-sm text-gray-500 truncate">{r.url}</p>
-                      <p className="text-xs text-gray-400">{new Date(r.createdAt).toLocaleDateString()}</p>
-                    </div>
-                    <div className="flex-shrink-0 flex gap-2">
-                      <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); onOpenBrandForUrl(r.url, r.customerName || 'autouser'); }}>Brand Monitor</Button>
-                      <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); onOpenFilesForUrl(r.url, r.customerName || 'autouser'); }}>Files</Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
+    <div className="flex h-full relative flex-col">
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="px-6 sm:px-8 lg:px-12 py-8 max-w-7xl mx-auto">
@@ -428,20 +290,86 @@ function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefi
   );
 }
 
-function UGCTab() {
+function UGCTab({ prefill, prefillBlogId }: { prefill?: { url: string; brandName: string } | null; prefillBlogId?: string | null }) {
+  const searchParams = useSearchParams();
+  const brandId = searchParams.get("brandId");
   const [companyUrl, setCompanyUrl] = useState("");
   const [topic, setTopic] = useState("");
   const [brandName, setBrandName] = useState("");
   const [emailId, setEmailId] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [items, setItems] = useState<Array<{ id: string; companyUrl: string; brandName: string | null; createdAt: string }>>([]);
-  const [loadingItems, setLoadingItems] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [blogContent, setBlogContent] = useState<string>("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
+  const [suggestingTopics, setSuggestingTopics] = useState(false);
+  const [suggestedTopics, setSuggestedTopics] = useState<string[]>([]);
+
+  const fetchSuggestions = async (bName: string) => {
+    if (!bName) return;
+    try {
+      const res = await fetch(`/api/topic-suggestion?brand_name=${encodeURIComponent(bName)}`);
+      const data = await res.json();
+      if (data.topics) setSuggestedTopics(data.topics);
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (brandName) fetchSuggestions(brandName);
+  }, [brandName]);
+
+  const handleSuggest = async () => {
+    if (!brandName.trim()) {
+      setError("Please enter a Brand Name first to generate suggestions.");
+      return;
+    }
+    setSuggestingTopics(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/topic-suggestion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brand_name: brandName }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      if (data.topics) setSuggestedTopics(data.topics);
+    } catch (e: any) {
+      setError(e.message || "Failed to suggest topics");
+    } finally {
+      setSuggestingTopics(false);
+    }
+  };
+
   const canSubmit = companyUrl.trim() && topic.trim();
+
+  useEffect(() => {
+    if (prefill) {
+      if (prefill.url) setCompanyUrl(prefill.url);
+      if (prefill.brandName) setBrandName(prefill.brandName);
+    }
+  }, [prefill]);
+
+  useEffect(() => {
+    const loadBlog = async () => {
+      if (!prefillBlogId) return;
+      try {
+        const res = await fetch(`/api/write-blog/view?id=${encodeURIComponent(prefillBlogId)}`);
+        const data = await res.json();
+        if (res.ok) {
+          setCompanyUrl(data.company_url || '');
+          setTopic(data.topic || '');
+          setBrandName(data.brand_name || '');
+          setBlogContent(data.blog || '');
+          setSelectedId(Number(prefillBlogId));
+          // Sidebar closed by default
+        }
+      } catch (e) {
+        console.error("Failed to load prefilled blog", e);
+      }
+    };
+    loadBlog();
+  }, [prefillBlogId]);
 
   useEffect(() => {
     // Prefill email from session if available (read-only)
@@ -455,18 +383,6 @@ function UGCTab() {
     };
     load();
   }, []);
-
-  const fetchHistory = async () => {
-    setLoadingItems(true);
-    try {
-      const res = await fetch('/api/write-blog/list');
-      const data = await res.json();
-      if (res.ok && Array.isArray(data.items)) setItems(data.items);
-    } catch {}
-    setLoadingItems(false);
-  };
-
-  useEffect(() => { fetchHistory(); }, []);
 
   const handleSubmit = async () => {
     setError(null);
@@ -494,7 +410,6 @@ function UGCTab() {
       }
       setBlogContent(data.blog || "");
       setSelectedId(data.id || null);
-      fetchHistory();
     } catch (e: any) {
       setError(e.message || "Request failed");
     } finally {
@@ -521,118 +436,133 @@ function UGCTab() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-12rem)] relative">
-      <button onClick={() => setSidebarOpen(!sidebarOpen)} className={`absolute top-2 z-10 p-2 bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 ${sidebarOpen ? 'left-[324px]' : 'left-4'}`} aria-label="Toggle sidebar">{sidebarOpen ? (<X className="h-5 w-5 text-gray-600" />) : (<Menu className="h-5 w-5 text-gray-600" />)}</button>
-
-      <div className={`${sidebarOpen ? 'w-80' : 'w-0'} bg-white border-r overflow-hidden flex flex-col transition-all duration-200`}>
-        <div className="p-4 border-b"><div className="font-semibold">Your Blogs</div></div>
-        <div className="overflow-y-auto flex-1">
-          {loadingItems ? (
-            <div className="p-4 text-center text-gray-500">Loading...</div>
-          ) : items.length === 0 ? (
-            <div className="p-4 text-center text-gray-500">No blogs yet</div>
-          ) : (
-            <div className="space-y-1 p-2">
-              {items.map(it => (
-                <div key={it.id} className={`p-3 rounded-lg hover:bg-gray-100 cursor-pointer ${selectedId === it.id ? 'bg-gray-100' : ''}`} onClick={async () => {
-                  const res = await fetch(`/api/write-blog/view?id=${encodeURIComponent(it.id)}`);
-                  const data = await res.json();
-                  if (res.ok) {
-                    setCompanyUrl(data.company_url);
-                    setTopic(data.topic || '');
-                    setBrandName(data.brand_name || '');
-                    setBlogContent(data.blog || '');
-                    setSelectedId(Number(it.id));
-                    setSidebarOpen(false);
-                  }
-                }}>
-                  <p className="font-medium truncate">{it.brandName || 'Untitled'} </p>
-                  <p className="text-sm text-gray-500 truncate">{it.companyUrl}</p>
-                  {it.topic && <p className="text-xs text-gray-500 truncate">Topic: {it.topic}</p>}
-                  <p className="text-xs text-gray-400">{new Date(it.createdAt).toLocaleDateString()}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
+    <div className="flex h-full relative flex-col">
       <div className="flex-1 overflow-y-auto">
         <div className="bg-white rounded-lg border p-6 max-w-7xl mx-auto">
           <h2 className="text-2xl font-semibold mb-4">UGC Blog Generator</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="ugc-company-url">Company URL *</Label>
-          <Input id="ugc-company-url" placeholder="https://example.com" value={companyUrl} onChange={e=>setCompanyUrl(e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="ugc-topic">Topic *</Label>
-          <Input id="ugc-topic" placeholder="Topic for the blog" value={topic} onChange={e=>setTopic(e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="ugc-brand-name">Brand Name</Label>
-          <Input id="ugc-brand-name" placeholder="e.g., Acme Corp" value={brandName} onChange={e=>setBrandName(e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="ugc-email-id">Email</Label>
-          <Input id="ugc-email-id" value={emailId} disabled />
-        </div>
-      </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="ugc-company-url">Company URL *</Label>
+              <Input id="ugc-company-url" placeholder="https://example.com" value={companyUrl} onChange={e=>setCompanyUrl(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="ugc-topic">Topic *</Label>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 text-xs text-blue-600 hover:text-blue-700 px-2"
+                  onClick={handleSuggest}
+                  disabled={suggestingTopics}
+                >
+                  {suggestingTopics ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Sparkles className="w-3 h-3 mr-1" />}
+                  Suggest Topics
+                </Button>
+              </div>
+              <Input id="ugc-topic" placeholder="Topic for the blog" value={topic} onChange={e=>setTopic(e.target.value)} />
+              
+              {suggestedTopics.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-xs text-gray-500 mb-1">Suggestions:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {suggestedTopics.slice(0, 5).map((t, i) => (
+                      <button
+                        key={i}
+                        className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md border border-blue-100 hover:bg-blue-100 transition text-left"
+                        onClick={() => setTopic(t)}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ugc-brand-name">Brand Name</Label>
+              <Input id="ugc-brand-name" placeholder="e.g., Acme Corp" value={brandName} onChange={e=>setBrandName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ugc-email-id">Email</Label>
+              <Input id="ugc-email-id" value={emailId} disabled />
+            </div>
+          </div>
 
-      <div className="mt-4 flex items-center gap-3">
-        <Button className="btn-firecrawl-default h-9 px-4" onClick={handleSubmit} disabled={isSubmitting || !canSubmit}>
-          {isSubmitting ? "Generating..." : "Generate Blog"}
-        </Button>
-        {error && <span className="text-sm text-red-600">{error}</span>}
-      </div>
+          <div className="mt-4 flex items-center gap-3">
+            <Button className="btn-firecrawl-default h-9 px-4" onClick={handleSubmit} disabled={isSubmitting || !canSubmit}>
+              {isSubmitting ? "Generating..." : "Generate Blog"}
+            </Button>
+            {error && <span className="text-sm text-red-600">{error}</span>}
+          </div>
 
-      {/* Editor */}
-      <div className="mt-6">
-        <Label htmlFor="ugc-editor">Blog Editor</Label>
-        <textarea
-          id="ugc-editor"
-          className="mt-2 w-full min-h-[320px] p-3 border rounded-md font-mono text-sm"
-          placeholder="Generated blog content will appear here..."
-          value={blogContent}
-          onChange={(e) => setBlogContent(e.target.value)}
-        />
-        <div className="mt-3 flex gap-3">
-          <Button variant="outline" onClick={copyToClipboard}>Copy to clipboard</Button>
-          <Button variant="secondary" onClick={downloadMarkdown}>Download .md</Button>
-          <Button onClick={async () => {
-            if (!selectedId) return;
-            const res = await fetch('/api/write-blog/update', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ id: selectedId, company_url: companyUrl, brand_name: brandName || null, topic: topic || null, blog: blogContent })
-            });
-            const data = await res.json();
-            if (res.ok) {
-              fetchHistory();
-            } else {
-              console.error('Failed to save', data?.error);
-            }
-          }}>Save Changes</Button>
-        </div>
-        <p className="text-xs text-gray-500 mt-2">You can edit the blog directly in this editor. Copy or save as needed.</p>
-      </div>
+          {/* Editor */}
+          <div className="mt-6">
+            <Label htmlFor="ugc-editor">Blog Editor</Label>
+            <textarea
+              id="ugc-editor"
+              className="mt-2 w-full min-h-[320px] p-3 border rounded-md font-mono text-sm"
+              placeholder="Generated blog content will appear here..."
+              value={blogContent}
+              onChange={(e) => setBlogContent(e.target.value)}
+            />
+            <div className="mt-3 flex gap-3">
+              <Button variant="outline" onClick={copyToClipboard}>Copy to clipboard</Button>
+              <Button variant="secondary" onClick={downloadMarkdown}>Download .md</Button>
+              <Button onClick={async () => {
+                if (!selectedId) return;
+                const res = await fetch('/api/write-blog/update', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ id: selectedId, company_url: companyUrl, brand_name: brandName || null, topic: topic || null, blog: blogContent })
+                });
+                            const data = await res.json();
+                            if (res.ok) {
+                              // success
+                            } else {
+                              console.error('Failed to save', data?.error);
+                            }
+                          }}>Save Changes</Button>            </div>
+            <p className="text-xs text-gray-500 mt-2">You can edit the blog directly in this editor. Copy or save as needed.</p>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-export default function BrandMonitorPage() {
+function BrandMonitorPageContent() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const brandProfileIdFromQuery = searchParams.get("brandId");
+  const blogIdFromQuery = searchParams.get("blogId");
+  const analysisIdFromQuery = searchParams.get("analysisId");
+  const viewMode = searchParams.get("view");
+  const urlFromQuery = searchParams.get("url");
 
   // tabs: 'brand' | 'aeo' | 'files' | 'ugc'
   const [activeTab, setActiveTab] = useState<"brand" | "aeo" | "files" | "ugc">(
     "brand"
   );
+  const [prefillAeo, setPrefillAeo] = useState<{ url: string; customerName: string } | null>(null);
+  const [prefillBrand, setPrefillBrand] = useState<{ url: string; customerName: string } | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<FilesTabPrefill | null>(null);
+  const [prefillUgc, setPrefillUgc] = useState<{ url: string; brandName: string } | null>(null);
+  const [appliedBrandPrefill, setAppliedBrandPrefill] = useState<string | null>(null);
+  const [currentBrand, setCurrentBrand] = useState<{ id: string; name: string; logo?: string } | null>(null);
 
-  // Auto-select tab from hash
+  // Handle URL query param for "Create New" flow
+  useEffect(() => {
+    if (urlFromQuery && viewMode === 'new') {
+      setPrefillBrand({ 
+        url: urlFromQuery, 
+        customerName: "autouser" 
+      });
+    }
+  }, [urlFromQuery, viewMode]);
+
+  // Auto-select tab from hash or params
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#','');
@@ -640,14 +570,89 @@ export default function BrandMonitorPage() {
       if (hash === 'aeo') setActiveTab('aeo');
       if (hash === 'brand') setActiveTab('brand');
       if (hash === 'ugc') setActiveTab('ugc');
+      
+      if (blogIdFromQuery) setActiveTab('ugc');
     }
-  }, []);
+  }, [blogIdFromQuery]);
 
   useEffect(() => {
     if (!isPending && !session) {
       router.push("/login");
     }
   }, [session, isPending, router]);
+
+  useEffect(() => {
+    if (!session || !brandProfileIdFromQuery) return;
+    if (appliedBrandPrefill === brandProfileIdFromQuery) return;
+
+    let isCancelled = false;
+
+    const hydrateFromBrandProfile = async () => {
+      try {
+        const response = await fetch(`/api/brands/${brandProfileIdFromQuery}`);
+        if (!response.ok) {
+          console.error(`[BrandMonitor] Failed to fetch brand profile ${brandProfileIdFromQuery}`);
+          return;
+        }
+        const data = await response.json();
+        if (isCancelled) return;
+
+        const brandRecord = data?.brand;
+        if (!brandRecord?.url) return;
+
+        setCurrentBrand({
+            id: brandRecord.id,
+            name: brandRecord.name,
+            logo: brandRecord.logo
+        });
+
+        const scrapedCompetitors = Array.isArray(brandRecord?.scrapedData?.competitors)
+          ? brandRecord.scrapedData.competitors
+              .map((entry: any) =>
+                typeof entry === "string" ? entry : entry?.name,
+              )
+              .filter((name: string | undefined): name is string => Boolean(name))
+          : [];
+
+        setPendingFiles({
+          url: brandRecord.url,
+          customerName: brandRecord.name,
+          industry: brandRecord.industry,
+          competitors: scrapedCompetitors,
+        });
+        setPrefillUgc({
+          url: brandRecord.url,
+          brandName: brandRecord.name,
+        });
+        setPrefillBrand({
+          url: brandRecord.url,
+          customerName: brandRecord.name,
+        });
+        setAppliedBrandPrefill(brandProfileIdFromQuery);
+
+        // Respect hash or params if present
+        if (blogIdFromQuery) {
+          setActiveTab("ugc");
+        } else if (typeof window !== 'undefined') {
+          const h = window.location.hash;
+          if (h === '#files') setActiveTab("files");
+          else if (h === '#ugc') setActiveTab("ugc");
+          else if (h === '#aeo') setActiveTab("aeo");
+          else setActiveTab("brand");
+        } else {
+          setActiveTab("brand");
+        }
+      } catch (err) {
+        console.error("[BrandMonitor] Unable to hydrate Files tab from brand profile", err);
+      }
+    };
+
+    hydrateFromBrandProfile();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [appliedBrandPrefill, brandProfileIdFromQuery, session, blogIdFromQuery]);
 
   if (isPending) {
     return (
@@ -667,95 +672,67 @@ export default function BrandMonitorPage() {
     );
   }
 
-  // cross-tab state for orchestration
-  const [prefillAeo, setPrefillAeo] = useState<{ url: string; customerName: string } | null>(null);
-  const [prefillBrand, setPrefillBrand] = useState<{ url: string; customerName: string } | null>(null);
-  const [pendingFiles, setPendingFiles] = useState<{ url: string; customerName: string } | null>(null);
-
   const handleOpenAeoForUrl = (url: string, customerName?: string) => {
     setPrefillAeo({ url, customerName: (customerName && customerName.trim()) ? customerName : "autouser" });
     setActiveTab("aeo");
   };
-  const handleOpenFilesForUrl = (url: string, customerName?: string) => {
-    setPendingFiles({ url, customerName: (customerName && customerName.trim()) ? customerName : "autouser" });
+  const handleOpenFilesForUrl = (payload: FilesTabPrefill) => {
+    if (!payload?.url) return;
+    setPendingFiles({
+      url: payload.url,
+      customerName: payload.customerName && payload.customerName.trim() ? payload.customerName : "autouser",
+      industry: payload.industry,
+      competitors: payload.competitors,
+    });
     setActiveTab("files");
   };
 
   return (
-    <div className="bg-gray-50">
-      {/* Keep the hero header at top so it's shared across tabs */}
-      <div className="relative overflow-hidden bg-white border-b">
-        
-
-        {/* TAB BAR (placed in the lower grey area under header) */}
-        <div className="bg-gray-50 border-t">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <nav aria-label="Primary" className="mt-6">
-              <div className="inline-flex items-end space-x-1">
-                {/* Tab button common style */}
-                {/** We'll visually 'lift' the active tab to look like a classic tabbed UI */}
-                <TabButton
-                  title="Brand Monitor"
-                  active={activeTab === "brand"}
-                  onClick={() => setActiveTab("brand")}
-                />
-                <TabButton
-                  title="AEO Report"
-                  active={activeTab === "aeo"}
-                  onClick={() => setActiveTab("aeo")}
-                />
-                <TabButton
-                  title="Files"
-                  active={activeTab === "files"}
-                  onClick={() => setActiveTab("files")}
-                />
-                <TabButton
-                  title="UGC"
-                  active={activeTab === "ugc"}
-                  onClick={() => setActiveTab("ugc")}
-                />
-              </div>
-            </nav>
-          </div>
-        </div>
-      </div>
-
-      {/* Tab content area */}
+    <div className="bg-gray-50 min-h-screen">
       <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === "brand" && <BrandMonitorContent session={session} onOpenAeoForUrl={handleOpenAeoForUrl} onOpenFilesForUrl={handleOpenFilesForUrl} prefillBrand={prefillBrand} />}
+        {currentBrand && (
+            <div className="flex items-center gap-4 mb-6">
+                <Link 
+                    href={`/brand-profiles/${currentBrand.id}`} 
+                    className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors"
+                >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back to Profile
+                </Link>
+            </div>
+        )}
+        {activeTab === "brand" && (
+          <BrandMonitorContent 
+            session={session} 
+            onOpenAeoForUrl={handleOpenAeoForUrl} 
+            onOpenFilesForUrl={handleOpenFilesForUrl} 
+            prefillBrand={prefillBrand} 
+            initialAnalysisId={analysisIdFromQuery}
+            forceNew={viewMode === 'new'}
+          />
+        )}
         {activeTab === "aeo" && <AeoReportTab prefill={prefillAeo} onOpenBrandForUrl={(url, customerName) => { setPrefillBrand({ url, customerName: (customerName && customerName.trim()) ? customerName : "autouser" }); setActiveTab("brand"); }} onOpenFilesForUrl={handleOpenFilesForUrl} />}
         {activeTab === "files" && (
           <FilesTab prefill={pendingFiles} />
         )}
         {activeTab === "ugc" && (
-          <UGCTab />
+          <UGCTab prefill={prefillUgc} prefillBlogId={blogIdFromQuery} />
         )}
       </div>
     </div>
   );
 }
 
-/* --------------------- TabButton helper component --------------------- */
-function TabButton({
-  title,
-  active,
-  onClick,
-}: {
-  title: string;
-  active: boolean;
-  onClick: () => void;
-}) {
+export default function BrandMonitorPage() {
   return (
-    <button
-      onClick={onClick}
-      className={`relative -mb-6 px-6 py-3 border rounded-t-lg transition-all ${
-        active
-          ? "bg-white border-gray-300 text-gray-900 shadow"
-          : "bg-transparent border-b border-transparent text-gray-600 hover:text-gray-800"
-      }`}
-      aria-current={active ? "page" : undefined}
-    >
-      <span className={`${active ? "font-semibold" : "font-medium"}`}>{title}</span>
-    </button>
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+      </div>
+    }>
+      <BrandMonitorPageContent />
+    </Suspense>
   );
 }
+
+

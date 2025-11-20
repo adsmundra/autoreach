@@ -165,6 +165,13 @@ export async function scrapeCompanyInfo(url: string, maxAge?: number): Promise<C
     const providerDebug = debugProviders();
     
     const configuredProviders = getConfiguredProviders();
+    // Prioritize OpenAI for extraction
+    configuredProviders.sort((a, b) => {
+      if (a.id === 'openai') return -1;
+      if (b.id === 'openai') return 1;
+      return 0;
+    });
+
     console.log(`[DEBUG] Found ${configuredProviders.length} configured providers:`, configuredProviders.map(p => p.name));
     
     if (configuredProviders.length === 0) {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSessionCookie } from 'better-auth/cookies';
 
 // Define protected routes
-const protectedRoutes = ['/dashboard', '/chat', '/brand-monitor', '/profile'];
+const protectedRoutes = ['/dashboard', '/chat', '/brand-monitor', '/profile', '/brand-profiles'];
 
 // Define auth-related routes that should be skipped
 const authRoutes = ['/login', '/register', '/forgot-password', '/reset-password'];
@@ -23,6 +23,11 @@ export async function middleware(request: NextRequest) {
     response.headers.set('X-XSS-Protection', '1; mode=block');
     
     return response;
+  }
+
+  // Redirect root to brand-profiles
+  if (pathname === '/') {
+    return NextResponse.redirect(new URL('/brand-profiles', request.url));
   }
   
   // Check if the route is protected

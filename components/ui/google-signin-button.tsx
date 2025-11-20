@@ -25,6 +25,7 @@ export function GoogleSignInButton({
       // We should NOT call onSuccess here because the OAuth flow involves redirects
       await signIn.social({
         provider: 'google',
+        callbackURL: '/brand-profiles',
       });
       
       // If we reach here, the OAuth flow was initiated successfully

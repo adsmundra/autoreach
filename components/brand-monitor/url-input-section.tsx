@@ -6,6 +6,7 @@ interface UrlInputSectionProps {
   urlValid: boolean | null;
   loading: boolean;
   analyzing: boolean;
+  locked?: boolean;
   onUrlChange: (url: string) => void;
   onSubmit: () => void;
 }
@@ -15,6 +16,7 @@ export function UrlInputSection({
   urlValid,
   loading,
   analyzing,
+  locked,
   onUrlChange,
   onSubmit
 }: UrlInputSectionProps) {
@@ -22,11 +24,13 @@ export function UrlInputSection({
     <div className="flex items-center justify-center animate-panel-in pb-12">
       <div className="w-full max-w-5xl px-6">
           <div className="relative">
-            <Globe className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-black" />
+            <Globe className={`absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 ${locked ? 'text-gray-400' : 'text-black'}`} />
             <input
               type="text"
               className={`w-full pl-12 pr-16 h-14 text-base border-2 rounded-xl focus:outline-none focus:ring-2 transition-all ${
-                urlValid === false 
+                locked
+                  ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed'
+                  : urlValid === false 
                   ? 'border-red-300 focus:ring-red-500 focus:border-transparent' 
                   : urlValid === true 
                   ? 'border-orange-300 focus:ring-orange-500 focus:border-transparent'
@@ -34,21 +38,22 @@ export function UrlInputSection({
               }`}
               placeholder="Enter your website URL (e.g., example.com)"
               value={url}
-              onChange={(e) => onUrlChange(e.target.value)}
+              onChange={(e) => !locked && onUrlChange(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !loading && !analyzing && url) {
                   onSubmit();
                 }
               }}
               onFocus={(e) => {
-                if (!url) {
+                if (!url && !locked) {
                   e.target.placeholder = "example.com";
                 }
               }}
               onBlur={(e) => {
                 e.target.placeholder = "Enter your website URL (e.g., example.com)";
               }}
-              disabled={loading || analyzing}
+              disabled={loading || analyzing || locked}
+              readOnly={locked}
             />
             
             {/* Arrow button inside input */}

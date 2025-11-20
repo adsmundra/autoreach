@@ -14,7 +14,7 @@ export function GoogleSignInButtonImproved({
   onError, 
   disabled = false,
   className = "",
-  redirectTo = "/dashboard"
+  redirectTo = "/brand-profiles"
 }: GoogleSignInButtonProps) {
   const [loading, setLoading] = useState(false);
 

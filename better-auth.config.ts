@@ -7,3 +7,22 @@ dotenv.config({ path: '.env.local' });
 
 // Re-export the auth instance from the main lib
 export { auth } from './lib/auth';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
