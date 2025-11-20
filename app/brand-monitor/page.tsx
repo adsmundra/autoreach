@@ -442,7 +442,7 @@ function UGCTab({ prefill, prefillBlogId }: { prefill?: { url: string; brandName
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h2 className="text-3xl font-bold text-slate-900 tracking-tight">IntelliWrite Content Studio</h2>
-              <p className="text-slate-500 mt-1">Generate SEO-optimized, professional blog content tailored to your brand voice.</p>
+              <p className="text-slate-500 mt-1">Generate SEO-AEO optimized, professional blog content tailored to your brand voice.</p>
             </div>
           </div>
 
