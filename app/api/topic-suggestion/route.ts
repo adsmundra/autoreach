@@ -61,24 +61,41 @@ export async function POST(request: NextRequest) {
 
     await ensureTable();
 
-    // Use Gemini model via provider-config
-    const model = getProviderModel('google', process.env.NEXT_PUBLIC_GEMINI_MODEL || 'gemini-2.5-pro');
-    if (!model) return NextResponse.json({ error: 'Gemini model not configured' }, { status: 500 });
+    // Use Claude model via provider-config
+    const model = getProviderModel('anthropic', 'claude-3-5-haiku-20241022');
+    if (!model) return NextResponse.json({ error: 'Claude model not configured' }, { status: 500 });
 
     const system = 'You are an SEO strategist. Propose concise, high-CTR, search-intent aligned blog topics to improve SEO/AEO rankings.';
-    const prompt = `Brand: ${brandName}\nGenerate 8-12 SEO-rich, user-intent focused topics with variations (how-to, listicle, comparison, vs, best-of, mistakes, guides). Return as a JSON array of short strings only.`;
+    const prompt = `Brand: ${brandName}\nGenerate 8-12 SEO-rich, user-intent focused topics with variations (how-to, listicle, comparison, vs, best-of, mistakes, guides). Return ONLY a raw JSON array of strings. No markdown formatting, no code blocks, no introductory text.`;
 
     const { text } = await generateText({ model, system, prompt, temperature: 0.3, maxTokens: 800 });
 
+    console.log('Raw AI response for topics:', text);
+
     let topics: string[] = [];
     try {
-      const parsed = JSON.parse(text || '[]');
+      // Try to clean markdown code blocks if present
+      const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      const parsed = JSON.parse(cleanText || '[]');
       if (Array.isArray(parsed)) {
         topics = parsed.filter((t) => typeof t === 'string').map((s) => s.trim()).filter(Boolean);
       }
     } catch {
-      // fallback: split by newline if not valid JSON
-      topics = (text || '').split(/\r?\n/).map((s) => s.replace(/^[-*]\s*/, '').trim()).filter(Boolean).slice(0, 12);
+      // Fallback: try to find array pattern
+      try {
+        const match = text.match(/\[.*\]/s);
+        if (match) {
+             const parsed = JSON.parse(match[0]);
+             if (Array.isArray(parsed)) {
+                topics = parsed.filter((t: any) => typeof t === 'string').map((s: any) => s.trim()).filter(Boolean);
+             }
+        }
+      } catch (e2) {}
+
+      // Last resort fallback: split by newline if not valid JSON
+      if (topics.length === 0) {
+         topics = (text || '').split(/\r?\n/).map((s) => s.replace(/^[-*]\s*/, '').trim()).filter(Boolean).slice(0, 12);
+      }
     }
 
     if (topics.length === 0) return NextResponse.json({ error: 'No topics generated' }, { status: 500 });

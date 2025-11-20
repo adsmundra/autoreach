@@ -8,7 +8,7 @@ import { getProviderModel, PROVIDER_CONFIGS } from '@/lib/provider-config';
 import { pool } from '@/lib/db';
 import { auth } from '@/lib/auth';
 
-const OPENAI_DEFAULT_MODEL = PROVIDER_CONFIGS.perplexity?.defaultModel || 'sonar-pro';
+const CLAUDE_DEFAULT_MODEL = 'claude-3-5-haiku-20241022';
 const MAX_TOKENS = process.env.MAX_TOKENS ? Number(process.env.MAX_TOKENS) : 2000;
 
 async function fetchHtml(url: string, timeoutMs = 15000): Promise<string> {
@@ -109,8 +109,8 @@ Write a comprehensive, well-structured blog post for "${providedBrand || brandNa
 Cite specific scraped facts inline using [source].
 `;
 
-  const model = getProviderModel('perplexity', OPENAI_DEFAULT_MODEL);
-  if (!model) throw new Error('OpenAI model not available or API key not configured');
+  const model = getProviderModel('anthropic', CLAUDE_DEFAULT_MODEL);
+  if (!model) throw new Error('Claude model not available or API key not configured');
 
   const { text } = await generateText({
     model,
