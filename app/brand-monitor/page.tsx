@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Sparkles, Loader2, ArrowLeft } from "lucide-react";
@@ -531,7 +531,7 @@ function UGCTab({ prefill, prefillBlogId }: { prefill?: { url: string; brandName
   );
 }
 
-export default function BrandMonitorPage() {
+function BrandMonitorPageContent() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -720,6 +720,18 @@ export default function BrandMonitorPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function BrandMonitorPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+      </div>
+    }>
+      <BrandMonitorPageContent />
+    </Suspense>
   );
 }
 
