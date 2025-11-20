@@ -24,6 +24,11 @@ export async function middleware(request: NextRequest) {
     
     return response;
   }
+
+  // Redirect root to brand-profiles
+  if (pathname === '/') {
+    return NextResponse.redirect(new URL('/brand-profiles', request.url));
+  }
   
   // Check if the route is protected
   const isProtectedRoute = protectedRoutes.some(route => 
