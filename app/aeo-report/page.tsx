@@ -323,7 +323,7 @@ function AEOReportContent() {
 
                         <CardContent className="p-8 pt-2 space-y-8 flex-1 flex flex-col justify-between">
                              <p className="text-slate-600 leading-relaxed text-lg">
-                                Your comprehensive Answer Engine Optimization report is ready. This analysis covers brand visibility across AI platforms, technical schema validation, and strategic recommendations.
+                                This AEO Intelligence Report analyzes your brand’s visibility across AI search engines. It evaluates your structured data, content relevance, optimization gaps, and overall readiness to improve AI-driven discovery.
                              </p>
                              
                              {/* Action Buttons */}
@@ -364,13 +364,31 @@ function AEOReportContent() {
                         </h4>
                         <div className="space-y-4">
                             {[
-                                { icon: BarChart3, color: "blue", title: "Visibility Score", desc: "AI Search Engine Ranking Analysis" },
-                                { icon: Code, color: "indigo", title: "Schema Validation", desc: "Technical Structured Data Check" },
-                                { icon: CheckCircle, color: "emerald", title: "Strategic Roadmap", desc: "Actionable Growth Opportunities" }
+                                { 
+                                    icon: BarChart3, 
+                                    title: "Optimization Score", 
+                                    desc: "Indicates the potential improvement your website can achieve",
+                                    containerHover: "group-hover:border-blue-200 group-hover:text-blue-600",
+                                    iconHover: "group-hover:text-blue-600"
+                                },
+                                { 
+                                    icon: Code, 
+                                    title: "Schema Validation", 
+                                    desc: "Technical Structured Data Check",
+                                    containerHover: "group-hover:border-indigo-200 group-hover:text-indigo-600",
+                                    iconHover: "group-hover:text-indigo-600"
+                                },
+                                { 
+                                    icon: CheckCircle, 
+                                    title: "Strategic Roadmap", 
+                                    desc: "Actionable Growth Opportunities",
+                                    containerHover: "group-hover:border-emerald-200 group-hover:text-emerald-600",
+                                    iconHover: "group-hover:text-emerald-600"
+                                }
                             ].map((item, i) => (
                                 <div key={i} className="flex gap-4 p-4 rounded-xl bg-slate-50/50 border border-slate-100 transition-all hover:bg-white hover:shadow-md hover:border-slate-200 group hover:-translate-y-0.5 cursor-default">
-                                    <div className={`mt-1 p-2.5 bg-white rounded-lg border border-slate-100 shadow-sm group-hover:border-${item.color}-200 group-hover:text-${item.color}-600 transition-colors`}>
-                                        <item.icon className={`h-5 w-5 text-slate-400 group-hover:text-${item.color}-600 transition-colors`} />
+                                    <div className={`mt-1 p-2.5 bg-white rounded-lg border border-slate-100 shadow-sm ${item.containerHover} transition-colors`}>
+                                        <item.icon className={`h-5 w-5 text-slate-400 ${item.iconHover} transition-colors`} />
                                     </div>
                                     <div>
                                         <div className="text-sm font-bold text-slate-900">{item.title}</div>
