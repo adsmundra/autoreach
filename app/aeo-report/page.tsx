@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, FileText, Loader2, AlertCircle, BarChart3, Code, CheckCircle, Activity, ArrowLeft, Search, Sparkles, Globe, LayoutDashboard } from 'lucide-react';
+import { Download, FileText, Loader2, AlertCircle, BarChart3, Code, CheckCircle, Activity, ArrowLeft, Search, Sparkles, Globe, LayoutDashboard, ArrowRight, PenTool, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ReportData {
@@ -261,14 +261,14 @@ function AEOReportContent() {
   // If a report is loaded, show the View Mode (Success State)
   if (reportData) {
     return (
-      <div className="min-h-screen bg-slate-50 relative overflow-hidden">
+      <div className="min-h-screen bg-slate-50/50 relative overflow-hidden bg-grid-zinc-100">
         {/* Background Decorative Elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
-            <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-3xl" />
+            <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-blob" />
+            <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-3xl animate-blob animation-delay-2000" />
         </div>
 
-        <div className="relative z-10 container mx-auto py-12 px-4 max-w-3xl">
+        <div className="relative z-10 container mx-auto py-12 px-4 max-w-6xl">
             {/* Back Button */}
              <div className="mb-8">
                 {brandId ? (
@@ -290,65 +290,157 @@ function AEOReportContent() {
                 )}
              </div>
 
-            <Card className="border-none shadow-2xl bg-white overflow-hidden">
-                <div className="h-2 bg-gradient-to-r from-blue-500 to-purple-600" />
-                <CardHeader className="p-8 text-center space-y-4 border-b border-slate-100">
-                    <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-2">
-                        <CheckCircle className="h-8 w-8 text-green-600" />
-                    </div>
-                    <div>
-                        <CardTitle className="text-2xl font-bold text-slate-900">Analysis Complete</CardTitle>
-                        <CardDescription className="text-base mt-2">
-                            AEO Intelligence Report for <span className="font-semibold text-slate-900">{reportData.customerName}</span>
-                        </CardDescription>
-                    </div>
-                    <p className="text-sm text-slate-500">
-                        Generated on {new Date(reportData.generatedAt).toLocaleString()}
-                    </p>
-                </CardHeader>
-                <CardContent className="p-8">
-                    <div className="grid grid-cols-1 gap-4">
-                        <Button 
-                            onClick={() => {
-                                const newWindow = window.open('', '_blank');
-                                if (newWindow) {
-                                    newWindow.document.write(reportData.htmlContent);
-                                    newWindow.document.close();
-                                }
-                            }}
-                            className="w-full py-6 text-lg bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 rounded-xl"
-                        >
-                            <FileText className="mr-2 h-5 w-5" />
-                            View Full Report
-                        </Button>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start mb-12">
+                
+                {/* Left Column: Report Status & Actions */}
+                <div className="md:col-span-7 space-y-6 animate-fade-in-up">
+                    <Card className="border-0 shadow-2xl bg-white/80 backdrop-blur-xl overflow-hidden ring-1 ring-slate-200/50 h-full flex flex-col">
+                        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500" />
                         
-                        <Button 
-                            onClick={downloadPDF}
-                            variant="outline"
-                            className="w-full py-6 text-lg border-2 border-slate-200 hover:bg-slate-50 hover:border-slate-300 text-slate-700 rounded-xl"
-                        >
-                            <Download className="mr-2 h-5 w-5" />
-                            Download PDF
-                        </Button>
+                        <CardHeader className="p-8 pb-4">
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 border border-green-100 text-green-700 text-xs font-medium mb-4 animate-pulse">
+                                        <span className="relative flex h-2 w-2">
+                                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                          <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                        </span>
+                                        Analysis Complete
+                                    </div>
+                                    <CardTitle className="text-3xl font-bold text-slate-900 tracking-tight mb-2">
+                                        {reportData.customerName}
+                                    </CardTitle>
+                                    <CardDescription className="text-slate-500 text-base">
+                                        AEO Intelligence Audit • {new Date(reportData.generatedAt).toLocaleDateString()}
+                                    </CardDescription>
+                                </div>
+                                {/* Decorative Icon */}
+                                <div className="hidden sm:flex h-14 w-14 bg-blue-50 rounded-2xl items-center justify-center text-blue-600 shadow-inner border border-blue-100">
+                                    <FileText className="h-7 w-7" />
+                                </div>
+                            </div>
+                        </CardHeader>
+
+                        <CardContent className="p-8 pt-2 space-y-8 flex-1 flex flex-col justify-between">
+                             <p className="text-slate-600 leading-relaxed text-lg">
+                                Your comprehensive Answer Engine Optimization report is ready. This analysis covers brand visibility across AI platforms, technical schema validation, and strategic recommendations.
+                             </p>
+                             
+                             {/* Action Buttons */}
+                             <div className="flex flex-col sm:flex-row gap-4">
+                                <Button 
+                                    onClick={() => {
+                                        const newWindow = window.open('', '_blank');
+                                        if (newWindow) {
+                                            newWindow.document.write(reportData.htmlContent);
+                                            newWindow.document.close();
+                                        }
+                                    }}
+                                    className="flex-1 h-14 text-base font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200/50 rounded-xl transition-all hover:-translate-y-0.5 hover:shadow-blue-300/50"
+                                >
+                                    <Sparkles className="mr-2 h-5 w-5" />
+                                    View Full Report
+                                </Button>
+                                
+                                <Button 
+                                    onClick={downloadPDF}
+                                    variant="outline"
+                                    className="flex-1 h-14 text-base font-medium border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl transition-colors"
+                                >
+                                    <Download className="mr-2 h-5 w-5" />
+                                    Download PDF
+                                </Button>
+                             </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Right Column: Highlights */}
+                <div className="md:col-span-5 space-y-6 animate-fade-in-up animation-delay-200">
+                    <div className="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 h-full">
+                        <h4 className="font-semibold text-slate-900 mb-6 flex items-center gap-2">
+                            <Activity className="h-5 w-5 text-purple-500" />
+                            Included in this Report
+                        </h4>
+                        <div className="space-y-4">
+                            {[
+                                { icon: BarChart3, color: "blue", title: "Visibility Score", desc: "AI Search Engine Ranking Analysis" },
+                                { icon: Code, color: "indigo", title: "Schema Validation", desc: "Technical Structured Data Check" },
+                                { icon: CheckCircle, color: "emerald", title: "Strategic Roadmap", desc: "Actionable Growth Opportunities" }
+                            ].map((item, i) => (
+                                <div key={i} className="flex gap-4 p-4 rounded-xl bg-slate-50/50 border border-slate-100 transition-all hover:bg-white hover:shadow-md hover:border-slate-200 group hover:-translate-y-0.5 cursor-default">
+                                    <div className={`mt-1 p-2.5 bg-white rounded-lg border border-slate-100 shadow-sm group-hover:border-${item.color}-200 group-hover:text-${item.color}-600 transition-colors`}>
+                                        <item.icon className={`h-5 w-5 text-slate-400 group-hover:text-${item.color}-600 transition-colors`} />
+                                    </div>
+                                    <div>
+                                        <div className="text-sm font-bold text-slate-900">{item.title}</div>
+                                        <div className="text-xs text-slate-500 mt-1">{item.desc}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                </CardContent>
-            </Card>
-            
-            {/* Summary/Legend Section */}
-             <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                <div className="bg-white/60 backdrop-blur-sm p-4 rounded-xl border border-slate-200/60">
-                    <div className="font-semibold text-slate-900 text-lg mb-1">Visibility</div>
-                    <div className="text-sm text-slate-500">Search & AI Rankings</div>
                 </div>
-                <div className="bg-white/60 backdrop-blur-sm p-4 rounded-xl border border-slate-200/60">
-                    <div className="font-semibold text-slate-900 text-lg mb-1">Technical</div>
-                    <div className="text-sm text-slate-500">Schema & Structure</div>
+            </div>
+
+            {/* Recommended Actions Section */}
+            <div className="animate-fade-in-up animation-delay-400">
+                <h3 className="text-lg font-semibold text-slate-900 mb-6 flex items-center gap-2">
+                    Recommended Next Steps
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <Link href={`/blog-writer?brandId=${brandId || ''}`} className="block group">
+                        <Card className="h-full border border-slate-200 hover:border-emerald-300 hover:shadow-xl hover:shadow-emerald-100/50 transition-all duration-300 hover:-translate-y-1 bg-white">
+                            <CardContent className="p-6 flex flex-col h-full">
+                                <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <PenTool className="h-6 w-6 text-emerald-600" />
+                                </div>
+                                <h4 className="font-semibold text-slate-900 mb-2">Create Content</h4>
+                                <p className="text-sm text-slate-500 flex-1">
+                                    Use IntelliWrite to generate optimized blog posts based on these findings.
+                                </p>
+                                <div className="mt-4 flex items-center text-emerald-600 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-[-10px] group-hover:translate-x-0">
+                                    Launch Writer <ArrowRight className="ml-1 h-4 w-4" />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </Link>
+
+                    <Link href={`/brand-monitor?brandId=${brandId || ''}&view=new&url=${encodeURIComponent(url)}`} className="block group">
+                        <Card className="h-full border border-slate-200 hover:border-blue-300 hover:shadow-xl hover:shadow-blue-100/50 transition-all duration-300 hover:-translate-y-1 bg-white">
+                            <CardContent className="p-6 flex flex-col h-full">
+                                <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <TrendingUp className="h-6 w-6 text-blue-600" />
+                                </div>
+                                <h4 className="font-semibold text-slate-900 mb-2">Monitor Rankings</h4>
+                                <p className="text-sm text-slate-500 flex-1">
+                                    Set up ongoing tracking to monitor your brand's visibility over time.
+                                </p>
+                                <div className="mt-4 flex items-center text-blue-600 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-[-10px] group-hover:translate-x-0">
+                                    Go to Monitor <ArrowRight className="ml-1 h-4 w-4" />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </Link>
+
+                    <Link href={`/brand-monitor?brandId=${brandId || ''}#files`} className="block group">
+                        <Card className="h-full border border-slate-200 hover:border-orange-300 hover:shadow-xl hover:shadow-orange-100/50 transition-all duration-300 hover:-translate-y-1 bg-white">
+                            <CardContent className="p-6 flex flex-col h-full">
+                                <div className="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <FileText className="h-6 w-6 text-orange-600" />
+                                </div>
+                                <h4 className="font-semibold text-slate-900 mb-2">Generate GEO Assets</h4>
+                                <p className="text-sm text-slate-500 flex-1">
+                                    Create optimized JSON-LD and Knowledge Graph files for AI engines.
+                                </p>
+                                <div className="mt-4 flex items-center text-orange-600 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-[-10px] group-hover:translate-x-0">
+                                    Create Files <ArrowRight className="ml-1 h-4 w-4" />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </Link>
                 </div>
-                <div className="bg-white/60 backdrop-blur-sm p-4 rounded-xl border border-slate-200/60">
-                    <div className="font-semibold text-slate-900 text-lg mb-1">Strategy</div>
-                    <div className="text-sm text-slate-500">Actionable Steps</div>
-                </div>
-             </div>
+            </div>
         </div>
       </div>
     );

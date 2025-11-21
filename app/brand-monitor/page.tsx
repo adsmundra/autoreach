@@ -807,9 +807,17 @@ function BrandMonitorPageContent() {
     setActiveTab("files");
   };
 
+  const isBrandTab = activeTab === "brand";
+
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className={isBrandTab ? "bg-gray-50 min-h-screen" : "min-h-screen bg-slate-50 relative overflow-hidden bg-grid-zinc-100"}>
+      {!isBrandTab && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-blob" />
+            <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-3xl animate-blob animation-delay-2000" />
+        </div>
+      )}
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         {currentBrand && (
             <div className="flex items-center gap-4 mb-6">
                 <Link 
