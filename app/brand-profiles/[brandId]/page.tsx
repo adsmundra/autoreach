@@ -357,7 +357,7 @@ export default function BrandProfilePage() {
       renderItem: (report: AEOReport) => (
         <Link
             key={report.id}
-            href={`/aeo-report?reportId=${report.id}&brandId=${brandId}`}
+            href={`/aeo-report?reportId=${report.id}&brandId=${brandId}&customerName=${encodeURIComponent(report.customerName)}`}
             className="group block p-4 border-b border-slate-50 hover:bg-slate-50 transition-all duration-200"
         >
             <div className="flex justify-between items-center mb-2">
