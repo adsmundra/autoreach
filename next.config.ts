@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    domains: ['res.cloudinary.com', 'lh3.googleusercontent.com', 'avatars.githubusercontent.com', 'www.google.com'],
+    domains: ['res.cloudinary.com', 'lh3.googleusercontent.com', 'avatars.githubusercontent.com', 'www.google.com', 'sfycdn.speedsize.com'],
   },
   // Fix for "Can't resolve 'fs'" when using libraries like duck-duck-scrape on the client
   webpack: (config, { isServer }) => {
