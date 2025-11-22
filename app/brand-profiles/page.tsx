@@ -176,145 +176,152 @@ export default function BrandProfilesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-7xl mx-auto space-y-10">
-        {/* Header Section */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-slate-200 pb-8">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">Brand Profiles</h1>
-            <p className="text-lg text-slate-500 max-w-2xl">
-              Manage your brand assets, monitor presence, and analyze competitors all in one place.
-            </p>
+    <div className="min-h-screen bg-slate-50 relative overflow-hidden bg-grid-zinc-100 font-sans">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-blob" />
+        <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-3xl animate-blob animation-delay-2000" />
+      </div>
+
+      <div className="relative z-10 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto space-y-10">
+          {/* Header Section */}
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-slate-200/60 pb-8">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">Brand Profiles</h1>
+              <p className="text-lg text-slate-500 max-w-2xl">
+                Manage your brand assets, monitor presence, and analyze competitors all in one place.
+              </p>
+            </div>
+            {brands.length > 0 && (
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold shadow-sm shadow-blue-600/20 transition-all duration-200 hover:scale-105 active:scale-95"
+              >
+                <Plus className="w-5 h-5" />
+                New Brand
+              </button>
+            )}
           </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+              {error}
+            </div>
+          )}
+
+          {/* Search & Filters */}
           {brands.length > 0 && (
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold shadow-sm shadow-blue-600/20 transition-all duration-200 hover:scale-105 active:scale-95"
-            >
-              <Plus className="w-5 h-5" />
-              New Brand
-            </button>
+            <div className="relative max-w-xl">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-slate-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search brands..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="block w-full pl-11 pr-4 py-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm hover:shadow-md"
+              />
+            </div>
+          )}
+
+          {/* Content Grid */}
+          {brands.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 bg-white/60 backdrop-blur-sm border border-dashed border-slate-300 rounded-3xl">
+              <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mb-6">
+                <Plus className="w-10 h-10 text-blue-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">Add a New Brand</h2>
+              <p className="text-slate-500 text-center max-w-md mb-8">
+                Get started by adding your first brand profile. We'll help you track its performance and visibility across AI platforms.
+              </p>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-600/30 transition-all duration-200 hover:scale-105"
+              >
+                <Plus className="w-5 h-5" />
+                Create Brand Profile
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredBrands.map((brand) => (
+                <div
+                  key={brand.id}
+                  className="group relative bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                >
+                  {/* Card Header */}
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="relative">
+                      {brand.logo ? (
+                        <img
+                          src={brand.logo}
+                          alt={brand.name}
+                          className="w-16 h-16 rounded-2xl object-contain bg-slate-50 border border-slate-100 p-2"
+                        />
+                      ) : (
+                        <div className={`w-16 h-16 ${getDomainColor(brand.name)} rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-inner`}>
+                          {getInitials(brand.name)}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleDelete(brand.id, brand.name);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 transition-all p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
+                      title="Delete Brand"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Card Body */}
+                  <div className="space-y-4 mb-6">
+                    <div>
+                      <h3 className="text-xl font-bold text-slate-900 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                        {brand.name}
+                      </h3>
+                      <p className="text-sm font-medium text-slate-500 flex items-center gap-1.5 mt-1">
+                        <Building2 className="w-3.5 h-3.5" />
+                        {brand.industry}
+                      </p>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                        <MapPin className="w-3 h-3 mr-1" />
+                        {brand.location}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card Footer */}
+                  <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-4">
+                    <a
+                      href={brand.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-blue-600 transition-colors truncate max-w-[50%]"
+                    >
+                      <Globe className="w-3.5 h-3.5" />
+                      <span className="truncate">{brand.url.replace(/^https?:\/\//, '')}</span>
+                    </a>
+                    
+                    <button
+                      onClick={() => router.push(`/brand-profiles/${brand.id}`)}
+                      className="inline-flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold shadow-sm shadow-blue-600/20 transition-all duration-200 hover:scale-105 active:scale-95 text-sm"
+                    >
+                      View Profile
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
-
-        {error && (
-          <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
-            {error}
-          </div>
-        )}
-
-        {/* Search & Filters */}
-        {brands.length > 0 && (
-          <div className="relative max-w-xl">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-slate-400" />
-            </div>
-            <input
-              type="text"
-              placeholder="Search brands..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="block w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm hover:shadow-md"
-            />
-          </div>
-        )}
-
-        {/* Content Grid */}
-        {brands.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-white border border-dashed border-slate-300 rounded-3xl">
-            <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mb-6">
-              <Plus className="w-10 h-10 text-blue-600" />
-            </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Add a New Brand</h2>
-            <p className="text-slate-500 text-center max-w-md mb-8">
-              Get started by adding your first brand profile. We'll help you track its performance and visibility across AI platforms.
-            </p>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-600/30 transition-all duration-200 hover:scale-105"
-            >
-              <Plus className="w-5 h-5" />
-              Create Brand Profile
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredBrands.map((brand) => (
-              <div
-                key={brand.id}
-                className="group relative bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-              >
-                {/* Card Header */}
-                <div className="flex items-start justify-between mb-6">
-                  <div className="relative">
-                    {brand.logo ? (
-                      <img
-                        src={brand.logo}
-                        alt={brand.name}
-                        className="w-16 h-16 rounded-2xl object-contain bg-slate-50 border border-slate-100 p-2"
-                      />
-                    ) : (
-                      <div className={`w-16 h-16 ${getDomainColor(brand.name)} rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-inner`}>
-                        {getInitials(brand.name)}
-                      </div>
-                    )}
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleDelete(brand.id, brand.name);
-                    }}
-                    className="opacity-0 group-hover:opacity-100 transition-all p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
-                    title="Delete Brand"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Card Body */}
-                <div className="space-y-4 mb-6">
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900 line-clamp-1 group-hover:text-blue-600 transition-colors">
-                      {brand.name}
-                    </h3>
-                    <p className="text-sm font-medium text-slate-500 flex items-center gap-1.5 mt-1">
-                      <Building2 className="w-3.5 h-3.5" />
-                      {brand.industry}
-                    </p>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-2">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                      <MapPin className="w-3 h-3 mr-1" />
-                      {brand.location}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Card Footer */}
-                <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-4">
-                  <a
-                    href={brand.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-blue-600 transition-colors truncate max-w-[50%]"
-                  >
-                    <Globe className="w-3.5 h-3.5" />
-                    <span className="truncate">{brand.url.replace(/^https?:\/\//, '')}</span>
-                  </a>
-                  
-                  <button
-                    onClick={() => router.push(`/brand-profiles/${brand.id}`)}
-                    className="inline-flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold shadow-sm shadow-blue-600/20 transition-all duration-200 hover:scale-105 active:scale-95 text-sm"
-                  >
-                    View Profile
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Modal Overlay */}

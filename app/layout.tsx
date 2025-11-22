@@ -23,6 +23,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { FeedbackButton } from "@/components/feedback-button";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -41,6 +43,7 @@ export default function RootLayout({
             </main>
             <Footer />
           </div>
+          <FeedbackButton />
         </Providers>
       </body>
     </html>

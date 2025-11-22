@@ -5,7 +5,9 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
 import { getProviderModel, PROVIDER_CONFIGS } from '@/lib/provider-config';
-import { pool } from '@/lib/db';
+import { pool, db } from '@/lib/db';
+import { brandprofile } from '@/lib/db/schema';
+import { eq, and } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 
 const CLAUDE_DEFAULT_MODEL = 'claude-3-5-haiku-20241022';
@@ -92,21 +94,55 @@ async function ensureTable() {
   await pool.query('ALTER TABLE blogs ADD COLUMN IF NOT EXISTS topic TEXT');
 }
 
-async function generateBlog({ topic, brandName, scrapedContent, providedEmail, providedBrand }: {
-  topic: string; brandName: string | null; scrapedContent: string; providedEmail: string | null; providedBrand?: string | null;
+async function generateBlog({ topic, brandName, scrapedContent, providedEmail, providedBrand, brandContext }: {
+  topic: string; brandName: string | null; scrapedContent: string; providedEmail: string | null; providedBrand?: string | null; brandContext?: string;
 }) {
-  const systemPrompt = `You are a professional content writer focusing on helpful, accurate, and SEO-friendly blogs. Use only the facts provided in "Scraped Content" and the brand information the user has provided. If information is missing, you may add minimal general context but mark it as generic at the end. Output the blog in Markdown. Start with a "Meta Description" heading (one or two sentences).`;
+  const systemPrompt = `You are an expert content strategist specializing in AEO (Answer Engine Optimization) and SEO. 
+Your goal is to write high-quality, authoritative content that ranks well in traditional search engines (Google) and is easily parsed by AI answer engines (ChatGPT, Perplexity, Gemini).
 
-  const userPrompt = `
+AEO Principles to follow:
+- Structure content for direct answers (What is X? How does Y work?).
+- Use clear, hierarchical headings (H1, H2, H3).
+- Include bullet points and numbered lists for scannability.
+- Define key entities and concepts early in the content.
+- Adopt a "Question & Answer" style where appropriate.
+
+SEO Principles to follow:
+- Naturally incorporate relevant keywords from the context.
+- Ensure high readability and engagement.
+- Maintain a professional, brand-aligned tone.
+
+Use ONLY the facts provided in the source material. Do not hallucinate. Output in clean Markdown.`;
+
+  let userPrompt = `
 Topic: ${topic}
 Brand (provided): ${providedBrand || brandName}
 Email (provided): ${providedEmail || 'N/A'}
 
-Scraped Content (use this as source facts):
+Scraped Content (Source Facts):
 ${(scrapedContent || '').slice(0, 12000)}
+`;
 
-Write a comprehensive, well-structured blog post for "${providedBrand || brandName}" about "${topic}". Use headings, bullets/lists where useful, and include an "Conclusion" section. If you added any generic info, append a short line "Note: generic information added." at the end.
-Cite specific scraped facts inline using [source].
+  if (brandContext) {
+    userPrompt += `\nBrand Context (Entity Details):
+${brandContext}
+Use this context to ensure entity consistency and relevance.
+`;
+  }
+
+  userPrompt += `
+Write a comprehensive, AEO-optimized blog post for "${providedBrand || brandName}" about "${topic}".
+
+Requirements:
+1. **Meta Description**: Start with a "Meta Description" heading (150-160 chars), optimized for clicks.
+2. **Introduction**: concise, hooking the reader, defining the core concept immediately (good for featured snippets).
+3. **Structure**: Use H2s for main questions/sections and H3s for sub-points.
+4. **Direct Answers**: Where the topic asks a question, answer it directly in the first paragraph of that section.
+5. **Formatting**: Use bolding for key terms and lists for steps or features.
+6. **Conclusion**: Summary with a call-to-action (implied).
+7. **Citations**: Cite specific scraped facts inline using [source] where applicable.
+
+Do NOT include any "Note: generic information added" disclaimer.
 `;
 
   const model = getProviderModel('anthropic', CLAUDE_DEFAULT_MODEL);
@@ -116,7 +152,7 @@ Cite specific scraped facts inline using [source].
     model,
     system: systemPrompt,
     prompt: userPrompt,
-    temperature: 0,
+    temperature: 0, // Keep it factual
     maxTokens: Math.min(MAX_TOKENS, 4000)
   });
 
@@ -147,14 +183,45 @@ export async function POST(request: Request) {
     const { brandName: scrapedBrand, email: scrapedEmail, content: scrapedContent } = extractFromHtml(html, company_url);
     const finalBrand = providedBrand || scrapedBrand;
     let finalEmail = providedEmail || scrapedEmail || null;
+    let userId = null;
 
-    // Prefer session email if available
+    // Prefer session email if available and get userId
     try {
       // @ts-ignore - NextRequest type not available here; using any headers
       const session = await auth.api.getSession({ headers: (request as any).headers });
       const sessionEmail = session?.user?.email || null;
+      userId = session?.user?.id || null;
       if (sessionEmail) finalEmail = sessionEmail;
     } catch {}
+
+    // Fetch richer brand context if possible
+    let brandContext = '';
+    if (userId && providedBrand) {
+        try {
+            const brands = await db
+                .select()
+                .from(brandprofile)
+                .where(and(eq(brandprofile.userId, userId), eq(brandprofile.name, providedBrand)))
+                .limit(1);
+
+            if (brands.length > 0) {
+                const b = brands[0];
+                const keywords = (b.scrapedData as any)?.keywords || [];
+                const description = b.description || (b.scrapedData as any)?.description || '';
+                
+                brandContext = `
+Industry: ${b.industry}
+Location: ${b.location}
+Description: ${description}
+Keywords: ${keywords.join(', ')}
+Competitors: ${(b.scrapedData as any)?.competitors?.join(', ') || ''}
+`;
+                console.log('Found brand profile context for blog generation:', providedBrand);
+            }
+        } catch (err) {
+            console.warn('Failed to fetch brand profile for blog context:', err);
+        }
+    }
 
 
     await ensureTable();
@@ -168,6 +235,7 @@ export async function POST(request: Request) {
         scrapedContent,
         providedEmail: finalEmail,
         providedBrand: providedBrand,
+        brandContext,
       });
     } catch (err: any) {
       console.error('AI error:', err);
@@ -194,3 +262,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Internal server error', detail: String(err) }, { status: 500 });
   }
 }
+
