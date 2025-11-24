@@ -207,12 +207,12 @@ export function Navbar() {
             <nav className="hidden md:flex items-center gap-6">
               {session && (
                 <>
-                  <Link
+                  {/* <Link
                     href="/plans"
                     className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors"
                   >
                     Pricing
-                  </Link>
+                  </Link> */}
                 </>
               )}
             </nav>
@@ -252,12 +252,12 @@ export function Navbar() {
                       <span>Profile</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="rounded-lg focus:bg-slate-50 cursor-pointer">
+                  {/* <DropdownMenuItem asChild className="rounded-lg focus:bg-slate-50 cursor-pointer">
                     <Link href="/plans" className="flex items-center">
                       <CreditCard className="mr-2 h-4 w-4 text-slate-500" />
                       <span>Subscription</span>
                     </Link>
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                   <DropdownMenuSeparator className="bg-slate-100 my-1" />
                   <DropdownMenuItem 
                     onClick={handleLogout}

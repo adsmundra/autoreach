@@ -74,11 +74,11 @@ export default function PricingPage() {
 
         <div className="bg-white rounded-[20px] shadow-xl p-8 border border-zinc-200">
           {/* Use static component for unauthenticated users to avoid API calls */}
-          {session ? (
+          {/* {session ? (
             <PricingTable />
           ) : (
             <StaticPricingTable products={staticProducts} />
-          )}
+          )} */}
         </div>
       </div>
     </div>
