@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { 
-  Loader2, 
-  Edit2, 
-  Trash2, 
-  ArrowRight, 
+import {
+  Loader2,
+  Edit2,
+  Trash2,
+  ArrowRight,
   ExternalLink,
   Globe,
   MapPin,
@@ -172,19 +172,19 @@ export default function BrandProfilePage() {
         try {
           const blogResponse = await fetch('/api/write-blog/list');
           if (blogResponse.ok) {
-             const blogData = await blogResponse.json();
-             const allBlogs = blogData.items || [];
-             const bName = brand.name.toLowerCase().trim();
-             const bUrl = brand.url.toLowerCase().trim().replace(/\/+$/, '');
-             fetchedBlogReports = allBlogs.filter((b: any) => {
-                const iName = (b.brandName || '').toLowerCase().trim();
-                const iUrl = (b.companyUrl || '').toLowerCase().trim().replace(/\/+$/, '');
-                if (iName && iName === bName) return true;
-                if (iName && bName.includes(iName)) return true;
-                if (iUrl && iUrl === bUrl) return true;
-                if (iUrl && bUrl && (iUrl.includes(bUrl) || bUrl.includes(iUrl))) return true;
-                return false;
-             });
+            const blogData = await blogResponse.json();
+            const allBlogs = blogData.items || [];
+            const bName = brand.name.toLowerCase().trim();
+            const bUrl = brand.url.toLowerCase().trim().replace(/\/+$/, '');
+            fetchedBlogReports = allBlogs.filter((b: any) => {
+              const iName = (b.brandName || '').toLowerCase().trim();
+              const iUrl = (b.companyUrl || '').toLowerCase().trim().replace(/\/+$/, '');
+              if (iName && iName === bName) return true;
+              if (iName && bName.includes(iName)) return true;
+              if (iUrl && iUrl === bUrl) return true;
+              if (iUrl && bUrl && (iUrl.includes(bUrl) || bUrl.includes(iUrl))) return true;
+              return false;
+            });
           }
         } catch (err) { console.error(err); }
 
@@ -197,15 +197,15 @@ export default function BrandProfilePage() {
             const bName = brand.name.toLowerCase().trim();
             const bUrl = brand.url.toLowerCase().trim().replace(/\/+$/, '');
             fetchedBrandMonitorReports = allAnalyses.filter((a: any) => {
-               const aUrl = (a.url || '').toLowerCase().trim().replace(/\/+$/, '');
-               const aName = (a.companyName || '').toLowerCase().trim();
-               if (aName && aName === bName) return true;
-               if (aName && bName.includes(aName)) return true;
-               if (aUrl && aUrl === bUrl) return true;
-               if (aUrl && bUrl && (aUrl.includes(bUrl) || bUrl.includes(aUrl))) return true;
-               return false;
+              const aUrl = (a.url || '').toLowerCase().trim().replace(/\/+$/, '');
+              const aName = (a.companyName || '').toLowerCase().trim();
+              if (aName && aName === bName) return true;
+              if (aName && bName.includes(aName)) return true;
+              if (aUrl && aUrl === bUrl) return true;
+              if (aUrl && bUrl && (aUrl.includes(bUrl) || bUrl.includes(aUrl))) return true;
+              return false;
             });
-            fetchedBrandMonitorReports.sort((a: any, b: any) => 
+            fetchedBrandMonitorReports.sort((a: any, b: any) =>
               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
             );
           }
@@ -289,8 +289,8 @@ export default function BrandProfilePage() {
           </div>
           <h2 className="text-xl font-bold text-slate-900 mb-2">Profile Not Found</h2>
           <p className="text-slate-500 mb-6 text-sm">{error || 'The requested brand profile could not be retrieved.'}</p>
-          <Link 
-            href="/brand-profiles" 
+          <Link
+            href="/brand-profiles"
             className="inline-flex items-center justify-center w-full px-4 py-2.5 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-all"
           >
             Return to Profiles
@@ -311,9 +311,9 @@ export default function BrandProfilePage() {
 
   // Enhanced section configuration
   const sectionConfig = [
-    { 
+    {
       id: 'monitor',
-      title: 'Brand Monitor', 
+      title: 'Brand Monitor',
       description: 'Track visibility & ranking',
       icon: TrendingUp,
       colorClass: 'text-blue-600 bg-blue-50 border-blue-100 hover:bg-blue-100',
@@ -322,32 +322,32 @@ export default function BrandProfilePage() {
       data: sectionData.brandMonitorReports,
       renderItem: (report: any) => (
         <Link
-            key={report.id}
-            href={`/brand-monitor?brandId=${brandId}&analysisId=${report.id}`}
-            className="group block p-4 border-b border-slate-50 hover:bg-slate-50 transition-all duration-200"
+          key={report.id}
+          href={`/brand-monitor?brandId=${brandId}&analysisId=${report.id}`}
+          className="group block p-4 border-b border-slate-50 hover:bg-slate-50 transition-all duration-200"
         >
-            <div className="flex justify-between items-center mb-2">
-                <span className="font-semibold text-slate-900 text-sm truncate flex-1">
-                    {report.companyName || 'Analysis'}
-                </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full border border-blue-100">
-                    {report.analysisData?.scores?.visibilityScore ?? report.analysisData?.visibility_score ?? '-'}
-                </span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
-                <Globe className="w-3 h-3 text-slate-400" />
-                <span className="truncate max-w-[200px]">{report.url}</span>
-            </div>
-            <div className="text-[10px] text-slate-400 flex items-center gap-1">
-                <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                {new Date(report.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-            </div>
+          <div className="flex justify-between items-center mb-2">
+            <span className="font-semibold text-slate-900 text-sm truncate flex-1">
+              {report.companyName || 'Analysis'}
+            </span>
+            <span className="text-[10px] font-bold px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full border border-blue-100">
+              {report.analysisData?.scores?.visibilityScore ?? report.analysisData?.visibility_score ?? '-'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
+            <Globe className="w-3 h-3 text-slate-400" />
+            <span className="truncate max-w-[200px]">{report.url}</span>
+          </div>
+          <div className="text-[10px] text-slate-400 flex items-center gap-1">
+            <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+            {new Date(report.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+          </div>
         </Link>
       )
     },
-    { 
+    {
       id: 'aeo',
-      title: 'AEO Audit', 
+      title: 'AEO Audit',
       description: 'Answer Engine Optimization',
       icon: Search,
       colorClass: 'text-purple-600 bg-purple-50 border-purple-100 hover:bg-purple-100',
@@ -356,30 +356,30 @@ export default function BrandProfilePage() {
       data: sectionData.aeoReports,
       renderItem: (report: AEOReport) => (
         <Link
-            key={report.id}
-            href={`/aeo-report?reportId=${report.id}&brandId=${brandId}&customerName=${encodeURIComponent(report.customerName)}&url=${encodeURIComponent(report.url)}`}
-            className="group block p-4 border-b border-slate-50 hover:bg-slate-50 transition-all duration-200"
+          key={report.id}
+          href={`/aeo-report?reportId=${report.id}&brandId=${brandId}&customerName=${encodeURIComponent(report.customerName)}&url=${encodeURIComponent(report.url)}`}
+          className="group block p-4 border-b border-slate-50 hover:bg-slate-50 transition-all duration-200"
         >
-            <div className="flex justify-between items-center mb-2">
-                <span className="font-semibold text-slate-900 text-sm truncate flex-1">
-                    {report.customerName}
-                </span>
-                <ArrowRight className="w-3 h-3 text-slate-300 group-hover:text-purple-500 transition-colors" />
-            </div>
-            <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
-                <Globe className="w-3 h-3 text-slate-400" />
-                <span className="truncate max-w-[200px]">{report.url}</span>
-            </div>
-            <div className="text-[10px] text-slate-400 flex items-center gap-1">
-                <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                {new Date(report.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-            </div>
+          <div className="flex justify-between items-center mb-2">
+            <span className="font-semibold text-slate-900 text-sm truncate flex-1">
+              {report.customerName}
+            </span>
+            <ArrowRight className="w-3 h-3 text-slate-300 group-hover:text-purple-500 transition-colors" />
+          </div>
+          <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
+            <Globe className="w-3 h-3 text-slate-400" />
+            <span className="truncate max-w-[200px]">{report.url}</span>
+          </div>
+          <div className="text-[10px] text-slate-400 flex items-center gap-1">
+            <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+            {new Date(report.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+          </div>
         </Link>
       )
     },
-    { 
+    {
       id: 'files',
-      title: 'GEO Files', 
+      title: 'GEO Files',
       description: 'Generative Engine Optimization',
       icon: FileText,
       colorClass: 'text-orange-600 bg-orange-50 border-orange-100 hover:bg-orange-100',
@@ -388,13 +388,13 @@ export default function BrandProfilePage() {
       data: sectionData.geoFileReports,
       renderItem: (item: any) => (
         <div key={item} className="p-6 text-sm text-slate-400 text-center italic bg-slate-50/50 mx-4 my-4 rounded-lg border border-dashed border-slate-200">
-            Feature coming soon
+          Feature coming soon
         </div>
       )
     },
-    { 
+    {
       id: 'blog',
-      title: 'IntelliWrite', 
+      title: 'IntelliWrite',
       description: 'AI Content Generation',
       icon: PenTool,
       colorClass: 'text-emerald-600 bg-emerald-50 border-emerald-100 hover:bg-emerald-100',
@@ -403,31 +403,36 @@ export default function BrandProfilePage() {
       data: sectionData.blogReports,
       renderItem: (report: any) => (
         <Link
-            key={report.id}
-            href={`/blog-writer?brandId=${brandId}&blogId=${report.id}`}
-            className="group block p-4 border-b border-slate-50 hover:bg-slate-50 transition-all duration-200"
+          key={report.id}
+          href={`/blog-writer?brandId=${brandId}&blogId=${report.id}`}
+          className="group block p-4 border-b border-slate-50 hover:bg-slate-50 transition-all duration-200"
         >
-            <div className="flex justify-between items-center mb-2">
-                <span className="font-semibold text-slate-900 text-sm truncate flex-1">
-                    {report.topic || 'Untitled Blog'}
-                </span>
-                <ArrowRight className="w-3 h-3 text-slate-300 group-hover:text-emerald-500 transition-colors" />
-            </div>
-            <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
-                <Briefcase className="w-3 h-3 text-slate-400" />
-                <span className="truncate max-w-[200px]">{report.brandName || report.companyUrl}</span>
-            </div>
-            <div className="text-[10px] text-slate-400 flex items-center gap-1">
-                <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                {new Date(report.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-            </div>
+          <div className="flex justify-between items-center mb-2">
+            <span className="font-semibold text-slate-900 text-sm truncate flex-1">
+              {report.topic || 'Untitled Blog'}
+            </span>
+            <ArrowRight className="w-3 h-3 text-slate-300 group-hover:text-emerald-500 transition-colors" />
+          </div>
+          <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
+            <Briefcase className="w-3 h-3 text-slate-400" />
+            <span className="truncate max-w-[200px]">{report.brandName || report.companyUrl}</span>
+          </div>
+          <div className="text-[10px] text-slate-400 flex items-center gap-1">
+            <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+            {new Date(report.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+          </div>
         </Link>
       )
     },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900 pb-12">
+    <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900 pb-12 relative overflow-hidden bg-grid-zinc-100">
+      {/* Background Decorative Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-blob" />
+        <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-3xl animate-blob animation-delay-2000" />
+      </div>
       {/* Breadcrumb Header */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -439,148 +444,148 @@ export default function BrandProfilePage() {
             <span className="text-slate-300">/</span>
             <span className="font-medium text-slate-900">{brand.name}</span>
           </div>
-          
+
           <div className="flex gap-2">
-             <button 
-                onClick={() => setIsEditing(true)}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-all"
-                title="Edit Profile"
-             >
-                <Edit2 className="w-4 h-4" />
-             </button>
-             <button 
-                onClick={handleDelete}
-                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                title="Delete Profile"
-             >
-                <Trash2 className="w-4 h-4" />
-             </button>
+            <button
+              onClick={() => setIsEditing(true)}
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-all"
+              title="Edit Profile"
+            >
+              <Edit2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleDelete}
+              className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+              title="Delete Profile"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
         {/* Main Brand Profile Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="p-6 md:p-8 flex flex-col md:flex-row gap-8 items-start">
             {/* Brand Logo/Avatar */}
             <div className="flex-shrink-0">
-               <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl shadow-inner border border-slate-100 bg-white p-3 flex items-center justify-center overflow-hidden">
-                  {brand.logo ? (
-                    <img src={brand.logo} alt={brand.name} className="w-full h-full object-contain" />
-                  ) : (
-                    <div className={`w-full h-full rounded-xl ${getDomainColor()} flex items-center justify-center text-white text-4xl font-bold shadow-lg`}>
-                      {getInitials()}
-                    </div>
-                  )}
-               </div>
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl shadow-inner border border-slate-100 bg-white p-3 flex items-center justify-center overflow-hidden">
+                {brand.logo ? (
+                  <img src={brand.logo} alt={brand.name} className="w-full h-full object-contain" />
+                ) : (
+                  <div className={`w-full h-full rounded-xl ${getDomainColor()} flex items-center justify-center text-white text-4xl font-bold shadow-lg`}>
+                    {getInitials()}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Brand Details */}
             <div className="flex-1 min-w-0">
-               <div className="flex flex-wrap items-center gap-3 mb-3">
-                  <h1 className="text-3xl font-bold text-slate-900">{brand.name}</h1>
-                  {brand.url && (
-                    <a href={brand.url} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-blue-600 transition-colors">
-                       <ExternalLink className="w-5 h-5" />
-                    </a>
-                  )}
-               </div>
+              <div className="flex flex-wrap items-center gap-3 mb-3">
+                <h1 className="text-3xl font-bold text-slate-900">{brand.name}</h1>
+                {brand.url && (
+                  <a href={brand.url} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-blue-600 transition-colors">
+                    <ExternalLink className="w-5 h-5" />
+                  </a>
+                )}
+              </div>
 
-               <p className="text-slate-600 text-sm leading-relaxed max-w-3xl mb-6">
-                  {brand.description || 'No description available.'}
-               </p>
+              <p className="text-slate-600 text-sm leading-relaxed max-w-3xl mb-6">
+                {brand.description || 'No description available.'}
+              </p>
 
-               <div className="flex flex-wrap gap-2 mb-6">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700">
-                     <Briefcase className="w-3.5 h-3.5 text-slate-400" />
-                     {brand.industry}
+              <div className="flex flex-wrap gap-2 mb-6">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700">
+                  <Briefcase className="w-3.5 h-3.5 text-slate-400" />
+                  {brand.industry}
+                </div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                  {brand.location}
+                </div>
+                {brand.scrapedData?.location && brand.scrapedData.location !== brand.location && (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-xs font-medium text-blue-700" title="Verified via Web">
+                    <Globe className="w-3.5 h-3.5" />
+                    {brand.scrapedData.location}
                   </div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700">
-                     <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                     {brand.location}
+                )}
+              </div>
+
+              {/* Keywords & Competitors Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-100">
+                {brand.scrapedData?.keywords && brand.scrapedData.keywords.length > 0 && (
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Target Keywords</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {brand.scrapedData.keywords.slice(0, 8).map((kw, i) => (
+                        <span key={i} className="px-2.5 py-1 bg-slate-50 text-slate-600 text-xs rounded-md border border-slate-200">
+                          {kw}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  {brand.scrapedData?.location && brand.scrapedData.location !== brand.location && (
-                     <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-xs font-medium text-blue-700" title="Verified via Web">
-                        <Globe className="w-3.5 h-3.5" />
-                        {brand.scrapedData.location}
-                     </div>
-                  )}
-               </div>
+                )}
 
-               {/* Keywords & Competitors Grid */}
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-100">
-                  {brand.scrapedData?.keywords && brand.scrapedData.keywords.length > 0 && (
-                    <div>
-                       <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Target Keywords</h3>
-                       <div className="flex flex-wrap gap-2">
-                          {brand.scrapedData.keywords.slice(0, 8).map((kw, i) => (
-                            <span key={i} className="px-2.5 py-1 bg-slate-50 text-slate-600 text-xs rounded-md border border-slate-200">
-                               {kw}
-                            </span>
-                          ))}
-                       </div>
+                {brand.competitors && brand.competitors.length > 0 && (
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Competitors</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {brand.competitors.slice(0, 6).map((comp, i) => (
+                        <span key={i} className="px-2.5 py-1 bg-purple-50 text-purple-700 text-xs rounded-md border border-purple-100 font-medium">
+                          {comp}
+                        </span>
+                      ))}
                     </div>
-                  )}
-
-                  {brand.competitors && brand.competitors.length > 0 && (
-                    <div>
-                       <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Competitors</h3>
-                       <div className="flex flex-wrap gap-2">
-                          {brand.competitors.slice(0, 6).map((comp, i) => (
-                            <span key={i} className="px-2.5 py-1 bg-purple-50 text-purple-700 text-xs rounded-md border border-purple-100 font-medium">
-                               {comp}
-                            </span>
-                          ))}
-                       </div>
-                    </div>
-                  )}
-               </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
         {/* Tools & History Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-           {sectionConfig.map((section) => (
-             <div key={section.id} className="flex flex-col bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden h-[500px]">
-                {/* Card Header / Action Area */}
-                <div className="p-5 border-b border-slate-100 bg-gradient-to-b from-slate-50/50 to-transparent flex-shrink-0">
-                   <div className="flex items-center gap-3 mb-2">
-                      <div className={`p-2 rounded-lg ${section.colorClass} bg-opacity-10`}>
-                         <section.icon className="w-5 h-5" />
-                      </div>
-                      <h3 className="font-bold text-slate-900">{section.title}</h3>
-                   </div>
-                   <p className="text-xs text-slate-500 mb-4 h-8 line-clamp-2">{section.description}</p>
-                   
-                   <Link 
-                      href={section.link}
-                      className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all active:scale-[0.98] ${section.buttonClass} shadow-sm`}
-                   >
-                      <Plus className="w-4 h-4" />
-                      Create New
-                   </Link>
+          {sectionConfig.map((section) => (
+            <div key={section.id} className="flex flex-col bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden h-[500px]">
+              {/* Card Header / Action Area */}
+              <div className="p-5 border-b border-slate-100 bg-gradient-to-b from-slate-50/50 to-transparent flex-shrink-0">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={`p-2 rounded-lg ${section.colorClass} bg-opacity-10`}>
+                    <section.icon className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-bold text-slate-900">{section.title}</h3>
                 </div>
+                <p className="text-xs text-slate-500 mb-4 h-8 line-clamp-2">{section.description}</p>
 
-                {/* Scrollable List */}
-                <div className="flex-1 overflow-y-auto bg-white scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent hover:scrollbar-thumb-slate-300">
-                   {section.data && section.data.length > 0 ? (
-                      <div className="flex flex-col">
-                        {section.data.map((item) => section.renderItem(item))}
-                      </div>
-                   ) : (
-                      <div className="h-full flex flex-col items-center justify-center text-center p-6 opacity-60">
-                         <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3">
-                            <section.icon className="w-5 h-5 text-slate-300" />
-                         </div>
-                         <p className="text-xs text-slate-400 font-medium">No history found</p>
-                      </div>
-                   )}
-                </div>
-             </div>
-           ))}
+                <Link
+                  href={section.link}
+                  className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all active:scale-[0.98] ${section.buttonClass} shadow-sm`}
+                >
+                  <Plus className="w-4 h-4" />
+                  Create New
+                </Link>
+              </div>
+
+              {/* Scrollable List */}
+              <div className="flex-1 overflow-y-auto bg-white scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent hover:scrollbar-thumb-slate-300">
+                {section.data && section.data.length > 0 ? (
+                  <div className="flex flex-col">
+                    {section.data.map((item) => section.renderItem(item))}
+                  </div>
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-center p-6 opacity-60">
+                    <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3">
+                      <section.icon className="w-5 h-5 text-slate-300" />
+                    </div>
+                    <p className="text-xs text-slate-400 font-medium">No history found</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
 
       </div>
@@ -590,11 +595,11 @@ export default function BrandProfilePage() {
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
-               <h2 className="text-2xl font-bold text-slate-900">Edit Brand Profile</h2>
-               <button onClick={() => setIsEditing(false)} className="text-slate-400 hover:text-slate-600">
-                  <span className="sr-only">Close</span>
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-               </button>
+              <h2 className="text-2xl font-bold text-slate-900">Edit Brand Profile</h2>
+              <button onClick={() => setIsEditing(false)} className="text-slate-400 hover:text-slate-600">
+                <span className="sr-only">Close</span>
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
             </div>
 
             <form onSubmit={handleEditSubmit} className="space-y-5">
