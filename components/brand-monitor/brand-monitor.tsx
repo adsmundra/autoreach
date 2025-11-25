@@ -27,6 +27,9 @@ import { useSaveBrandAnalysis } from '@/hooks/useBrandAnalyses';
 // Components
 import { UrlInputSection } from './url-input-section';
 import { CompanyCard } from './company-card';
+import { CompetitorSelectionScreen } from './competitor-selection-screen';
+import { ScrapingLoader } from './scraping-loader';
+import { ProfessionalLoader } from './professional-loader';
 import { AnalysisProgressSection } from './analysis-progress-section';
 import { ResultsNavigation } from './results-navigation';
 import { PromptsResponsesTab } from './prompts-responses-tab';
@@ -122,6 +125,7 @@ export function BrandMonitor({
     company,
     showInput,
     showCompanyCard,
+    showCompetitorsScreen,
     showPromptsList,
     showCompetitors,
     customPrompts,
@@ -236,18 +240,13 @@ export function BrandMonitor({
 
       const data = await response.json();
       console.log('Scrape data received:', data);
-      
+
       if (!data.company) {
         throw new Error('No company data received');
       }
-      
-      // If prompts were generated on the server, prefill them for analysis view
-      if (Array.isArray(data.prompts) && data.prompts.length > 0) {
-        const promptStrings = data.prompts.map((p: any) => p?.prompt ?? p).filter((p: any) => typeof p === 'string');
-        if (promptStrings.length > 0) {
-          dispatch({ type: 'SET_ANALYZING_PROMPTS', payload: promptStrings });
-        }
-      }
+
+      // DO NOT prefill prompts here anymore - they will be generated after competitor selection
+      // Prompts will be generated when user continues from the competitor selection screen
       
       // Scrape was successful - credits have been deducted, refresh the navbar
       if (onCreditsUpdate) {
@@ -280,53 +279,134 @@ export function BrandMonitor({
     }
   }, [url, creditsAvailable, onCreditsUpdate]);
 
-  // Handle initialUrl and autoRun
+  // Handle initialUrl - when provided, skip URL input and go directly to scraping
   useEffect(() => {
     const run = async () => {
       try {
         if (!initialUrl) return;
-        
+
         // Always set URL if provided
         if (url !== initialUrl) {
-            dispatch({ type: 'SET_URL', payload: initialUrl });
-            // Validate immediately
-            const isValid = isValidUrlFormat(initialUrl);
-            dispatch({ type: 'SET_URL_VALID', payload: isValid });
+          dispatch({ type: 'SET_URL', payload: initialUrl });
+          // Validate immediately
+          const isValid = isValidUrlFormat(initialUrl);
+          dispatch({ type: 'SET_URL_VALID', payload: isValid });
         }
 
-        // Only run pipeline if autoRun is true
-        if (!autoRun) return;
-        
+        // Skip URL input screen when initialUrl is provided
+        dispatch({ type: 'SET_SHOW_INPUT', payload: false });
+
+        // Only proceed with scraping if we haven't already
         if (analysis || company || loading || analyzing || preparingAnalysis) return;
 
-        // confirm on low credits
-        if (creditsAvailable < CREDITS_PER_BRAND_ANALYSIS) {
-          if (onRequireCreditsConfirm) {
-            onRequireCreditsConfirm(CREDITS_PER_BRAND_ANALYSIS, creditsAvailable, async () => {
-              await handleScrape();
-              await new Promise(res => setTimeout(res, 50));
-              await handlePrepareAnalysis();
-              await new Promise(res => setTimeout(res, 50));
-              await handleAnalyze();
-            });
-            return;
-          }
-          // if no confirm handler, bail out
+        // Check credits before scraping
+        if (creditsAvailable < 1) {
+          dispatch({ type: 'SET_ERROR', payload: 'Insufficient credits. You need at least 1 credit to analyze a URL.' });
           return;
         }
-        // proceed automatically
-        await handleScrape();
-        await new Promise(res => setTimeout(res, 50));
-        await handlePrepareAnalysis();
-        await new Promise(res => setTimeout(res, 50));
-        await handleAnalyze();
+
+        console.log('Starting auto-scrape for URL:', initialUrl);
+        dispatch({ type: 'SET_LOADING', payload: true });
+        dispatch({ type: 'SET_ERROR', payload: null });
+
+        // Auto-start scraping when initialUrl is provided
+        const response = await fetch('/api/brand-monitor/scrape', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: initialUrl,
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 1 week in milliseconds
+          }),
+        });
+
+        if (!response.ok) {
+          try {
+            const errorData = await response.json();
+            console.error('Scrape API error:', errorData);
+            throw new Error(errorData.error || 'Failed to scrape');
+          } catch (e) {
+            throw new Error('Failed to scrape website');
+          }
+        }
+
+        const data = await response.json();
+        console.log('Scrape data received:', data);
+
+        if (!data.company) {
+          throw new Error('No company data received');
+        }
+
+        // Update credits
+        if (onCreditsUpdate) {
+          onCreditsUpdate();
+        }
+
+        dispatch({ type: 'SCRAPE_SUCCESS', payload: data.company });
+
+        // Small delay to ensure DOM updates
+        await new Promise(res => setTimeout(res, 100));
+        dispatch({ type: 'SET_SHOW_COMPANY_CARD', payload: true });
+
+        // Prepare analysis (identify competitors)
+        dispatch({ type: 'SET_PREPARING_ANALYSIS', payload: true });
+
+        // Extract competitors from scraped data
+        const extractedCompetitors = data.company.scrapedData?.competitors || [];
+        const competitorMap = new Map();
+
+        extractedCompetitors.forEach((name: string) => {
+          const normalizedName = normalizeCompetitorName(name);
+          const url = assignUrlToCompetitor(name);
+          if (!competitorMap.has(normalizedName)) {
+            competitorMap.set(normalizedName, { name, url });
+          }
+        });
+
+        const getFaviconDomain = (url?: string) => {
+          if (!url) return undefined;
+          const [domain] = url.split('/');
+          return domain;
+        };
+
+        let competitors = Array.from(competitorMap.values())
+          .filter(comp => comp.name !== 'Competitor 1' && comp.name !== 'Competitor 2' &&
+                          comp.name !== 'Competitor 3' && comp.name !== 'Competitor 4' &&
+                          comp.name !== 'Competitor 5')
+          .slice(0, 10)
+          .map(comp => {
+            const fallbackUrl = comp.url || assignUrlToCompetitor(comp.name);
+            const validatedUrl = fallbackUrl ? validateCompetitorUrl(fallbackUrl) : undefined;
+            const faviconDomain = getFaviconDomain(validatedUrl);
+
+            return {
+              ...comp,
+              url: validatedUrl,
+              metadata: faviconDomain ? {
+                ...comp.metadata,
+                favicon: `https://www.google.com/s2/favicons?domain=${faviconDomain}&sz=64`,
+                validated: true,
+              } : comp.metadata,
+            };
+          });
+
+        competitors = competitors.slice(0, 6);
+
+        console.log('Identified competitors:', competitors);
+        dispatch({ type: 'SET_IDENTIFIED_COMPETITORS', payload: competitors });
+        dispatch({ type: 'SET_SHOW_COMPETITORS_SCREEN', payload: true });
+        dispatch({ type: 'SET_PREPARING_ANALYSIS', payload: false });
+        dispatch({ type: 'SET_LOADING', payload: false });
+
       } catch (e) {
-        console.error('[AutoRun] pipeline error', e);
+        console.error('[InitialUrl] pipeline error', e);
+        dispatch({ type: 'SET_ERROR', payload: 'Failed to load website data. Please try again.' });
+        dispatch({ type: 'SET_LOADING', payload: false });
+        dispatch({ type: 'SET_PREPARING_ANALYSIS', payload: false });
       }
     };
     run();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialUrl, autoRun]);
+  }, [initialUrl, creditsAvailable, onCreditsUpdate]);
   
   const handlePrepareAnalysis = useCallback(async () => {
     if (!company) return;
@@ -408,28 +488,102 @@ export function BrandMonitor({
 
     console.log('Identified competitors:', competitors);
     dispatch({ type: 'SET_IDENTIFIED_COMPETITORS', payload: competitors });
-    
-    // Show competitors on the same page with animation
-    dispatch({ type: 'SET_SHOW_COMPETITORS', payload: true });
+
+    // If called from initial URL (brand monitor creation), show competitors screen directly
+    // Otherwise show competitors inline on company card
+    if (initialUrl) {
+      dispatch({ type: 'SET_SHOW_COMPETITORS_SCREEN', payload: true });
+    } else {
+      dispatch({ type: 'SET_SHOW_COMPETITORS', payload: true });
+    }
     dispatch({ type: 'SET_PREPARING_ANALYSIS', payload: false });
-  }, [company]);
+  }, [company, initialUrl]);
   
   const handleProceedToPrompts = useCallback(async () => {
     if (!company) return;
-    // Add a fade-out class to the current view
+    // Transition to the competitor selection screen
     const currentView = document.querySelector('.animate-panel-in');
     if (currentView) {
       currentView.classList.add('opacity-0');
     }
 
-    // We already prefetched prompts in the scrape API response.
-    // Just transition to the prompts view.
     setTimeout(() => {
-      dispatch({ type: 'SET_SHOW_COMPETITORS', payload: false });
-      dispatch({ type: 'SET_SHOW_PROMPTS_LIST', payload: true });
+      dispatch({ type: 'SET_SHOW_COMPANY_CARD', payload: false });
+      dispatch({ type: 'SET_SHOW_COMPETITORS_SCREEN', payload: true });
     }, 300);
   }, [company]);
-  
+
+  // New handler: Generate prompts based on final competitors and show prompts screen
+  const handleContinueFromCompetitorsScreen = useCallback(async () => {
+    if (!company) return;
+
+    dispatch({ type: 'SET_PREPARING_ANALYSIS', payload: true });
+
+    try {
+      // Generate fresh prompts based on current competitors
+      const competitorNames = identifiedCompetitors.map(c => c.name);
+
+      const response = await fetch('/api/brand-monitor/generate-prompts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company,
+          competitors: competitorNames
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate prompts');
+      }
+
+      const data = await response.json();
+
+      // Set the newly generated prompts
+      if (Array.isArray(data.prompts) && data.prompts.length > 0) {
+        const promptStrings = data.prompts.map((p: any) => p?.prompt ?? p).filter((p: any) => typeof p === 'string');
+        if (promptStrings.length > 0) {
+          dispatch({ type: 'SET_ANALYZING_PROMPTS', payload: promptStrings });
+          console.log('✅ Fresh prompts generated from competitors selection:', promptStrings.length, 'prompts');
+        }
+      }
+
+      // Update credits (backend already tracked the usage)
+      if (onCreditsUpdate) {
+        onCreditsUpdate();
+      }
+
+      // Transition to prompts view with fade out
+      const currentView = document.querySelector('.animate-panel-in');
+      if (currentView) {
+        currentView.classList.add('opacity-0');
+      }
+
+      setTimeout(() => {
+        dispatch({ type: 'SET_SHOW_COMPETITORS_SCREEN', payload: false });
+        dispatch({ type: 'SET_SHOW_PROMPTS_LIST', payload: true });
+        dispatch({ type: 'SET_PREPARING_ANALYSIS', payload: false });
+      }, 300);
+    } catch (error) {
+      console.error('Error generating prompts from competitors:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to generate prompts. Please try again.' });
+      dispatch({ type: 'SET_PREPARING_ANALYSIS', payload: false });
+    }
+  }, [company, identifiedCompetitors, onCreditsUpdate]);
+
+  // Handler for going back from prompts to competitors screen
+  const handleBackToCompetitors = useCallback(async () => {
+    // Fade out current view
+    const currentView = document.querySelector('.animate-panel-in');
+    if (currentView) {
+      currentView.classList.add('opacity-0');
+    }
+
+    setTimeout(() => {
+      dispatch({ type: 'SET_SHOW_PROMPTS_LIST', payload: false });
+      dispatch({ type: 'SET_SHOW_COMPETITORS_SCREEN', payload: true });
+    }, 300);
+  }, []);
+
   const handleAnalyze = useCallback(async () => {
     if (!company) return;
 
@@ -676,13 +830,31 @@ export function BrandMonitor({
         </div>
       )}
 
+      {/* Scraping Loader - Show while loading but no company yet */}
+      {!showInput && loading && !company && (
+        <ProfessionalLoader
+          stage="scraping"
+          title="Analyzing Your Website"
+          message="We're collecting and analyzing your website data..."
+        />
+      )}
+
+      {/* Professional Loader - Show while preparing analysis (identifying competitors) */}
+      {company && !showCompanyCard && !showCompetitorsScreen && preparingAnalysis && (
+        <ProfessionalLoader
+          stage="preparing"
+          title="Identifying Competitors"
+          message="Finding and analyzing relevant competitors..."
+        />
+      )}
+
       {/* Company Card Section with Competitors */}
-      {!showInput && company && !showPromptsList && !analyzing && !analysis && (
+      {!showInput && company && !showCompetitorsScreen && !showPromptsList && !analyzing && !analysis && (
         <div className="flex-1 flex items-center justify-center animate-panel-in min-h-0 h-full">
           <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 h-full min-h-0">
             <div className="w-full space-y-6 h-full min-h-0">
             <div className={`transition-all duration-500 ${showCompanyCard ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-              <CompanyCard 
+              <CompanyCard
                 company={company}
                 onAnalyze={handlePrepareAnalysis}
                 analyzing={preparingAnalysis}
@@ -699,6 +871,21 @@ export function BrandMonitor({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Competitor Selection Screen */}
+      {showCompetitorsScreen && company && !showPromptsList && !analyzing && !analysis && (
+        <CompetitorSelectionScreen
+          company={company}
+          identifiedCompetitors={identifiedCompetitors}
+          onRemoveCompetitor={(idx) => dispatch({ type: 'REMOVE_COMPETITOR', payload: idx })}
+          onAddCompetitor={() => {
+            dispatch({ type: 'TOGGLE_MODAL', payload: { modal: 'addCompetitor', show: true } });
+            dispatch({ type: 'SET_NEW_COMPETITOR', payload: { name: '', url: '' } });
+          }}
+          onContinueToNextStep={handleContinueFromCompetitorsScreen}
+          isLoading={preparingAnalysis}
+        />
       )}
 
       {/* Prompts List Section */}
@@ -731,6 +918,7 @@ export function BrandMonitor({
                     dispatch({ type: 'SET_NEW_PROMPT_TEXT', payload: '' });
                 }}
                 onStartAnalysis={handleAnalyze}
+                onBack={handleBackToCompetitors}
             />
             </div>
         </div>

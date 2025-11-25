@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Plus, Trash2, CheckIcon } from 'lucide-react';
+import { Loader2, Plus, Trash2, CheckIcon, ArrowLeft } from 'lucide-react';
 import { Company, AnalysisStage } from '@/lib/types';
 import { IdentifiedCompetitor, PromptCompletionStatus } from '@/lib/brand-monitor-reducer';
 import { getEnabledProviders } from '@/lib/provider-config';
@@ -22,6 +22,7 @@ interface AnalysisProgressSectionProps {
   onRemoveCustomPrompt: (prompt: string) => void;
   onAddPromptClick: () => void;
   onStartAnalysis: () => void;
+  onBack?: () => void;
 }
 
 // Provider icon mapping
@@ -78,7 +79,8 @@ export function AnalysisProgressSection({
   promptCompletionStatus,
   onRemoveCustomPrompt,
   onAddPromptClick,
-  onStartAnalysis
+  onStartAnalysis,
+  onBack
 }: AnalysisProgressSectionProps) {
     // prompts already includes custom prompts merged from brand-monitor.tsx
     const displayPrompts = prompts;
@@ -91,9 +93,20 @@ export function AnalysisProgressSection({
           <Card className="p-2 bg-card text-card-foreground gap-6 rounded-xl border py-6 shadow-sm border-gray-200 h-full flex flex-col">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-xl font-semibold">
-                  {analyzing ? 'Analysis Progress' : 'Prompts'}
-                </CardTitle>
+                <div className="flex items-center gap-3">
+                  {!analyzing && onBack && (
+                    <button
+                      onClick={onBack}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      title="Go back to competitors"
+                    >
+                      <ArrowLeft className="w-5 h-5 text-gray-600" />
+                    </button>
+                  )}
+                  <CardTitle className="text-xl font-semibold">
+                    {analyzing ? 'Analysis Progress' : 'Prompts'}
+                  </CardTitle>
+                </div>
                 {/* Competitors list on the right */}
                 {!analyzing && (
                   <div className="flex items-center gap-2">

@@ -11,6 +11,7 @@ export type BrandMonitorAction =
   | { type: 'SET_COMPANY'; payload: Company | null }
   | { type: 'SET_SHOW_INPUT'; payload: boolean }
   | { type: 'SET_SHOW_COMPANY_CARD'; payload: boolean }
+  | { type: 'SET_SHOW_COMPETITORS_SCREEN'; payload: boolean }
   | { type: 'SET_SHOW_PROMPTS_LIST'; payload: boolean }
   | { type: 'SET_SHOW_COMPETITORS'; payload: boolean }
   | { type: 'SET_CUSTOM_PROMPTS'; payload: string[] }
@@ -124,6 +125,7 @@ export interface BrandMonitorState {
   // UI state
   showInput: boolean;
   showCompanyCard: boolean;
+  showCompetitorsScreen: boolean;
   showPromptsList: boolean;
   showCompetitors: boolean;
   
@@ -169,6 +171,7 @@ export const initialBrandMonitorState: BrandMonitorState = {
   analysis: null,
   showInput: true,
   showCompanyCard: false,
+  showCompetitorsScreen: false,
   showPromptsList: false,
   showCompetitors: false,
   customPrompts: [],
@@ -228,10 +231,13 @@ export function brandMonitorReducer(
       
     case 'SET_SHOW_COMPANY_CARD':
       return { ...state, showCompanyCard: action.payload };
-      
+
+    case 'SET_SHOW_COMPETITORS_SCREEN':
+      return { ...state, showCompetitorsScreen: action.payload };
+
     case 'SET_SHOW_PROMPTS_LIST':
       return { ...state, showPromptsList: action.payload };
-      
+
     case 'SET_SHOW_COMPETITORS':
       return { ...state, showCompetitors: action.payload };
       
