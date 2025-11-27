@@ -874,6 +874,10 @@ export function BrandMonitor({
                     dispatch({ type: 'TOGGLE_MODAL', payload: { modal: 'addPrompt', show: true } });
                     dispatch({ type: 'SET_NEW_PROMPT_TEXT', payload: '' });
                 }}
+                onAddCompetitorClick={() => {
+                  dispatch({ type: 'TOGGLE_MODAL', payload: { modal: 'addCompetitor', show: true } });
+                  dispatch({ type: 'SET_NEW_COMPETITOR', payload: { name: '', url: '' } });
+                }}
                 onStartAnalysis={handleAnalyze}
                 onBack={handleBackToCompetitors}
             />
