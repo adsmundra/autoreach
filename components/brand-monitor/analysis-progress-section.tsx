@@ -74,243 +74,766 @@ export function AnalysisProgressSection({
     setMounted(true);
   }, []);
 
-  return (
-    <div className="relative w-full h-full min-h-[800px] flex flex-col font-sans selection:bg-indigo-100 selection:text-indigo-900 bg-white">
-      
-      {/* Background Ambience - Clean & Professional */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-         <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-blue-50/50 rounded-full blur-[100px] mix-blend-multiply animate-float-slow" />
-         <div className="absolute bottom-[-10%] left-[-5%] w-[600px] h-[600px] bg-indigo-50/50 rounded-full blur-[100px] mix-blend-multiply animate-float-slow animation-delay-2000" />
-         <div 
-            className="absolute inset-0 opacity-[0.4]" 
-            style={{
-                backgroundImage: 'radial-gradient(#E2E8F0 1px, transparent 1px)',
-                backgroundSize: '24px 24px'
-            }}
-         />
-      </div>
+    return (
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-6 h-full flex flex-col">
+      <div className="relative w-full h-full min-h-[800px] flex flex-col items-center justify-center p-6 font-sans selection:bg-indigo-100 selection:text-indigo-900">
+
         
-        {/* Dynamic Header */}
-        <div className={`pt-8 pb-6 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-            <div className="flex-1">
-               <div className="flex items-center gap-3 mb-2">
-                 {!analyzing && onBack && (
-                  <button onClick={onBack} className="p-2 rounded-full hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-700">
-                    <ArrowLeft className="w-5 h-5" />
-                  </button>
-                 )}
-                 <div className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border backdrop-blur-md ${analyzing ? 'bg-blue-50 border-blue-200 text-blue-600 animate-pulse' : 'bg-white border-slate-200 text-slate-500 shadow-sm'}`}>
-                    {analyzing ? 'Analysis in Progress' : 'Analysis Setup'}
+
+        {/* Background Ambience */}
+
+        <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+
+           <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-blue-50/50 rounded-full blur-[100px] mix-blend-multiply animate-float-slow" />
+
+           <div className="absolute bottom-[-10%] left-[-5%] w-[600px] h-[600px] bg-indigo-50/50 rounded-full blur-[100px] mix-blend-multiply animate-float-slow animation-delay-2000" />
+
+        </div>
+
+  
+
+        {/* Main Container Box */}
+
+        <div className={`relative z-10 w-full max-w-7xl h-full flex flex-col bg-white rounded-[2.5rem] border border-slate-200 shadow-2xl overflow-hidden transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+
+          
+
+          {/* Dynamic Header */}
+
+          <div className="px-8 pt-8 pb-6 bg-white/80 backdrop-blur-xl border-b border-slate-100 z-20">
+
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+
+              <div className="flex-1">
+
+                 <div className="flex items-center gap-3 mb-2">
+
+                   {!analyzing && onBack && (
+
+                    <button onClick={onBack} className="p-2 rounded-full hover:bg-slate-100 hover:shadow-sm border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-700">
+
+                      <ArrowLeft className="w-5 h-5" />
+
+                    </button>
+
+                   )}
+
+                   <div className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border backdrop-blur-md ${analyzing ? 'bg-blue-50 border-blue-200 text-blue-600 animate-pulse' : 'bg-slate-50 border-slate-200 text-slate-500 shadow-sm'}`}>
+
+                      {analyzing ? 'Analysis in Progress' : 'Analysis Setup'}
+
+                   </div>
+
                  </div>
-               </div>
-               
-               <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight mb-3">
-                 {analyzing ? (
-                   <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 animate-gradient-x">
-                     Analyzing Brand Voice
-                   </span>
-                 ) : 'Configure Analysis'}
-               </h1>
-               
-               <p className="text-base text-slate-600 max-w-2xl leading-relaxed">
-                  {analyzing 
-                    ? 'Our autonomous agents are currently scanning search engines to determine your share of voice and sentiment.'
-                    : 'Review the generated search queries below. These prompts are tailored to your industry to extract the most relevant insights.'
-                  }
-               </p>
+
+                 
+
+                 <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight mb-2">
+
+                   {analyzing ? (
+
+                     <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 animate-gradient-x">
+
+                       Analyzing Brand Voice
+
+                     </span>
+
+                   ) : 'Configure Analysis'}
+
+                 </h1>
+
+                 
+
+                 <p className="text-base text-slate-600 max-w-2xl leading-relaxed">
+
+                    {analyzing 
+
+                      ? 'Our autonomous agents are currently scanning search engines to determine your share of voice and sentiment.'
+
+                      : 'Review the generated search queries below. These prompts are tailored to your industry to extract the most relevant insights.'
+
+                    }
+
+                 </p>
+
+              </div>
+
+  
+
+              {/* Status / Competitors Widget */}
+
+              {!analyzing && (
+
+                <div className="bg-slate-50/50 border border-slate-200/60 shadow-sm rounded-2xl p-4 flex items-center gap-4 animate-scale-in origin-right">
+
+                   <div className="flex flex-col">
+
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Comparing Against</span>
+
+                      <div className="flex items-center gap-2">
+
+                        <div className="flex -space-x-2">
+
+                          {identifiedCompetitors.slice(0, 5).map((comp, idx) => {
+
+                               const domain = comp.url ? comp.url.split('/')[0] : undefined;
+
+                               const faviconSrc = comp.metadata?.favicon || (domain
+
+                                 ? `https://www.google.com/s2/favicons?domain=${domain}&sz=64`
+
+                                 : undefined);
+
+                               return (
+
+                                 <div key={idx} className="w-9 h-9 rounded-full ring-2 ring-white bg-white shadow-sm flex items-center justify-center overflow-hidden transition-transform hover:-translate-y-1 z-0 hover:z-10 border border-slate-100" title={comp.name}>
+
+                                    {faviconSrc ? (
+
+                                      <img src={faviconSrc} alt={comp.name} className="w-full h-full object-contain" />
+
+                                    ) : (
+
+                                      <span className="text-xs font-bold text-slate-400">{comp.name.charAt(0)}</span>
+
+                                    )}
+
+                                 </div>
+
+                               );
+
+                          })}
+
+                        </div>
+
+                        <span className="text-xs font-medium text-slate-500 ml-1">
+
+                           {identifiedCompetitors.length > 5 ? `+${identifiedCompetitors.length - 5}` : ''}
+
+                        </span>
+
+                      </div>
+
+                   </div>
+
+                   
+
+                   <div className="w-px h-10 bg-slate-200 mx-1"></div>
+
+                   
+
+                   <button 
+
+                     onClick={onAddCompetitorClick}
+
+                     className="flex flex-col items-center justify-center w-10 h-10 rounded-xl bg-white border border-dashed border-slate-300 text-slate-400 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50 transition-all shadow-sm hover:shadow"
+
+                     title="Add Competitor"
+
+                   >
+
+                      <Plus className="w-5 h-5" />
+
+                   </button>
+
+                </div>
+
+              )}
+
+              
+
+              {/* Active Analysis Monitor */}
+
+              {analyzing && analysisProgress && (
+
+                 <div className="flex-1 max-w-md w-full bg-white border border-slate-200 shadow-lg rounded-xl p-5 animate-fade-in-up">
+
+                    <div className="flex justify-between items-center mb-3">
+
+                       <div className="flex items-center gap-2">
+
+                          <span className="relative flex h-2.5 w-2.5">
+
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+
+                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
+
+                          </span>
+
+                          <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">{analysisProgress.message}</span>
+
+                       </div>
+
+                       <span className="text-xl font-bold text-slate-800 tabular-nums">{analysisProgress.progress}%</span>
+
+                    </div>
+
+                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+
+                       <div 
+
+                         className="h-full bg-blue-600 rounded-full"
+
+                         style={{ width: `${analysisProgress.progress}%`, transition: 'width 0.5s cubic-bezier(0.4, 0, 0.2, 1)' }}
+
+                       />
+
+                    </div>
+
+                 </div>
+
+              )}
+
             </div>
 
-            {/* Status / Competitors Widget */}
-            {!analyzing && (
-              <div className="bg-white/80 backdrop-blur-xl border border-slate-200 shadow-sm rounded-xl p-4 flex items-center gap-4 animate-scale-in origin-right">
-                 <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Comparing Against</span>
-                    <div className="flex items-center gap-2">
-                      <div className="flex -space-x-2">
-                        {identifiedCompetitors.slice(0, 5).map((comp, idx) => {
-                             const domain = comp.url ? comp.url.split('/')[0] : undefined;
-                             const faviconSrc = comp.metadata?.favicon || (domain
-                               ? `https://www.google.com/s2/favicons?domain=${domain}&sz=64`
-                               : undefined);
-                             return (
-                               <div key={idx} className="w-9 h-9 rounded-full ring-2 ring-white bg-white shadow-sm flex items-center justify-center overflow-hidden transition-transform hover:-translate-y-1 z-0 hover:z-10 border border-slate-100" title={comp.name}>
-                                  {faviconSrc ? (
-                                    <img src={faviconSrc} alt={comp.name} className="w-full h-full object-contain" />
-                                  ) : (
-                                    <span className="text-xs font-bold text-slate-400">{comp.name.charAt(0)}</span>
-                                  )}
-                               </div>
-                             );
-                        })}
-                      </div>
-                      <span className="text-xs font-medium text-slate-500 ml-1">
-                         {identifiedCompetitors.length > 5 ? `+${identifiedCompetitors.length - 5}` : ''}
-                      </span>
-                    </div>
-                 </div>
-                 
-                 <div className="w-px h-10 bg-slate-200 mx-1"></div>
-                 
-                 <button 
-                   onClick={onAddCompetitorClick}
-                   className="flex flex-col items-center justify-center w-10 h-10 rounded-lg bg-white border border-dashed border-slate-300 text-slate-400 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50 transition-all"
-                   title="Add Competitor"
-                 >
-                    <Plus className="w-5 h-5" />
-                 </button>
-              </div>
-            )}
-            
-            {/* Active Analysis Monitor */}
-            {analyzing && analysisProgress && (
-               <div className="flex-1 max-w-md w-full bg-white border border-slate-200 shadow-lg rounded-xl p-5 animate-fade-in-up">
-                  <div className="flex justify-between items-center mb-3">
-                     <div className="flex items-center gap-2">
-                        <span className="relative flex h-2.5 w-2.5">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
-                        </span>
-                        <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">{analysisProgress.message}</span>
-                     </div>
-                     <span className="text-xl font-bold text-slate-800 tabular-nums">{analysisProgress.progress}%</span>
-                  </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                     <div 
-                       className="h-full bg-blue-600 rounded-full"
-                       style={{ width: `${analysisProgress.progress}%`, transition: 'width 0.5s cubic-bezier(0.4, 0, 0.2, 1)' }}
-                     />
-                  </div>
-               </div>
-            )}
           </div>
-        </div>
 
-        {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto pb-32 -mx-6 px-6 mask-image-b">
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-             {displayPrompts.map((prompt, index) => {
-                const isCustom = customPrompts.includes(prompt);
-                const delay = index * 30;
-                
-                // Status Determination
-                let statusColor = "bg-white border-slate-200 hover:border-blue-300 hover:shadow-md";
-                let isRunning = false;
-                
-                if (analyzing) {
-                    const statuses = getEnabledProviders().map(p => promptCompletionStatus[prompt.trim()]?.[p.name]);
-                    isRunning = statuses.some(s => s === 'running');
-                    const isCompleted = statuses.every(s => s === 'completed');
-                    
-                    if (isRunning) {
-                        statusColor = "bg-blue-50 border-blue-200 shadow-md ring-1 ring-blue-100";
-                    } else if (isCompleted) {
-                        statusColor = "bg-green-50/30 border-green-200";
-                    }
-                }
+  
 
-                return (
-                   <div 
-                     key={`${prompt}-${index}`}
-                     className={`
-                        group relative p-5 rounded-xl border transition-all duration-300
-                        ${statusColor}
-                        ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}
-                     `}
-                     style={{ transitionDelay: `${delay}ms` }}
-                   >
-                      <div className="flex items-start relative">
-                         <div className="flex-1">
-                            <div className="flex items-center justify-between mb-1.5">
-                               <Badge variant="secondary" className={`text-[10px] uppercase font-bold px-1.5 h-5 ${isCustom ? 'bg-purple-100 text-purple-700 hover:bg-purple-100' : 'bg-slate-100 text-slate-600 hover:bg-slate-100'}`}>
-                                  {isCustom ? 'User Query' : 'Auto-Generated'}
-                                </Badge>
-                                {!analyzing && (
-                                  <button onClick={() => onRemoveCustomPrompt(prompt)} className="text-slate-300 hover:text-red-500 transition-colors p-1">
-                                     <Trash2 className="w-4 h-4" />
-                                  </button>
-                                )}
-                            </div>
-                            <p className="text-slate-800 font-medium text-sm leading-relaxed">
-                               "{prompt}"
-                            </p>
-                            
-                            {/* Provider Status Indicators */}
-                            {analyzing && (
-                               <div className="mt-3 flex items-center gap-2">
-                                  {getEnabledProviders().map(config => {
-                                      const provider = config.name;
-                                      const status = promptCompletionStatus[prompt.trim()]?.[provider] || 'pending';
+                  {/* Scrollable Content Area */}
+
+  
+
+                  <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50 relative scroll-smooth">
+
+  
+
+                     <div className="absolute inset-0 pointer-events-none opacity-[0.3]" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
+
+  
+
+                     
+
+  
+
+                     <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-4">
+
+  
+
+                       {displayPrompts.map((prompt, index) => {
+
+  
+
+                          const isCustom = customPrompts.includes(prompt);
+
+  
+
+                          const delay = index * 30;
+
+  
+
+                          
+
+  
+
+                          // Status Determination
+
+  
+
+                          let statusColor = "bg-white border-slate-200 hover:border-blue-300 hover:shadow-md";
+
+  
+
+                          let isRunning = false;
+
+  
+
+                          
+
+  
+
+                          if (analyzing) {
+
+  
+
+                              const statuses = getEnabledProviders().map(p => promptCompletionStatus[prompt.trim()]?.[p.name]);
+
+  
+
+                              isRunning = statuses.some(s => s === 'running');
+
+  
+
+                              const isCompleted = statuses.every(s => s === 'completed');
+
+  
+
+                              
+
+  
+
+                              if (isRunning) {
+
+  
+
+                                  statusColor = "bg-blue-50 border-blue-200 shadow-md ring-1 ring-blue-100";
+
+  
+
+                              } else if (isCompleted) {
+
+  
+
+                                  statusColor = "bg-green-50/30 border-green-200";
+
+  
+
+                              }
+
+  
+
+                          }
+
+  
+
+          
+
+  
+
+                          return (
+
+  
+
+                             <div 
+
+  
+
+                               key={`${prompt}-${index}`}
+
+  
+
+                               className={`
+
+  
+
+                                  group relative p-5 rounded-2xl border transition-all duration-300
+
+  
+
+                                  ${statusColor}
+
+  
+
+                                  ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}
+
+  
+
+                               `}
+
+  
+
+                               style={{ transitionDelay: `${delay}ms` }}
+
+  
+
+                             >
+
+  
+
+                                <div className="flex items-start gap-4">
+
+  
+
+                                   <div className={`
+
+  
+
+                                      w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 border shadow-sm
+
+  
+
+                                      ${isCustom ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-white text-slate-500 border-slate-100'}
+
+  
+
+                                   `}>
+
+  
+
+                                      {isCustom ? <User className="w-5 h-5" /> : <Terminal className="w-5 h-5" />}
+
+  
+
+                                   </div>
+
+  
+
+                                   
+
+  
+
+                                   <div className="flex-1 pt-0.5">
+
+  
+
+                                      <div className="flex items-center justify-between mb-1.5">
+
+  
+
+                                         <Badge variant="secondary" className={`text-[10px] uppercase font-bold px-2 h-5 ${isCustom ? 'bg-purple-100 text-purple-700 hover:bg-purple-100' : 'bg-slate-100 text-slate-600 hover:bg-slate-100'}`}>
+
+  
+
+                                            {isCustom ? 'User Query' : 'Auto-Generated'}
+
+  
+
+                                          </Badge>
+
+  
+
+                                          {!analyzing && (
+
+  
+
+                                            <button onClick={() => onRemoveCustomPrompt(prompt)} className="text-slate-300 hover:text-red-500 transition-colors p-1 opacity-0 group-hover:opacity-100">
+
+  
+
+                                               <Trash2 className="w-4 h-4" />
+
+  
+
+                                            </button>
+
+  
+
+                                          )}
+
+  
+
+                                      </div>
+
+  
+
+                                      <p className="text-slate-800 font-medium text-sm leading-relaxed">
+
+  
+
+                                         "{prompt}"
+
+  
+
+                                      </p>
+
+  
+
                                       
-                                      return (
-                                         <div key={provider} className="relative group/tooltip">
-                                            <div className={`
-                                               w-7 h-7 rounded-md flex items-center justify-center border transition-all duration-300
-                                               ${status === 'running' ? 'bg-white border-blue-400 shadow-sm scale-110' : 
-                                                 status === 'completed' ? 'bg-white border-green-300' : 
-                                                 'bg-slate-50 border-slate-200 opacity-60'}
-                                            `}>
-                                               {status === 'completed' ? <Check className="w-3.5 h-3.5 text-green-500" /> : <div className="w-3.5 h-3.5">{getProviderIcon(provider, status)}</div>}
-                                            </div>
-                                            {/* Tooltip */}
-                                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-white text-[10px] font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                               {provider}: {status}
-                                            </div>
+
+  
+
+                                      {/* Provider Status Indicators */}
+
+  
+
+                                      {analyzing && (
+
+  
+
+                                         <div className="mt-3 flex items-center gap-2">
+
+  
+
+                                            {getEnabledProviders().map(config => {
+
+  
+
+                                                const provider = config.name;
+
+  
+
+                                                const status = promptCompletionStatus[prompt.trim()]?.[provider] || 'pending';
+
+  
+
+                                                
+
+  
+
+                                                return (
+
+  
+
+                                                   <div key={provider} className="relative group/tooltip">
+
+  
+
+                                                      <div className={`
+
+  
+
+                                                         w-7 h-7 rounded-lg flex items-center justify-center border transition-all duration-300
+
+  
+
+                                                         ${status === 'running' ? 'bg-white border-blue-400 shadow-sm scale-110' : 
+
+  
+
+                                                           status === 'completed' ? 'bg-white border-green-300' : 
+
+  
+
+                                                           'bg-slate-50 border-slate-200 opacity-60'}
+
+  
+
+                                                      `}>
+
+  
+
+                                                         {status === 'completed' ? <Check className="w-3.5 h-3.5 text-green-500" /> : <div className="w-3.5 h-3.5">{getProviderIcon(provider, status)}</div>}
+
+  
+
+                                                      </div>
+
+  
+
+                                                      {/* Tooltip */}
+
+  
+
+                                                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-white text-[10px] font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+
+  
+
+                                                         {provider}: {status}
+
+  
+
+                                                      </div>
+
+  
+
+                                                   </div>
+
+  
+
+                                                )
+
+  
+
+                                            })}
+
+  
+
                                          </div>
-                                      )
-                                  })}
-                               </div>
-                            )}
-                         </div>
-                      </div>
-                   </div>
-                );
-             })}
-           </div>
+
+  
+
+                                      )}
+
+  
+
+                                   </div>
+
+  
+
+                                </div>
+
+  
+
+                             </div>
+
+  
+
+                          );
+
+  
+
+                       })}
+
+  
+
+                     </div>
+
+  
+
+                  </div>
+
+  
+
+                  
+
+  
+
+                  {/* Anchored Footer Action Bar */}
+
+  
+
+                  {!analyzing && (
+
+  
+
+                     <div className="flex-none px-8 py-6 bg-white border-t border-slate-100 z-20">
+
+  
+
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-6 animate-fade-in-up animation-delay-200">
+
+  
+
+                           
+
+  
+
+                           {/* Left: Summary Stats */}
+
+  
+
+                           <div className="flex items-center gap-6">
+
+  
+
+                              <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-50 border border-slate-100">
+
+  
+
+                                 <span className="flex items-center gap-2 text-sm font-medium text-slate-700">
+
+  
+
+                                    <Sparkles className="w-4 h-4 text-purple-500" />
+
+  
+
+                                    <span className="font-bold text-slate-900">{displayPrompts.length}</span> Queries
+
+  
+
+                                 </span>
+
+  
+
+                                 <div className="w-px h-4 bg-slate-200" />
+
+  
+
+                                 <span className="flex items-center gap-2 text-sm font-medium text-slate-700">
+
+  
+
+                                    <Zap className="w-4 h-4 text-orange-500" />
+
+  
+
+                                    <span className="font-bold text-slate-900">{getEnabledProviders().length}</span> AI Engines
+
+  
+
+                                 </span>
+
+  
+
+                              </div>
+
+  
+
+                              <p className="text-xs text-slate-400 hidden lg:block">
+
+  
+
+                                 Ready to launch comprehensive analysis
+
+  
+
+                              </p>
+
+  
+
+                           </div>
+
+  
+
+                           
+
+  
+
+                           {/* Right: Actions */}
+
+  
+
+                           <div className="flex items-center gap-3 w-full md:w-auto">
+
+  
+
+                             <button
+
+  
+
+                                onClick={onAddPromptClick}
+
+  
+
+                                className="flex-1 md:flex-none h-12 px-6 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 text-slate-700 rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow active:scale-95 flex items-center justify-center gap-2 group"
+
+  
+
+                             >
+
+  
+
+                                <Plus className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />
+
+  
+
+                                Add Prompt
+
+  
+
+                             </button>
+
+  
+
+                             <button
+
+  
+
+                                onClick={onStartAnalysis}
+
+  
+
+                                className="flex-1 md:flex-none h-12 px-8 bg-[#155DFC] hover:bg-[#0e4add] text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 flex items-center justify-center gap-2.5"
+
+  
+
+                             >
+
+  
+
+                                <Play className="w-4 h-4 fill-current" />
+
+  
+
+                                Run Analysis
+
+  
+
+                             </button>
+
+  
+
+                           </div>
+
+  
+
+                        </div>
+
+  
+
+                     </div>
+
+  
+
+                  )}
+
+  
+
         </div>
-        
-        {/* Floating Action Dock */}
-        {!analyzing && (
-           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 animate-fade-in-up animation-delay-400 w-full max-w-2xl px-4">
-              <div className="bg-white/90 backdrop-blur-xl p-2 rounded-xl shadow-2xl border border-slate-200 flex items-center justify-between pl-5 pr-2 gap-4">
-                 <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Summary</span>
-                    <div className="flex items-center gap-3 text-sm font-medium text-slate-700">
-                       <span className="flex items-center gap-1.5">
-                          <Sparkles className="w-3.5 h-3.5 text-purple-500" />
-                          {displayPrompts.length} Queries
-                       </span>
-                       <span className="w-px h-3 bg-slate-300" />
-                       <span className="flex items-center gap-1.5">
-                          <Zap className="w-3.5 h-3.5 text-orange-500" />
-                          {getEnabledProviders().length} AI Engines
-                       </span>
-                    </div>
-                 </div>
-                 
-                 <div className="flex items-center gap-2">
-                   <button
-                      onClick={onAddPromptClick}
-                      className="h-10 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
-                   >
-                      <Plus className="w-4 h-4" />
-                      Add Prompt
-                   </button>
-                   <button
-                      onClick={onStartAnalysis}
-                      className="h-10 px-6 bg-[#155DFC] hover:bg-[#1249c9] text-white rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2"
-                   >
-                      <Play className="w-4 h-4 fill-current" />
-                      Run Analysis
-                   </button>
-                 </div>
-              </div>
-           </div>
-        )}
 
       </div>
-    </div>
-  );
-}
+
+    );
+
+  }

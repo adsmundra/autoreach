@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { CompetitorRanking, Company } from '@/lib/types';
 import { IdentifiedCompetitor } from '@/lib/brand-monitor-reducer';
+import { TrendingUp, TrendingDown, Minus, Crown, Target, ExternalLink } from 'lucide-react';
 
 interface VisibilityScoreTabProps {
   competitors: CompetitorRanking[];
@@ -38,106 +39,149 @@ export function VisibilityScoreTab({
     : undefined);
   const brandLogoGuess = company?.logo || (brandDomain ? `https://${brandDomain}/apple-touch-icon.png` : undefined);
   
+  // Custom colors matching the platform theme
+  const CHART_COLORS = [
+    '#3B82F6', // Blue 500
+    '#8B5CF6', // Violet 500
+    '#EC4899', // Pink 500
+    '#10B981', // Emerald 500
+    '#F59E0B', // Amber 500
+    '#6366F1', // Indigo 500
+    '#14B8A6', // Teal 500
+    '#F43F5E'  // Rose 500
+  ];
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full animate-fade-in-up">
       {/* Main Content Card */}
-      <Card className="p-2 bg-card text-card-foreground gap-6 rounded-xl border py-6 shadow-sm border-gray-200 h-full flex flex-col">
-        <CardHeader className="border-b">
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle className="text-xl font-semibold">Visibility Score</CardTitle>
-              <CardDescription className="text-sm text-gray-600 mt-1">
-                Your brand visibility across AI providers
+      <Card className="bg-white border-slate-200 shadow-sm rounded-2xl h-full flex flex-col overflow-hidden">
+        <CardHeader className="border-b border-slate-100 bg-slate-50/50 p-6">
+          <div className="flex justify-between items-start">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                 <div className="p-1.5 bg-blue-100 rounded-lg">
+                   <Target className="w-4 h-4 text-blue-600" />
+                 </div>
+                 <CardTitle className="text-lg font-bold text-slate-900">Visibility Analysis</CardTitle>
+              </div>
+              <CardDescription className="text-slate-500 pl-8">
+                Share of voice distribution across AI search engines
               </CardDescription>
             </div>
-            {/* Visibility Score in top right */}
-            <div className="text-right">
-              <p className="text-3xl font-bold text-[#155DFC]">{brandData.visibilityScore}%</p>
-              <p className="text-xs text-gray-500 mt-1">Overall Score</p>
+            
+            <div className="flex flex-col items-end">
+               <div className="flex items-baseline gap-1">
+                 <span className="text-4xl font-black text-slate-900 tracking-tight">{brandData.visibilityScore}</span>
+                 <span className="text-lg font-medium text-slate-400">%</span>
+               </div>
+               <div className="flex items-center gap-1.5 mt-1 text-sm font-medium">
+                  {difference > 0 ? (
+                    <span className="flex items-center text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                      <TrendingUp className="w-3 h-3 mr-1" />
+                      +{difference.toFixed(1)}% vs #2
+                    </span>
+                  ) : difference < 0 ? (
+                    <span className="flex items-center text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
+                      <TrendingDown className="w-3 h-3 mr-1" />
+                      {difference.toFixed(1)}% vs #1
+                    </span>
+                  ) : (
+                    <span className="flex items-center text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                      <Minus className="w-3 h-3 mr-1" />
+                      Equal to #1
+                    </span>
+                  )}
+                  <span className="text-slate-400">Total Score</span>
+               </div>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-6 flex-1">
-          <div className="flex gap-8">
-            {/* Left side - Pie Chart */}
-            <div className="flex-1">
-              <div className="h-80 relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <defs>
-                      <linearGradient id="orangeGradient" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stopColor="#665DFF" />
-                        <stop offset="100%" stopColor="#155DFC" />
-                      </linearGradient>
-                      <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-                        <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+
+        <CardContent className="p-8 flex-1 flex flex-col lg:flex-row gap-12 items-center justify-center">
+            {/* Chart Section */}
+            <div className="relative w-72 h-72 lg:w-96 lg:h-96 flex-shrink-0">
+              {/* Outer Glow Ring */}
+              <div className="absolute inset-4 rounded-full bg-gradient-to-tr from-blue-500/20 to-purple-500/20 blur-3xl animate-pulse" />
+              
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <defs>
+                    <linearGradient id="brandGradient" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#2563EB" />
+                      <stop offset="100%" stopColor="#155DFC" />
+                    </linearGradient>
+                    <filter id="glow" height="130%">
+                        <feGaussianBlur in="SourceAlpha" stdDeviation="3"/> 
                         <feOffset dx="0" dy="2" result="offsetblur"/>
-                        <feFlood floodColor="#000000" floodOpacity="0.1"/>
+                        <feFlood floodColor="#155DFC" floodOpacity="0.3"/>
                         <feComposite in2="offsetblur" operator="in"/>
-                        <feMerge>
+                        <feMerge> 
                           <feMergeNode/>
                           <feMergeNode in="SourceGraphic"/>
                         </feMerge>
-                      </filter>
-                    </defs>
-                    <Pie
-                      data={competitors.slice(0, 8).map((competitor) => ({
-                        name: competitor.name,
-                        value: competitor.visibilityScore,
-                        isOwn: competitor.isOwn
-                      }))}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={70}
-                      outerRadius={110}
-                      paddingAngle={1}
-                      dataKey="value"
-                      startAngle={90}
-                      endAngle={-270}
-                      animationBegin={0}
-                      animationDuration={800}
-                      filter="url(#shadow)"
-                    >
-                      {competitors.slice(0, 8).map((competitor, idx) => (
-                        <Cell 
-                          key={`cell-${idx}`} 
-                          fill={competitor.isOwn ? 'url(#orangeGradient)' : 
-                            ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#6366f1', '#14b8a6', '#f43f5e'][idx % 8]}
-                          stroke={competitor.isOwn ? '#155DFC' : 'none'}
-                          strokeWidth={competitor.isOwn ? 2 : 0}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'rgba(255, 255, 255, 0.95)', 
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        padding: '8px 12px',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                      }}
-                      formatter={(value: number, name: string) => [`${value}% visibility`, name]}
-                      labelStyle={{ fontWeight: 600 }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                
-                {/* Center text showing relative performance */}
-                <div className="absolute top-[50%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                  <p className="text-3xl font-bold text-gray-900">#{brandRank}</p>
-                  <p className="text-sm text-gray-500 mt-1">Rank</p>
-                  {difference !== 0 && (
-                    <p className={`text-xs mt-2 font-medium ${difference > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {difference > 0 ? '+' : ''}{Math.abs(difference).toFixed(1)}% vs #2
-                    </p>
-                  )}
-                </div>
+                    </filter>
+                  </defs>
+                  <Pie
+                    data={competitors.slice(0, 8).map((competitor) => ({
+                      name: competitor.name,
+                      value: competitor.visibilityScore,
+                      isOwn: competitor.isOwn
+                    }))}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius="60%"
+                    outerRadius="90%"
+                    paddingAngle={3}
+                    dataKey="value"
+                    startAngle={90}
+                    endAngle={-270}
+                    cornerRadius={6}
+                    stroke="none"
+                  >
+                    {competitors.slice(0, 8).map((competitor, idx) => (
+                      <Cell 
+                        key={`cell-${idx}`} 
+                        fill={competitor.isOwn ? 'url(#brandGradient)' : CHART_COLORS[idx % CHART_COLORS.length]}
+                        filter={competitor.isOwn ? 'url(#glow)' : ''}
+                        className="transition-all duration-300 hover:opacity-90 cursor-pointer outline-none focus:outline-none"
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                            <div className="bg-slate-900 text-white text-xs rounded-lg py-2 px-3 shadow-xl border border-slate-700">
+                                <p className="font-semibold mb-1">{data.name}</p>
+                                <p className="text-slate-300">
+                                    Visibility: <span className="text-white font-bold">{data.value}%</span>
+                                </p>
+                            </div>
+                        );
+                        }
+                        return null;
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              
+              {/* Center Stat */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+                  <div className="w-12 h-12 mx-auto bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-1">
+                     <Crown className="w-6 h-6" />
+                  </div>
+                  <div className="text-3xl font-black text-slate-900">#{brandRank}</div>
+                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Market Rank</div>
               </div>
             </div>
             
-            {/* Right side - Legend */}
-            <div className="w-80 space-y-2">
+            {/* Detailed Legend / List */}
+            <div className="w-full max-w-sm space-y-3">
+              <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">
+                 Competitor Breakdown
+              </h4>
+              
               {competitors.slice(0, 8).map((competitor, idx) => {
                 const competitorData = identifiedCompetitors.find(c => 
                   c.name === competitor.name || 
@@ -153,66 +197,70 @@ export function VisibilityScoreTab({
                   ? brandLogoGuess || null
                   : (competitorDomain ? `https://${competitorDomain}/apple-touch-icon.png` : null);
                 
-                const color = competitor.isOwn ? '#155DFC' : 
-                  ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#6366f1', '#14b8a6', '#f43f5e'][idx % 8];
+                const color = competitor.isOwn ? '#155DFC' : CHART_COLORS[idx % CHART_COLORS.length];
                 
                 return (
-                  <div key={idx} className="flex items-center gap-2">
+                  <div 
+                    key={idx} 
+                    className={`
+                        group flex items-center gap-3 p-2.5 rounded-xl transition-all duration-200 border border-transparent
+                        ${competitor.isOwn 
+                           ? 'bg-blue-50/50 border-blue-100 shadow-sm' 
+                           : 'hover:bg-slate-50 hover:border-slate-100'}
+                    `}
+                  >
+                    {/* Color Indicator */}
                     <div 
-                      className="w-3 h-3 rounded-full flex-shrink-0" 
+                      className="w-1.5 h-8 rounded-full flex-shrink-0" 
                       style={{ backgroundColor: color }}
                     />
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-5 h-5 rounded flex items-center justify-center bg-gray-100 flex-shrink-0">
+                    
+                    {/* Favicon */}
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white border border-slate-100 shadow-sm flex-shrink-0 p-1">
                         {faviconUrl ? (
                           <img 
                             src={faviconUrl}
                             alt={competitor.name}
-                            className="w-4 h-4 object-contain"
+                            className="w-full h-full object-contain"
                             onError={(e) => {
-                              // Try logo guess fallback
-                              if (logoGuess) {
-                                (e.currentTarget as HTMLImageElement).src = logoGuess;
-                              } else {
                                 e.currentTarget.style.display = 'none';
-                                const fallback = e.currentTarget.nextSibling as HTMLDivElement;
-                                if (fallback) fallback.style.display = 'flex';
-                              }
-                            }}
-                          />
-                        ) : logoGuess ? (
-                          <img 
-                            src={logoGuess}
-                            alt={competitor.name}
-                            className="w-4 h-4 object-contain"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              const fallback = e.currentTarget.nextSibling as HTMLDivElement;
-                              if (fallback) fallback.style.display = 'flex';
+                                e.currentTarget.parentElement!.querySelector('.fallback-icon')!.classList.remove('hidden');
                             }}
                           />
                         ) : null}
-                        <div className={`w-full h-full ${
-                          competitor.isOwn ? 'bg-[#155DFC]' : 'bg-gray-300'
-                        } flex items-center justify-center text-white text-[8px] font-bold rounded`} 
-                        style={{ display: (faviconUrl || logoGuess) ? 'none' : 'flex' }}>
+                        <div className={`fallback-icon w-full h-full flex items-center justify-center text-[10px] font-bold rounded ${competitor.isOwn ? 'text-blue-600 bg-blue-50' : 'text-slate-500 bg-slate-100'} ${faviconUrl ? 'hidden' : ''}`}>
                           {competitor.name.charAt(0)}
                         </div>
+                    </div>
+                    
+                    {/* Text Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-sm truncate font-semibold ${competitor.isOwn ? 'text-slate-900' : 'text-slate-700'}`}>
+                            {competitor.name}
+                        </span>
+                        {competitor.isOwn && (
+                            <Badge variant="secondary" className="h-4 px-1 text-[9px] bg-blue-100 text-blue-700 border-0">YOU</Badge>
+                        )}
                       </div>
-                      <span className={`text-sm truncate ${
-                        competitor.isOwn ? 'font-semibold text-[#155DFC]' : 'text-gray-700'
-                      }`}>
-                        {competitor.name}
-                      </span>
-                      <span className="text-sm font-medium text-gray-900 ml-auto">
-                        {competitor.visibilityScore}%
-                      </span>
+                      <div className="w-full bg-slate-100 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                         <div 
+                           className="h-full rounded-full" 
+                           style={{ width: `${competitor.visibilityScore}%`, backgroundColor: color }}
+                         />
+                      </div>
+                    </div>
+                    
+                    {/* Score */}
+                    <div className="text-right pl-2">
+                        <span className="block text-sm font-bold text-slate-900 tabular-nums">
+                            {competitor.visibilityScore}%
+                        </span>
                     </div>
                   </div>
                 );
               })}
             </div>
-          </div>
         </CardContent>
       </Card>
     </div>

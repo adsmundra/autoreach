@@ -1,5 +1,19 @@
 import React from 'react';
 import { ResultsTab } from '@/lib/brand-monitor-reducer';
+import { 
+  BarChart2, 
+  MessageSquare, 
+  Trophy, 
+  PieChart, 
+  Info,
+  ChevronRight
+} from 'lucide-react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface ResultsNavigationProps {
   activeTab: ResultsTab;
@@ -12,77 +26,117 @@ export function ResultsNavigation({
   onTabChange,
   onRestart
 }: ResultsNavigationProps) {
-  const handleTabClick = (tab: ResultsTab) => {
-    onTabChange(tab);
-  };
   
+  const navItems = [
+    { 
+      id: 'visibility', 
+      label: 'Visibility Score', 
+      icon: PieChart,
+      description: 'Overall brand presence'
+    },
+    { 
+      id: 'matrix', 
+      label: 'Comparison Matrix', 
+      icon: BarChart2,
+      description: 'Head-to-head analysis'
+    },
+    { 
+      id: 'rankings', 
+      label: 'Provider Rankings', 
+      icon: Trophy,
+      description: 'AI engine performance'
+    },
+    { 
+      id: 'prompts', 
+      label: 'Prompts & Responses', 
+      icon: MessageSquare,
+      description: 'Deep dive into answers'
+    },
+  ] as const;
+
   return (
-    <nav className="w-47 flex-shrink-0 animate-fade-in flex flex-col h-[calc(100vh-8rem)] ml-[-2rem] sticky top-8" style={{ animationDelay: '0.3s' }}>
+    <nav className="w-64 flex-shrink-0 flex flex-col h-[calc(100vh-8rem)] sticky top-8 animate-fade-in-left">
       
-      <div className="w-full flex flex-col justify-between flex-1">
+      <div className="flex flex-col gap-2">
+        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest px-4 mb-2">
+          Analysis Report
+        </h3>
         
-        {/* Navigation Tabs - at the top */}
-        <div className="space-y-2">
-        <button
-          onClick={() => handleTabClick('matrix')}
-          className={`w-full text-left px-4 py-3 rounded-[10px] text-sm font-medium transition-all duration-200 ${
-            activeTab === 'matrix'
-              ? 'bg-[#090376] text-white [box-shadow:inset_0px_-2.108433723449707px_0px_0px_#171310,_0px_1.2048193216323853px_6.325301647186279px_0px_rgba(58,_33,_8,_58%)]'
-              : 'bg-[#155DFC] text-white hover:bg-[#090376] [box-shadow:inset_0px_-2.108433723449707px_0px_0px_#090376,_0px_1.2048193216323853px_6.325301647186279px_0px_rgba(23,_13,_242,_58%)] hover:translate-y-[1px] hover:scale-[0.98]'
-          }`}
-        >
-          Comparison Matrix
-        </button>
-        <button
-          onClick={() => handleTabClick('prompts')}
-          className={`w-full text-left px-4 py-3 rounded-[10px] text-sm font-medium transition-all duration-200 ${
-            activeTab === 'prompts'
-              ? 'bg-[#090376] text-white [box-shadow:inset_0px_-2.108433723449707px_0px_0px_#171310,_0px_1.2048193216323853px_6.325301647186279px_0px_rgba(58,_33,_8,_58%)]'
-              : 'bg-[#155DFC] text-white hover:bg-[#090376] [box-shadow:inset_0px_-2.108433723449707px_0px_0px_#090376,_0px_1.2048193216323853px_6.325301647186279px_0px_rgba(23,_13,_242,_58%)] hover:translate-y-[1px] hover:scale-[0.98]'
-          }`}
-        >
-          Prompts & Responses
-        </button>
-        <button
-          onClick={() => handleTabClick('rankings')}
-          className={`w-full text-left px-4 py-3 rounded-[10px] text-sm font-medium transition-all duration-200 ${
-            activeTab === 'rankings'
-              ? 'bg-[#090376] text-white [box-shadow:inset_0px_-2.108433723449707px_0px_0px_#171310,_0px_1.2048193216323853px_6.325301647186279px_0px_rgba(58,_33,_8,_58%)]'
-              : 'bg-[#155DFC] text-white hover:bg-[#090376] [box-shadow:inset_0px_-2.108433723449707px_0px_0px_#090376,_0px_1.2048193216323853px_6.325301647186279px_0px_rgba(23,_13,_242,_58%)] hover:translate-y-[1px] hover:scale-[0.98]'
-          }`}
-        >
-          Provider Rankings
-        </button>
-        <button
-          onClick={() => handleTabClick('visibility')}
-          className={`w-full text-left px-4 py-3 rounded-[10px] text-sm font-medium transition-all duration-200 ${
-            activeTab === 'visibility'
-              ? 'bg-[#090376] text-white [box-shadow:inset_0px_-2.108433723449707px_0px_0px_#171310,_0px_1.2048193216323853px_6.325301647186279px_0px_rgba(58,_33,_8,_58%)]'
-              : 'bg-[#155DFC] text-white hover:bg-[#090376] [box-shadow:inset_0px_-2.108433723449707px_0px_0px_#090376,_0px_1.2048193216323853px_6.325301647186279px_0px_rgba(23,_13,_242,_58%)] hover:translate-y-[1px] hover:scale-[0.98]'
-          }`}
-        >
-          Visibility Score
-        </button>
-         <div className="mt-4 text-gray-700 text-xs space-y-1">
-                <p className="text-sm"><strong>Glossary</strong></p>
-                <br/>
-                <p><strong>Annotation:</strong></p>
-                <p><strong>Visibility:</strong> How often your brand appears in search results for the tracked keywords.</p>
-                <p><strong>Share of Voice:</strong> Your brand&apos;s percentage of mentions compared to competitors across the analyzed content.</p>
-                <p><strong>Sentiment:</strong> The overall emotional tone (positive, negative, neutral) of the content where your brand is mentioned.</p>
-                <br />
-                <p><strong>Formulas:</strong></p>
-                <p><strong>Visibility </strong>= (Number of responses citing your domain) ÷ (Total responses)</p>
-                <p><strong>Share of Voice </strong>= (Brand's total mentions / Total mentions across all competitors) × 100</p>
-                <p><strong>Sentiment Score </strong>= (Positive sentiment mentions / Total mentions) × 100</p>
-                <p><strong>AveragePosition  </strong>= Sum of all positions where brand was mentioned / Number of mentions</p>
-        </div>
-        </div>
-        <br></br>
-        
+        {navItems.map((item) => {
+          const isActive = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => onTabChange(item.id as ResultsTab)}
+              className={`
+                group relative flex items-center gap-3 px-4 py-3 text-left rounded-xl transition-all duration-200
+                ${isActive 
+                  ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100' 
+                  : 'text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-sm hover:ring-1 hover:ring-slate-200'}
+              `}
+            >
+              <div className={`
+                p-2 rounded-lg transition-colors
+                ${isActive ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500 group-hover:bg-white group-hover:text-blue-500'}
+              `}>
+                <item.icon className="w-4 h-4" />
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm font-semibold ${isActive ? 'text-blue-900' : 'text-slate-700'}`}>
+                  {item.label}
+                </p>
+                <p className={`text-[11px] truncate ${isActive ? 'text-blue-500/80' : 'text-slate-400'}`}>
+                  {item.description}
+                </p>
+              </div>
 
+              {isActive && (
+                <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+              )}
+            </button>
+          );
+        })}
+      </div>
 
-       
+      <div className="mt-8 px-1">
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="glossary" className="border-slate-200">
+            <AccordionTrigger className="text-xs font-semibold text-slate-500 hover:text-slate-800 py-3">
+              <div className="flex items-center gap-2">
+                <Info className="w-3.5 h-3.5" />
+                <span>Metrics Glossary</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="space-y-4 pt-1 pb-4">
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-slate-900">Visibility</p>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    Percentage of AI responses where your brand is cited or mentioned.
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-slate-900">Share of Voice</p>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    Your brand's dominance in the conversation compared to competitors.
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-slate-900">Sentiment</p>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    The emotional tone of the AI's coverage of your brand.
+                  </p>
+                </div>
+                <div className="pt-2 border-t border-slate-100">
+                   <p className="text-[10px] text-slate-400 font-mono">
+                     Vis = (Citations / Total) * 100
+                   </p>
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
     </nav>
   );
