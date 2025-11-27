@@ -144,7 +144,13 @@ export function ProviderComparisonMatrix({ data, brandName, competitors, company
   // });
   
   // Get background style based on score
-  const getBackgroundStyle = (score: number) => {
+  const getBackgroundStyle = (score: number, isOwn: boolean) => {
+    if (!isOwn) {
+      return {
+        backgroundColor: 'transparent'
+      };
+    }
+    
     const opacity = Math.pow(score / 100, 0.5);
     return {
       backgroundColor: `rgba(21, 93, 252, ${opacity})`,
@@ -268,7 +274,7 @@ export function ProviderComparisonMatrix({ data, brandName, competitors, company
                       className={`text-center p-3 ${
                         index < providers.length - 1 ? 'border-r border-gray-200' : ''
                       }`}
-                      style={getBackgroundStyle(score)}
+                      style={getBackgroundStyle(score, competitor.isOwn)}
                     >
                       <span className="text-black font-bold text-xs">
                         {score}%
