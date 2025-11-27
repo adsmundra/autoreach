@@ -1,5 +1,5 @@
-import React from 'react';
-import { Globe, Loader2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Globe, Loader2, ArrowRight, Search, BarChart2, Zap } from 'lucide-react';
 
 interface UrlInputSectionProps {
   url: string;
@@ -20,58 +20,119 @@ export function UrlInputSection({
   onUrlChange,
   onSubmit
 }: UrlInputSectionProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
-    <div className="flex items-center justify-center animate-panel-in pb-12">
-      <div className="w-full max-w-5xl px-6">
-          <div className="relative">
-            <Globe className={`absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 ${locked ? 'text-gray-400' : 'text-black'}`} />
-            <input
-              type="text"
-              className={`w-full pl-12 pr-16 h-14 text-base border-2 rounded-xl focus:outline-none focus:ring-2 transition-all ${
-                locked
-                  ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed'
-                  : urlValid === false 
-                  ? 'border-red-300 focus:ring-red-500 focus:border-transparent' 
-                  : urlValid === true 
-                  ? 'border-orange-300 focus:ring-orange-500 focus:border-transparent'
-                  : 'border-gray-300 focus:ring-orange-500 focus:border-transparent'
-              }`}
-              placeholder="Enter your website URL (e.g., example.com)"
-              value={url}
-              onChange={(e) => !locked && onUrlChange(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !loading && !analyzing && url) {
-                  onSubmit();
-                }
-              }}
-              onFocus={(e) => {
-                if (!url && !locked) {
-                  e.target.placeholder = "example.com";
-                }
-              }}
-              onBlur={(e) => {
-                e.target.placeholder = "Enter your website URL (e.g., example.com)";
-              }}
-              disabled={loading || analyzing || locked}
-              readOnly={locked}
-            />
+    <div className="relative w-full flex flex-col items-center justify-center py-20 lg:py-32 overflow-hidden">
+      
+      {/* Background Decor */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
+         {/* Blobs */}
+         <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-100/50 rounded-full blur-3xl mix-blend-multiply animate-blob" />
+         <div className="absolute top-0 right-1/4 w-96 h-96 bg-purple-100/50 rounded-full blur-3xl mix-blend-multiply animate-blob animation-delay-2000" />
+         <div className="absolute -bottom-32 left-1/3 w-96 h-96 bg-pink-100/50 rounded-full blur-3xl mix-blend-multiply animate-blob animation-delay-4000" />
+      </div>
+
+      <div className={`relative z-10 w-full max-w-4xl px-6 flex flex-col items-center text-center transition-all duration-1000 transform ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+        
+        {/* Badge */}
+        <div className="mb-8 inline-flex items-center px-3 py-1 rounded-full border border-gray-200 bg-white/50 backdrop-blur-sm shadow-sm transition-all hover:bg-white/80">
+          <span className="flex h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
+          <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">AI-Powered Brand Analysis</span>
+        </div>
+
+        {/* Hero Title */}
+        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-gray-900 mb-6 drop-shadow-sm">
+          <span className="block mb-2">Analyze your brand's</span>
+          <span className="block bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent pb-2">
+            Share of Voice
+          </span>
+        </h1>
+
+        {/* Subtitle */}
+        <p className="max-w-2xl text-lg md:text-xl text-gray-600 mb-12 leading-relaxed">
+          Monitor your visibility across AI platforms. Enter your website to instantly discover how AI search engines perceive and rank your brand.
+        </p>
+
+        {/* Input Card */}
+        <div className={`w-full max-w-2xl transition-all duration-700 delay-300 transform ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+          <div className={`relative group p-1.5 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 shadow-xl transition-all duration-300 ${urlValid === false ? 'from-red-100 to-red-200' : 'hover:shadow-2xl hover:scale-[1.005]'}`}>
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-xl"></div>
             
-            {/* Arrow button inside input */}
-            <button
-              onClick={onSubmit}
-              disabled={loading || analyzing || !url || urlValid === false}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-10 w-10 rounded-lg flex items-center justify-center transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 bg-[#36322F] hover:bg-[#4a4542] disabled:bg-gray-300 disabled:hover:bg-gray-300"
-              aria-label="Analyze website"
-            >
-              {loading ? (
-                <Loader2 className="h-5 w-5 animate-spin text-white" />
-              ) : (
-                <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              )}
-            </button>
+            <div className="relative bg-white rounded-xl flex items-center p-2 shadow-inner">
+              <div className="pl-4 pr-3 text-gray-400">
+                <Globe className={`h-6 w-6 ${urlValid ? 'text-blue-500' : ''} transition-colors duration-300`} />
+              </div>
+              
+              <input
+                type="text"
+                className="flex-1 h-14 bg-transparent text-lg text-gray-900 placeholder-gray-400 focus:outline-none font-medium"
+                placeholder="example.com"
+                value={url}
+                onChange={(e) => !locked && onUrlChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !loading && !analyzing && url) {
+                    onSubmit();
+                  }
+                }}
+                disabled={loading || analyzing || locked}
+                readOnly={locked}
+                autoFocus
+              />
+
+              <div className="pr-1">
+                <button
+                  onClick={onSubmit}
+                  disabled={loading || analyzing || !url || urlValid === false}
+                  className={`h-12 px-6 rounded-lg flex items-center justify-center font-medium transition-all duration-300 
+                    ${!url ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 
+                      loading ? 'bg-gray-800 text-white cursor-wait' :
+                      'bg-gray-900 text-white hover:bg-black shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0'
+                    }`}
+                >
+                  {loading ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span>Analyzing...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span>Analyze</span>
+                      <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  )}
+                </button>
+              </div>
+            </div>
+            
+            {/* Error Message Tooltip */}
+            {urlValid === false && (
+              <div className="absolute -bottom-10 left-0 text-red-500 text-sm font-medium flex items-center animate-fade-in-up">
+                <span className="block w-2 h-2 rounded-full bg-red-500 mr-2" />
+                Please enter a valid URL (e.g., example.com)
+              </div>
+            )}
           </div>
+        </div>
+
+        {/* Feature Pills */}
+        <div className={`mt-16 flex flex-wrap justify-center gap-4 transition-all duration-700 delay-500 transform ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+           {[
+             { icon: Search, label: 'Search Visibility' },
+             { icon: BarChart2, label: 'Competitor Analysis' },
+             { icon: Zap, label: 'AI Insights' }
+           ].map((feature, idx) => (
+             <div key={idx} className="group flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-gray-200 shadow-sm text-sm text-gray-600 font-medium transition-all hover:border-blue-200 hover:shadow-md hover:text-blue-600 cursor-default">
+               <feature.icon className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
+               {feature.label}
+             </div>
+           ))}
+        </div>
+
       </div>
     </div>
   );
