@@ -398,3 +398,24 @@ html, body, #__next {
 .animate-indeterminate-bar {
   animation: indeterminate-bar 1.5s infinite linear;
 }
+
+/* Custom Spin Animations */
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
+@keyframes spin-reverse {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.animate-spin-reverse {
+  animation: spin-reverse 2s linear infinite;
+}

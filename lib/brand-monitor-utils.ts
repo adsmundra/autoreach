@@ -35,10 +35,44 @@ export async function validateUrl(url: string): Promise<boolean> {
     }
     try {
         const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
-        const response = await fetch(urlObj.toString(), { method: 'HEAD', redirect: 'follow' });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
+        const response = await fetch(urlObj.toString(), { 
+            method: 'HEAD', 
+            redirect: 'follow',
+            signal: controller.signal,
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+        });
+        
+        clearTimeout(timeoutId);
+        
+        // If HEAD fails with 405 (Method Not Allowed) or similar, try GET
+        if (!response.ok && (response.status === 405 || response.status === 403 || response.status === 404)) {
+             try {
+                const controllerGet = new AbortController();
+                const timeoutIdGet = setTimeout(() => controllerGet.abort(), 5000);
+                
+                const responseGet = await fetch(urlObj.toString(), {
+                    method: 'GET',
+                    redirect: 'follow',
+                    signal: controllerGet.signal,
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                    }
+                });
+                clearTimeout(timeoutIdGet);
+                return responseGet.ok;
+             } catch {
+                 return false;
+             }
+        }
+        
         return response.ok;
     } catch (e) {
-        console.error('URL existence check error:', e);
+        // Silent failure for URL checks - expected for invalid URLs
         return false;
     }
 }

@@ -64,11 +64,18 @@ export function BrandMonitor({
   autoRun = false,
   onRequireCreditsConfirm,
 }: BrandMonitorProps = {}) {
-  const [state, dispatch] = useReducer(brandMonitorReducer, initialBrandMonitorState);
+  const [state, dispatch] = useReducer(brandMonitorReducer, {
+    ...initialBrandMonitorState,
+    showInput: !initialUrl || !autoRun,
+    loading: !!initialUrl && autoRun,
+    url: initialUrl || '',
+    urlValid: !!initialUrl,
+  });
   const [demoUrl] = useState('example.com');
   const saveAnalysis = useSaveBrandAnalysis();
   const [isLoadingExistingAnalysis, setIsLoadingExistingAnalysis] = useState(false);
   const hasSavedRef = useRef(false);
+  const hasStartedAutoScrape = useRef(false);
   
   const { startSSEConnection } = useSSEHandler({ 
     state, 
@@ -167,6 +174,7 @@ export function BrandMonitor({
       dispatch({ type: 'RESET_STATE' });
       hasSavedRef.current = false;
       setIsLoadingExistingAnalysis(false);
+      hasStartedAutoScrape.current = false; // Reset auto-scrape guard
     }
   }, [selectedAnalysis]);
   
@@ -187,229 +195,10 @@ export function BrandMonitor({
       dispatch({ type: 'SET_URL_VALID', payload: null });
     }
   }, [error]);
-  
-  const handleScrape = useCallback(async () => {
-    if (!url) {
-      dispatch({ type: 'SET_ERROR', payload: 'Please enter a URL' });
-      return;
-    }
 
-    // Validate URL format first
-    if (!isValidUrlFormat(url)) {
-      dispatch({ type: 'SET_ERROR', payload: 'Please enter a valid URL format (e.g., example.com or https://example.com)' });
-      dispatch({ type: 'SET_URL_VALID', payload: false });
-      return;
-    }
-
-    // Check if user has enough credits for initial scrape (1 credit)
-    if (creditsAvailable < 1) {
-      dispatch({ type: 'SET_ERROR', payload: 'Insufficient credits. You need at least 1 credit to analyze a URL.' });
-      return;
-    }
-
-    console.log('Starting scrape for URL:', url);
-    dispatch({ type: 'SET_LOADING', payload: true });
-    dispatch({ type: 'SET_ERROR', payload: null });
-    dispatch({ type: 'SET_URL_VALID', payload: true });
-    
-    try {
-      const response = await fetch('/api/brand-monitor/scrape', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          url,
-          maxAge: 7 * 24 * 60 * 60 * 1000 // 1 week in milliseconds
-        }),
-      });
-
-      console.log('Scrape response status:', response.status);
-
-      if (!response.ok) {
-        try {
-          const errorData = await response.json();
-          console.error('Scrape API error:', errorData);
-          if (errorData.error?.message) {
-            throw new ClientApiError(errorData);
-          }
-          throw new Error(errorData.error || 'Failed to scrape');
-        } catch (e) {
-          if (e instanceof ClientApiError) throw e;
-          throw new Error('Failed to scrape');
-        }
-      }
-
-      const data = await response.json();
-      console.log('Scrape data received:', data);
-
-      if (!data.company) {
-        throw new Error('No company data received');
-      }
-
-      // DO NOT prefill prompts here anymore - they will be generated after competitor selection
-      // Prompts will be generated when user continues from the competitor selection screen
-      
-      // Scrape was successful - credits have been deducted, refresh the navbar
-      if (onCreditsUpdate) {
-        onCreditsUpdate();
-      }
-      
-      // Start fade out transition
-      dispatch({ type: 'SET_SHOW_INPUT', payload: false });
-      
-      // After fade out completes, set company and show card with fade in
-      setTimeout(() => {
-        dispatch({ type: 'SCRAPE_SUCCESS', payload: data.company });
-        // Small delay to ensure DOM updates before fade in
-        setTimeout(() => {
-          dispatch({ type: 'SET_SHOW_COMPANY_CARD', payload: true });
-          console.log('Showing company card');
-        }, 50);
-      }, 500);
-    } catch (error: any) {
-      let errorMessage = 'Failed to extract company information';
-      if (error instanceof ClientApiError) {
-        errorMessage = error.getUserMessage();
-      } else if (error.message) {
-        errorMessage = `Failed to extract company information: ${error.message}`;
-      }
-      dispatch({ type: 'SET_ERROR', payload: errorMessage });
-      console.error('HandleScrape error:', error);
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
-    }
-  }, [url, creditsAvailable, onCreditsUpdate]);
-
-  // Handle initialUrl - when provided, skip URL input and go directly to scraping
-  useEffect(() => {
-    const run = async () => {
-      try {
-        if (!initialUrl) return;
-
-        // Always set URL if provided
-        if (url !== initialUrl) {
-          dispatch({ type: 'SET_URL', payload: initialUrl });
-          // Validate immediately
-          const isValid = isValidUrlFormat(initialUrl);
-          dispatch({ type: 'SET_URL_VALID', payload: isValid });
-        }
-
-        // Skip URL input screen when initialUrl is provided
-        dispatch({ type: 'SET_SHOW_INPUT', payload: false });
-
-        // Only proceed with scraping if we haven't already
-        if (analysis || company || loading || analyzing || preparingAnalysis) return;
-
-        // Check credits before scraping
-        if (creditsAvailable < 1) {
-          dispatch({ type: 'SET_ERROR', payload: 'Insufficient credits. You need at least 1 credit to analyze a URL.' });
-          return;
-        }
-
-        console.log('Starting auto-scrape for URL:', initialUrl);
-        dispatch({ type: 'SET_LOADING', payload: true });
-        dispatch({ type: 'SET_ERROR', payload: null });
-
-        // Auto-start scraping when initialUrl is provided
-        const response = await fetch('/api/brand-monitor/scrape', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            url: initialUrl,
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 1 week in milliseconds
-          }),
-        });
-
-        if (!response.ok) {
-          try {
-            const errorData = await response.json();
-            console.error('Scrape API error:', errorData);
-            throw new Error(errorData.error || 'Failed to scrape');
-          } catch (e) {
-            throw new Error('Failed to scrape website');
-          }
-        }
-
-        const data = await response.json();
-        console.log('Scrape data received:', data);
-
-        if (!data.company) {
-          throw new Error('No company data received');
-        }
-
-        // Update credits
-        if (onCreditsUpdate) {
-          onCreditsUpdate();
-        }
-
-        dispatch({ type: 'SCRAPE_SUCCESS', payload: data.company });
-
-        // Small delay to ensure DOM updates
-        await new Promise(res => setTimeout(res, 100));
-        dispatch({ type: 'SET_SHOW_COMPANY_CARD', payload: true });
-
-        // Prepare analysis (identify competitors)
-        dispatch({ type: 'SET_PREPARING_ANALYSIS', payload: true });
-
-        // Extract competitors from scraped data
-        const extractedCompetitors = data.company.scrapedData?.competitors || [];
-        const competitorMap = new Map();
-
-        extractedCompetitors.forEach((name: string) => {
-          const normalizedName = normalizeCompetitorName(name);
-          const url = assignUrlToCompetitor(name);
-          if (!competitorMap.has(normalizedName)) {
-            competitorMap.set(normalizedName, { name, url });
-          }
-        });
-
-        const getFaviconDomain = (url?: string) => {
-          if (!url) return undefined;
-          const [domain] = url.split('/');
-          return domain;
-        };
-
-        let competitors = Array.from(competitorMap.values())
-          .filter(comp => comp.name !== 'Competitor 1' && comp.name !== 'Competitor 2' &&
-                          comp.name !== 'Competitor 3' && comp.name !== 'Competitor 4' &&
-                          comp.name !== 'Competitor 5')
-          .slice(0, 10)
-          .map(comp => {
-            const fallbackUrl = comp.url || assignUrlToCompetitor(comp.name);
-            const validatedUrl = fallbackUrl ? validateCompetitorUrl(fallbackUrl) : undefined;
-            const faviconDomain = getFaviconDomain(validatedUrl);
-
-            return {
-              ...comp,
-              url: validatedUrl,
-              metadata: faviconDomain ? {
-                ...comp.metadata,
-                favicon: `https://www.google.com/s2/favicons?domain=${faviconDomain}&sz=64`,
-                validated: true,
-              } : comp.metadata,
-            };
-          });
-
-        competitors = competitors.slice(0, 6);
-
-        console.log('Identified competitors:', competitors);
-        dispatch({ type: 'SET_IDENTIFIED_COMPETITORS', payload: competitors });
-        dispatch({ type: 'SET_SHOW_COMPETITORS_SCREEN', payload: true });
-        dispatch({ type: 'SET_PREPARING_ANALYSIS', payload: false });
-        dispatch({ type: 'SET_LOADING', payload: false });
-
-      } catch (e) {
-        console.error('[InitialUrl] pipeline error', e);
-        dispatch({ type: 'SET_ERROR', payload: 'Failed to load website data. Please try again.' });
-        dispatch({ type: 'SET_LOADING', payload: false });
-        dispatch({ type: 'SET_PREPARING_ANALYSIS', payload: false });
-      }
-    };
-    run();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialUrl, creditsAvailable, onCreditsUpdate]);
-  
-  const handlePrepareAnalysis = useCallback(async () => {
-    if (!company) return;
+  const handlePrepareAnalysis = useCallback(async (companyOverride?: Company) => {
+    const targetCompany = companyOverride || company;
+    if (!targetCompany) return;
     
     dispatch({ type: 'SET_PREPARING_ANALYSIS', payload: true });
     
@@ -431,13 +220,13 @@ export function BrandMonitor({
     }
     
     // Extract competitors from scraped data or use industry defaults
-    const extractedCompetitors = company.scrapedData?.competitors || [];
+    const extractedCompetitors = targetCompany.scrapedData?.competitors || [];
     
     // Merge extracted competitors with industry defaults, keeping URLs where available
     const competitorMap = new Map<string, IdentifiedCompetitor>();
     
     // Add extracted competitors and try to match them with known URLs
-    extractedCompetitors.forEach(name => {
+    extractedCompetitors.forEach((name: string) => {
       const normalizedName = normalizeCompetitorName(name);
       
       // Check if we already have this competitor
@@ -498,6 +287,183 @@ export function BrandMonitor({
     }
     dispatch({ type: 'SET_PREPARING_ANALYSIS', payload: false });
   }, [company, initialUrl]);
+  
+  const handleScrape = useCallback(async () => {
+    if (!url) {
+      dispatch({ type: 'SET_ERROR', payload: 'Please enter a URL' });
+      return;
+    }
+
+    // Validate URL format first
+    if (!isValidUrlFormat(url)) {
+      dispatch({ type: 'SET_ERROR', payload: 'Please enter a valid URL format (e.g., example.com or https://example.com)' });
+      dispatch({ type: 'SET_URL_VALID', payload: false });
+      return;
+    }
+
+    // Check if user has enough credits for initial scrape (1 credit)
+    if (creditsAvailable < 1) {
+      dispatch({ type: 'SET_ERROR', payload: 'Insufficient credits. You need at least 1 credit to analyze a URL.' });
+      return;
+    }
+
+    console.log('Starting scrape for URL:', url);
+    dispatch({ type: 'SET_LOADING', payload: true });
+    dispatch({ type: 'SET_SHOW_INPUT', payload: false });
+    dispatch({ type: 'SET_ERROR', payload: null });
+    dispatch({ type: 'SET_URL_VALID', payload: true });
+    
+    try {
+      const response = await fetch('/api/brand-monitor/scrape', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          url,
+          maxAge: 7 * 24 * 60 * 60 * 1000 // 1 week in milliseconds
+        }),
+      });
+
+      console.log('Scrape response status:', response.status);
+
+      if (!response.ok) {
+        try {
+          const errorData = await response.json();
+          console.error('Scrape API error:', errorData);
+          if (errorData.error?.message) {
+            throw new ClientApiError(errorData);
+          }
+          throw new Error(errorData.error || 'Failed to scrape');
+        } catch (e) {
+          if (e instanceof ClientApiError) throw e;
+          throw new Error('Failed to scrape');
+        }
+      }
+
+      const data = await response.json();
+      console.log('Scrape data received:', data);
+
+      if (!data.company) {
+        throw new Error('No company data received');
+      }
+
+      // DO NOT prefill prompts here anymore - they will be generated after competitor selection
+      // Prompts will be generated when user continues from the competitor selection screen
+      
+      // Scrape was successful - credits have been deducted, refresh the navbar
+      if (onCreditsUpdate) {
+        onCreditsUpdate();
+      }
+      
+      // After fade out completes, set company
+      dispatch({ type: 'SCRAPE_SUCCESS', payload: data.company });
+
+      // If initialUrl is present (Create New flow), automatically proceed to competitor analysis
+      if (initialUrl) {
+         await handlePrepareAnalysis(data.company);
+      } else {
+         // Standard flow: Show company card
+         dispatch({ type: 'SET_SHOW_COMPANY_CARD', payload: true });
+         console.log('Showing company card');
+      }
+    } catch (error: any) {
+      let errorMessage = 'Failed to extract company information';
+      if (error instanceof ClientApiError) {
+        errorMessage = error.getUserMessage();
+      } else if (error.message) {
+        errorMessage = `Failed to extract company information: ${error.message}`;
+      }
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      dispatch({ type: 'SET_SHOW_INPUT', payload: true });
+      console.error('HandleScrape error:', error);
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  }, [url, creditsAvailable, onCreditsUpdate, initialUrl, handlePrepareAnalysis]);
+
+  // Handle initialUrl - when provided, sync state and optionally auto-scrape
+  useEffect(() => {
+    // Always sync URL state with prop if they differ
+    if (initialUrl && url !== initialUrl) {
+      dispatch({ type: 'SET_URL', payload: initialUrl });
+      const isValid = isValidUrlFormat(initialUrl);
+      dispatch({ type: 'SET_URL_VALID', payload: isValid });
+    }
+
+    const run = async () => {
+      if (!autoRun) return;
+
+      try {
+        if (!initialUrl) return;
+
+        // Use ref to ensure we only run the auto-scrape once
+        if (hasStartedAutoScrape.current) return;
+        
+        // Also check if we already have data (in case of hot reload or re-mount with state preserved)
+        // But since we initialized loading=true if initialUrl exists, we can't check 'loading' here.
+        if (analysis || company || analyzing || preparingAnalysis) return;
+
+        hasStartedAutoScrape.current = true;
+
+        // Check credits before scraping
+        if (creditsAvailable < 1) {
+          dispatch({ type: 'SET_ERROR', payload: 'Insufficient credits. You need at least 1 credit to analyze a URL.' });
+          dispatch({ type: 'SET_LOADING', payload: false }); // Stop loading if error
+          return;
+        }
+
+        console.log('Starting auto-scrape for URL:', initialUrl);
+        // Note: loading is already true from initial state
+        dispatch({ type: 'SET_ERROR', payload: null });
+
+        // Auto-start scraping when initialUrl is provided
+        const response = await fetch('/api/brand-monitor/scrape', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: initialUrl,
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 1 week in milliseconds
+          }),
+        });
+
+        if (!response.ok) {
+          try {
+            const errorData = await response.json();
+            console.error('Scrape API error:', errorData);
+            throw new Error(errorData.error || 'Failed to scrape');
+          } catch (e) {
+            throw new Error('Failed to scrape website');
+          }
+        }
+
+        const data = await response.json();
+        console.log('Scrape data received:', data);
+
+        if (!data.company) {
+          throw new Error('No company data received');
+        }
+
+        // Update credits
+        if (onCreditsUpdate) {
+          onCreditsUpdate();
+        }
+
+        dispatch({ type: 'SCRAPE_SUCCESS', payload: data.company });
+
+        // Prepare analysis (identify competitors)
+        await handlePrepareAnalysis(data.company);
+
+      } catch (e) {
+        console.error('[InitialUrl] pipeline error', e);
+        dispatch({ type: 'SET_ERROR', payload: 'Failed to load website data. Please try again.' });
+        dispatch({ type: 'SET_LOADING', payload: false });
+        dispatch({ type: 'SET_PREPARING_ANALYSIS', payload: false });
+      }
+    };
+    run();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialUrl, creditsAvailable, onCreditsUpdate, autoRun]); // Added autoRun to deps
+  
+
   
   const handleProceedToPrompts = useCallback(async () => {
     if (!company) return;
@@ -811,7 +777,7 @@ export function BrandMonitor({
   const brandData = analysis?.competitors?.find(c => c.isOwn);
   
   return (
-    <div className="flex flex-col min-h-screen h-screen">
+    <div className="flex flex-col h-full min-h-[600px]">
 
       {/* URL Input Section */}
       {showInput && (
@@ -830,21 +796,12 @@ export function BrandMonitor({
         </div>
       )}
 
-      {/* Scraping Loader - Show while loading but no company yet */}
-      {!showInput && loading && !company && (
+      {/* Unified Professional Loader */}
+      {((!showInput && loading && !company) || (company && !showCompanyCard && !showCompetitorsScreen && preparingAnalysis)) && (
         <ProfessionalLoader
           stage="scraping"
-          title="Analyzing Your Website"
-          message="We're collecting and analyzing your website data..."
-        />
-      )}
-
-      {/* Professional Loader - Show while preparing analysis (identifying competitors) */}
-      {company && !showCompanyCard && !showCompetitorsScreen && preparingAnalysis && (
-        <ProfessionalLoader
-          stage="preparing"
-          title="Identifying Competitors"
-          message="Finding and analyzing relevant competitors..."
+          title="Analyzing Website"
+          message="We're collecting data and identifying competitors..."
         />
       )}
 
