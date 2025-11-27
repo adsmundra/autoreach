@@ -54,6 +54,28 @@ export function ResultsNavigation({
     },
   ] as const;
 
+  const glossaryContent: Record<string, { title: string; description: string }[]> = {
+    visibility: [
+      { title: 'Visibility Score', description: 'Percentage of AI responses where your brand is cited or mentioned.' },
+      { title: 'Share of Voice', description: 'Your brand\'s dominance in the conversation compared to competitors.' },
+    ],
+    matrix: [
+      { title: 'Heatmap', description: 'Color intensity indicating performance (darker blue = higher visibility).' },
+      { title: 'Comparison', description: 'Head-to-head visibility scores against specific competitors.' },
+    ],
+    rankings: [
+      { title: 'Provider Ranking', description: 'How different AI engines (e.g., GPT-4, Claude) rank your brand.' },
+      { title: 'Sentiment', description: 'The emotional tone of the AI\'s coverage (Positive, Neutral, Negative).' },
+      { title: 'Average Position', description: 'Where your brand typically appears in lists (lower # is better).' },
+    ],
+    prompts: [
+      { title: 'AI Response', description: 'The raw, generated answer from the AI model for a specific prompt.' },
+      { title: 'Citations', description: 'Links or references the AI provided to support its answer.' },
+    ]
+  };
+
+  const currentGlossary = glossaryContent[activeTab] || [];
+
   return (
     <nav className="w-64 flex-shrink-0 flex flex-col h-[calc(100vh-8rem)] sticky top-8 animate-fade-in-left">
       
@@ -100,39 +122,32 @@ export function ResultsNavigation({
       </div>
 
       <div className="mt-8 px-1">
-        <Accordion type="single" collapsible className="w-full">
+        <Accordion type="single" collapsible className="w-full" defaultValue="glossary">
           <AccordionItem value="glossary" className="border-slate-200">
             <AccordionTrigger className="text-xs font-semibold text-slate-500 hover:text-slate-800 py-3">
               <div className="flex items-center gap-2">
                 <Info className="w-3.5 h-3.5" />
-                <span>Metrics Glossary</span>
+                <span>Page Glossary</span>
               </div>
             </AccordionTrigger>
             <AccordionContent>
               <div className="space-y-4 pt-1 pb-4">
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-slate-900">Visibility</p>
-                  <p className="text-[11px] text-slate-500 leading-relaxed">
-                    Percentage of AI responses where your brand is cited or mentioned.
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-slate-900">Share of Voice</p>
-                  <p className="text-[11px] text-slate-500 leading-relaxed">
-                    Your brand's dominance in the conversation compared to competitors.
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-slate-900">Sentiment</p>
-                  <p className="text-[11px] text-slate-500 leading-relaxed">
-                    The emotional tone of the AI's coverage of your brand.
-                  </p>
-                </div>
-                <div className="pt-2 border-t border-slate-100">
-                   <p className="text-[10px] text-slate-400 font-mono">
-                     Vis = (Citations / Total) * 100
-                   </p>
-                </div>
+                {currentGlossary.map((term, idx) => (
+                  <div key={idx} className="space-y-1">
+                    <p className="text-xs font-semibold text-slate-900">{term.title}</p>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      {term.description}
+                    </p>
+                  </div>
+                ))}
+                
+                {activeTab === 'visibility' && (
+                  <div className="pt-2 border-t border-slate-100">
+                     <p className="text-[10px] text-slate-400 font-mono">
+                       Vis = (Citations / Total) * 100
+                     </p>
+                  </div>
+                )}
               </div>
             </AccordionContent>
           </AccordionItem>

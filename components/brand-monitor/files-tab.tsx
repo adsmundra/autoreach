@@ -215,8 +215,8 @@ A: We offer flexible tiers suitable for startups to enterprises...`;
             {/* Stats / Badge */}
             {hasSent && (
               <div className="hidden md:block bg-green-50 border border-green-100 rounded-2xl p-4 min-w-[140px] text-center">
-                <div className="text-xl font-bold text-green-700">You Will Recieve</div>
-                <div className="text-[10px] font-bold text-green-600 uppercase tracking-widest mt-1">In 30 Mins</div>
+                <div className="text-[10px] font-bold text-green-600 uppercase tracking-widest mb-1">You Will Receive</div>
+                <div className="text-xl font-bold text-green-700">In 30 Mins</div>
               </div>
             )}
           </div>

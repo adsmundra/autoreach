@@ -5,6 +5,7 @@ import { ProviderComparisonData, Company } from '@/lib/types';
 import { ArrowUpDownIcon, ArrowUpIcon, ArrowDownIcon } from 'lucide-react';
 import { CompetitorCell } from './competitor-cell';
 import { getConfiguredProviders } from '@/lib/provider-config';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface ProviderComparisonMatrixProps {
   data: ProviderComparisonData[];
@@ -131,17 +132,6 @@ export function ProviderComparisonMatrix({ data, brandName, competitors, company
     });
     providers = Array.from(providerSet);
   }
-  
-  // Don't filter out providers - show all enabled providers even if they have no data
-  // This ensures users can see which providers were attempted
-  // providers = providers.filter(provider => {
-  //   // Check if at least one competitor has data for this provider
-  //   return data.some(competitor => {
-  //     const providerData = competitor.providers[provider];
-  //     // Provider has data if visibilityScore exists and is > 0, or if mentions > 0
-  //     return providerData && (providerData.visibilityScore > 0 || providerData.mentions > 0);
-  //   });
-  // });
   
   // Get background style based on score
   const getBackgroundStyle = (score: number, isOwn: boolean) => {
@@ -289,4 +279,4 @@ export function ProviderComparisonMatrix({ data, brandName, competitors, company
       </table>
     </div>
   );
-} 
+}
