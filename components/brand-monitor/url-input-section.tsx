@@ -120,15 +120,18 @@ export function UrlInputSection({
         </div>
 
         {/* Feature Pills */}
-        <div className={`mt-16 flex flex-wrap justify-center gap-4 transition-all duration-700 delay-500 transform ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+        <div className={`mt-16 flex flex-wrap justify-center gap-6 transition-all duration-700 delay-500 transform ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
            {[
-             { icon: Search, label: 'Search Visibility' },
-             { icon: BarChart2, label: 'Competitor Analysis' },
-             { icon: Zap, label: 'AI Insights' }
+             { icon: Search, label: 'Search Visibility', description: 'Track rankings across AI platforms' },
+             { icon: BarChart2, label: 'Competitor Analysis', description: 'Compare performance with rivals' },
+             { icon: Zap, label: 'AI Insights', description: 'Get actionable growth recommendations' }
            ].map((feature, idx) => (
-             <div key={idx} className="group flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-gray-200 shadow-sm text-sm text-gray-600 font-medium transition-all hover:border-blue-200 hover:shadow-md hover:text-blue-600 cursor-default">
-               <feature.icon className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
-               {feature.label}
+             <div key={idx} className="flex flex-col items-center p-5 rounded-2xl bg-white/60 backdrop-blur-sm border border-gray-200/50 shadow-sm transition-all hover:shadow-md hover:bg-white max-w-[260px] text-center">
+               <div className="p-3 rounded-xl bg-blue-50/50 text-blue-600 mb-3 group-hover:bg-blue-50 transition-colors">
+                 <feature.icon className="h-6 w-6" />
+               </div>
+               <h3 className="text-base font-semibold text-gray-900 mb-2">{feature.label}</h3>
+               <p className="text-sm text-gray-500 leading-relaxed">{feature.description}</p>
              </div>
            ))}
         </div>
