@@ -819,16 +819,17 @@ function BrandMonitorPageContent() {
       
       <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         {currentBrand && (
-            <div className="flex items-center gap-4 mb-6">
+            <div className="absolute top-4 left-4 sm:left-6 lg:left-8 z-50">
                 <Link 
                     href={`/brand-profiles/${currentBrand.id}`} 
-                    className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-all bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-slate-200/60 hover:bg-white hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Back to Profile
                 </Link>
             </div>
         )}
+        <div className="mt-12"> {/* Add margin top to prevent overlap with the absolute button */}
         {activeTab === "brand" && (
           <BrandMonitorContent 
             session={session} 
@@ -846,6 +847,7 @@ function BrandMonitorPageContent() {
         {activeTab === "ugc" && (
           <UGCTab prefill={prefillUgc} prefillBlogId={blogIdFromQuery} />
         )}
+        </div>
       </div>
     </div>
   );

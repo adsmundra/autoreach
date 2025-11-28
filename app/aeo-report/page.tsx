@@ -268,29 +268,32 @@ function AEOReportContent() {
             <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-3xl animate-blob animation-delay-2000" />
         </div>
 
-        <div className="relative z-10 container mx-auto py-12 px-4 max-w-6xl">
-            {/* Back Button */}
-             <div className="mb-8">
-                {brandId ? (
-                    <Link 
-                    href={`/brand-profiles/${brandId}`}
-                    className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors"
-                    >
-                    <ArrowLeft className="h-4 w-4" />
-                    Back to Profile
-                    </Link>
-                ) : (
-                    <button 
-                    onClick={() => setReportData(null)}
-                    className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors"
-                    >
-                    <ArrowLeft className="h-4 w-4" />
-                    Back
-                    </button>
-                )}
-             </div>
+        {brandId ? (
+            <div className="absolute top-4 left-4 sm:left-6 lg:left-8 z-50">
+                <Link 
+                href={`/brand-profiles/${brandId}`}
+                className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-all bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-slate-200/60 hover:bg-white hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5"
+                >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Profile
+                </Link>
+            </div>
+        ) : (
+            <div className="absolute top-4 left-4 sm:left-6 lg:left-8 z-50">
+                <button 
+                onClick={() => setReportData(null)}
+                className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-all bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-slate-200/60 hover:bg-white hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5"
+                >
+                <ArrowLeft className="h-4 w-4" />
+                Back
+                </button>
+            </div>
+        )}
 
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start mb-12">
+        <div className="relative z-10 container mx-auto py-12 px-4 max-w-6xl">
+            {/* Back Button Removed from here */}
+            
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start mb-12 mt-8">
                 
                 {/* Left Column: Report Status & Actions */}
                 <div className="md:col-span-7 space-y-6 animate-fade-in-up">
@@ -473,29 +476,32 @@ function AEOReportContent() {
         <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative z-10 container mx-auto py-12 px-4 max-w-4xl">
-        {/* Consistent Back Button */}
-        <div className="mb-8">
-          {brandId ? (
-            <Link 
-              href={`/brand-profiles/${brandId}`}
-              className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Profile
-            </Link>
-          ) : (
-            <button 
-              onClick={() => router.back()}
-              className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </button>
-          )}
-        </div>
+        {brandId ? (
+            <div className="absolute top-4 left-4 sm:left-6 lg:left-8 z-50">
+                <Link 
+                href={`/brand-profiles/${brandId}`}
+                className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-all bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-slate-200/60 hover:bg-white hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5"
+                >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Profile
+                </Link>
+            </div>
+        ) : (
+            <div className="absolute top-4 left-4 sm:left-6 lg:left-8 z-50">
+                <button 
+                onClick={() => router.back()}
+                className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-all bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-slate-200/60 hover:bg-white hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5"
+                >
+                <ArrowLeft className="h-4 w-4" />
+                Back
+                </button>
+            </div>
+        )}
 
-        <div className="mb-12 text-center space-y-4">
+      <div className="relative z-10 container mx-auto py-12 px-4 max-w-4xl">
+        {/* Back Button Removed from here */}
+        
+        <div className="mb-12 text-center space-y-4 mt-8">
            <div className="inline-flex items-center justify-center p-2 bg-white rounded-2xl shadow-sm border border-slate-100 mb-4">
               <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white p-2 rounded-xl">
                  <Sparkles className="h-6 w-6" />

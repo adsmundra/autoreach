@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Plus, Search, Trash2, ExternalLink, Globe, MapPin, Building2 } from 'lucide-react';
 import Link from 'next/link';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 interface BrandProfile {
   id: string;
@@ -35,6 +36,10 @@ export default function BrandProfilesPage() {
     email: '',
     competitors: '',
   });
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [brandToDelete, setBrandToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch brands from database on mount
   useEffect(() => {
@@ -79,20 +84,31 @@ export default function BrandProfilesPage() {
     }
   }, [searchQuery, brands]);
 
-  const handleDelete = async (brandId: string, brandName: string) => {
-    if (!confirm(`Are you sure you want to delete "${brandName}"?`)) return;
+  const handleDelete = (brandId: string, brandName: string) => {
+    setBrandToDelete({ id: brandId, name: brandName });
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!brandToDelete) return;
 
     try {
-      const response = await fetch(`/api/brands/${brandId}`, {
+      setIsDeleting(true);
+      const response = await fetch(`/api/brands/${brandToDelete.id}`, {
         method: 'DELETE',
       });
 
       if (!response.ok) {
         throw new Error('Failed to delete brand');
       }
-      setBrands(brands.filter((b) => b.id !== brandId));
+      setBrands(brands.filter((b) => b.id !== brandToDelete.id));
+      setFilteredBrands(filteredBrands.filter((b) => b.id !== brandToDelete.id));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete brand');
+    } finally {
+      setIsDeleting(false);
+      setDeleteModalOpen(false);
+      setBrandToDelete(null);
     }
   };
 
@@ -447,6 +463,16 @@ export default function BrandProfilesPage() {
           </div>
         </div>
       )}
+
+      <ConfirmationDialog
+        open={deleteModalOpen}
+        onOpenChange={setDeleteModalOpen}
+        title="Delete Brand Profile"
+        description={`Are you sure you want to delete "${brandToDelete?.name}"? This action cannot be undone.`}
+        confirmText="Delete Brand"
+        onConfirm={confirmDelete}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

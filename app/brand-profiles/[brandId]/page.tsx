@@ -19,6 +19,7 @@ import {
   Plus
 } from 'lucide-react';
 import Link from 'next/link';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 interface BrandData {
   id: string;
@@ -101,6 +102,9 @@ export default function BrandProfilePage() {
     email: '',
     description: '',
   });
+
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   // Initialize edit form
   useEffect(() => {
@@ -251,9 +255,13 @@ export default function BrandProfilePage() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this brand profile?')) return;
+  const handleDelete = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
     try {
+      setIsDeleting(true);
       const response = await fetch(`/api/brands/${brandId}`, { method: 'DELETE' });
       if (response.ok || response.status === 401) {
         router.push('/brand-profiles');
@@ -263,6 +271,9 @@ export default function BrandProfilePage() {
     } catch (err) {
       console.error(err);
       alert('Failed to delete brand.');
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
     }
   };
 
@@ -695,6 +706,16 @@ export default function BrandProfilePage() {
           </div>
         </div>
       )}
+      
+      <ConfirmationDialog
+        open={isDeleteModalOpen}
+        onOpenChange={setIsDeleteModalOpen}
+        title="Delete Brand Profile"
+        description="Are you sure you want to delete this brand profile? This action cannot be undone."
+        confirmText="Delete Profile"
+        onConfirm={confirmDelete}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }
