@@ -227,7 +227,7 @@ function AEOReportContent() {
           </style>
         </head>
         <body>
-          <div class="header">
+          <div className="header">
             <h1 style="color: #0f172a; font-size: 24px; margin-bottom: 8px;">AEO Intelligence Report</h1>
             <p style="color: #64748b; margin: 0;">Prepared for <strong>${reportData.customerName}</strong> | ${new Date(reportData.generatedAt).toLocaleDateString()}</p>
           </div>
@@ -312,7 +312,7 @@ function AEOReportContent() {
                                     </CardTitle>
                                     <CardDescription className="text-slate-500 text-base">
                                         AEO Intelligence Audit • {new Date(reportData.generatedAt).toLocaleDateString()}
-                                    </CardDescription>
+                                    </CardDescription>>
                                 </div>
                                 {/* Decorative Icon */}
                                 <div className="hidden sm:flex h-14 w-14 bg-blue-50 rounded-2xl items-center justify-center text-blue-600 shadow-inner border border-blue-100">
@@ -323,7 +323,7 @@ function AEOReportContent() {
 
                         <CardContent className="p-8 pt-2 space-y-8 flex-1 flex flex-col justify-between">
                              <p className="text-slate-600 leading-relaxed text-lg">
-                                This AEO Intelligence Report analyzes your brand’s visibility across AI search engines. It evaluates your structured data, content relevance, optimization gaps, and overall readiness to improve AI-driven discovery.
+                                This report evaluates how effectively your data is structured for Large Language Models. It checks your structured data, content clarity, and machine-readability to ensure optimal performance in AI-driven search.
                              </p>
                              
                              {/* Action Buttons */}
@@ -505,7 +505,7 @@ function AEOReportContent() {
              AEO Intelligence
            </h1>
            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-             Generate professional Answer Engine Optimization reports. Analyze your brand's visibility across AI platforms like ChatGPT, Perplexity, and Gemini.
+             Generate professional AEO Intelligence reports. Analyze how well your website's data is structured for Large Language Models (LLMs) and optimized for AI discovery.
            </p>
         </div>
 
@@ -573,20 +573,43 @@ function AEOReportContent() {
           <div className="space-y-8">
              <Card className="border-none shadow-xl bg-white overflow-hidden">
                 <CardContent className="p-12 flex flex-col items-center justify-center text-center space-y-6">
-                   <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center">
-                      <LayoutDashboard className="w-8 h-8 text-blue-600" />
-                   </div>
-                   <div className="space-y-2">
-                      <h3 className="text-xl font-semibold text-slate-900">Start from Brand Profile</h3>
-                      <p className="text-slate-500 max-w-sm mx-auto">
-                        To generate an AEO Report, please select a brand from your dashboard and click "AEO Audit".
-                      </p>
-                   </div>
-                   <Link href="/brand-profiles">
-                     <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 rounded-xl">
-                       Go to Brand Profiles
-                     </Button>
-                   </Link>
+                   {customerName && url ? (
+                     <>
+                       <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-2">
+                          <Sparkles className="w-8 h-8 text-blue-600" />
+                       </div>
+                       <div className="space-y-2">
+                          <h3 className="text-2xl font-bold text-slate-900">Ready to Analyze {customerName}</h3>
+                          <p className="text-slate-500 max-w-md mx-auto text-base">
+                            We're ready to perform a comprehensive AEO audit for <span className="font-medium text-slate-700">{url}</span>. This includes analyzing your data structure for LLMs. This process usually takes about 2 minutes.
+                          </p>
+                       </div>
+                       <Button 
+                         onClick={() => generateReport()}
+                         className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 rounded-xl px-8 py-6 text-lg font-semibold transition-all hover:scale-105"
+                       >
+                         <Sparkles className="mr-2 h-5 w-5" />
+                         Start AEO Audit
+                       </Button>
+                     </>
+                   ) : (
+                     <>
+                       <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center">
+                          <LayoutDashboard className="w-8 h-8 text-blue-600" />
+                       </div>
+                       <div className="space-y-2">
+                          <h3 className="text-xl font-semibold text-slate-900">Start from Brand Profile</h3>
+                          <p className="text-slate-500 max-w-sm mx-auto">
+                            To generate an AEO Report, please select a brand from your dashboard and click "AEO Audit".
+                          </p>
+                       </div>
+                       <Link href="/brand-profiles">
+                         <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 rounded-xl">
+                           Go to Brand Profiles
+                         </Button>
+                       </Link>
+                     </>
+                   )}
                 </CardContent>
              </Card>
 
@@ -594,8 +617,8 @@ function AEOReportContent() {
              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
                   {
-                    title: "Brand Visibility",
-                    desc: "Analyze how your brand appears across major search engines and AI platforms.",
+                    title: "LLM Readiness",
+                    desc: "Analyze how machine-readable your content is for major AI platforms.",
                     icon: BarChart3,
                     color: "text-blue-600",
                     bg: "bg-blue-50"

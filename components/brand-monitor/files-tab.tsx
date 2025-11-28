@@ -17,7 +17,8 @@ import {
   AlertCircle,
   Bot,
   ChevronRight,
-  Terminal
+  Terminal,
+  Play
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { FilesTabPrefill } from "@/types/files";
@@ -36,6 +37,7 @@ export function FilesTab({ prefill }: { prefill?: FilesTabPrefill | null }) {
   const [lastSignature, setLastSignature] = useState<string | null>(null);
   const [hasSent, setHasSent] = useState(false);
   const [activeAsset, setActiveAsset] = useState<AssetType>("llm");
+  const [started, setStarted] = useState(false);
 
   const signature = useMemo(() => {
     if (!prefill) return null;
@@ -51,6 +53,8 @@ export function FilesTab({ prefill }: { prefill?: FilesTabPrefill | null }) {
   useEffect(() => {
     const run = async () => {
       if (!prefill || !signature) return;
+      if (!started) return;
+      
       if (!prefill.url || !prefill.customerName || !prefill.industry) {
         setError("Brand profile is missing required data.");
         return;
@@ -98,7 +102,7 @@ export function FilesTab({ prefill }: { prefill?: FilesTabPrefill | null }) {
     };
 
     run();
-  }, [prefill, signature, lastSignature, refreshCustomer]);
+  }, [prefill, signature, lastSignature, refreshCustomer, started]);
 
   // Dynamic Mock Content Generator
   const getPreviewContent = (type: AssetType) => {
@@ -210,6 +214,18 @@ A: We offer flexible tiers suitable for startups to enterprises...`;
                   sending ? "Analyzing your brand profile, structuring schema data, and optimizing for LLM retrieval.." :
                   "Generate rapid fixes to optimize AI visibility."}
                </p>
+               
+               {!sending && !hasSent && !error && (
+                   <div className="pt-2">
+                       <button 
+                         onClick={() => setStarted(true)}
+                         className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-200 transition-all hover:scale-105"
+                       >
+                         <Play className="w-5 h-5 mr-2 fill-current" />
+                         Start Generation
+                       </button>
+                   </div>
+               )}
             </div>
 
             {/* Stats / Badge */}

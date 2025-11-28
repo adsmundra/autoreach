@@ -352,7 +352,7 @@ export default function BrandProfilePage() {
       icon: Search,
       colorClass: 'text-purple-600 bg-purple-50 border-purple-100 hover:bg-purple-100',
       buttonClass: 'bg-purple-600 hover:bg-purple-700 text-white shadow-purple-200',
-      link: `/aeo-report?customerName=${encodeURIComponent(brand.name)}&url=${encodeURIComponent(brand.url)}&auto=true&brandId=${brand.id}`,
+      link: `/aeo-report?customerName=${encodeURIComponent(brand.name)}&url=${encodeURIComponent(brand.url)}&brandId=${brand.id}`,
       data: sectionData.aeoReports,
       renderItem: (report: AEOReport) => (
         <Link
