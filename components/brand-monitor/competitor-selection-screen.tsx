@@ -94,6 +94,14 @@ export function CompetitorSelectionScreen({
                   {identifiedCompetitors.map((competitor, index) => {
                     const validUrl = isValidUrl(competitor.url) ? competitor.url : null;
                     const hasError = competitorErrors[index] || false;
+                    
+                    // improved favicon logic
+                    const getDomain = (u: string) => { try { return new URL(u).hostname; } catch { return u; } };
+                    const domain = validUrl ? getDomain(validUrl) : null;
+                    
+                    const faviconUrl = !hasError 
+                        ? (competitor.metadata?.favicon || (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=64` : null))
+                        : null;
 
                     return (
                       <div
@@ -114,9 +122,9 @@ export function CompetitorSelectionScreen({
                           {/* Competitor Logo/Favicon */}
                           <div className="flex-shrink-0">
                             <div className="relative h-12 w-12 rounded-lg bg-gradient-to-br from-gray-100 to-gray-50 border border-gray-200 flex items-center justify-center overflow-hidden">
-                              {competitor.metadata?.favicon && !hasError ? (
+                              {faviconUrl ? (
                                 <Image
-                                  src={competitor.metadata.favicon}
+                                  src={faviconUrl}
                                   alt={competitor.name}
                                   width={32}
                                   height={32}

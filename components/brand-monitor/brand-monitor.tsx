@@ -3,7 +3,7 @@
 import React, { useReducer, useCallback, useState, useEffect, useRef } from 'react';
 import { Company } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, LayoutList, LineChart } from 'lucide-react';
 import { CREDITS_PER_BRAND_ANALYSIS } from '@/config/constants';
 import { ClientApiError } from '@/lib/client-errors';
 import { 
@@ -76,6 +76,7 @@ export function BrandMonitor({
   const [isLoadingExistingAnalysis, setIsLoadingExistingAnalysis] = useState(false);
   const hasSavedRef = useRef(false);
   const hasStartedAutoScrape = useRef(false);
+  const [matrixViewMode, setMatrixViewMode] = useState<'chart' | 'table'>('chart');
   
   const { startSSEConnection } = useSSEHandler({ 
     state, 
@@ -928,10 +929,19 @@ export function BrandMonitor({
                   />
                 )}
 
-                {activeResultsTab === 'matrix' && (
+                {activeResultsTab === 'matrix' && (() => {
+                  const matrixData = analysis.providerComparison || [];
+                  const marketTotal = matrixData.reduce((acc: number, item: any) => {
+                    const scores = Object.values(item.providers).map((p: any) => p?.visibilityScore || 0);
+                    const avg = scores.reduce((a, b) => a + b, 0) / (scores.length || 1);
+                    return acc + avg;
+                  }, 0);
+                  const marketAvg = matrixData.length > 0 ? Math.round(marketTotal / matrixData.length) : 0;
+
+                  return (
                   <div className="w-full flex justify-center">
                     <Card className="bg-white text-card-foreground border border-gray-200 rounded-xl shadow-sm w-[95%] mx-auto flex flex-col h-[calc(100vh-120px)]">
-                      <CardHeader className="border-b p-6">
+                      <CardHeader className="border-b p-6 flex-shrink-0">
                         <div className="flex justify-between items-center">
                           <div>
                             <CardTitle className="text-xl font-semibold">Comparison Matrix</CardTitle>
@@ -939,20 +949,53 @@ export function BrandMonitor({
                               Compare visibility scores across different AI providers
                             </CardDescription>
                           </div>
-                          <div className="text-right">
-                            <p className="text-2xl font-bold text-[#155DFC]">{brandData.visibilityScore}%</p>
-                            <p className="text-xs text-gray-500 mt-1">Average Score</p>
+                          <div className="flex items-center gap-8">
+                            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+                                <button
+                                    onClick={() => setMatrixViewMode('chart')}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                                        matrixViewMode === 'chart' 
+                                            ? 'bg-white text-blue-600 shadow-sm ring-1 ring-black/5' 
+                                            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200/50'
+                                    }`}
+                                >
+                                    <LineChart className="w-4 h-4" />
+                                    <span>Visual</span>
+                                </button>
+                                <button
+                                    onClick={() => setMatrixViewMode('table')}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                                        matrixViewMode === 'table' 
+                                            ? 'bg-white text-blue-600 shadow-sm ring-1 ring-black/5' 
+                                            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200/50'
+                                    }`}
+                                >
+                                    <LayoutList className="w-4 h-4" />
+                                    <span>Table</span>
+                                </button>
+                            </div>
+                            <div className="flex gap-6 border-l border-slate-200 pl-6">
+                                <div className="text-right">
+                                    <p className="text-2xl font-bold text-slate-700">{marketAvg}%</p>
+                                    <p className="text-xs text-gray-500 mt-1">Market Avg</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-2xl font-bold text-[#155DFC]">{brandData.visibilityScore}%</p>
+                                    <p className="text-xs text-gray-500 mt-1">Your Score</p>
+                                </div>
+                            </div>
                           </div>
                         </div>
                       </CardHeader>
 
-                      <CardContent className="pt-6 overflow-auto">
+                      <CardContent className={`pt-6 flex-1 ${matrixViewMode === 'chart' ? 'overflow-hidden flex flex-col' : 'overflow-auto'}`}>
                         {analysis.providerComparison ? (
                           <ProviderComparisonMatrix
                             data={analysis.providerComparison}
                             brandName={company?.name || ''}
                             company={company}
                             competitors={identifiedCompetitors}
+                            viewMode={matrixViewMode}
                           />
                         ) : (
                           <div className="text-center py-8 text-gray-500">
@@ -965,7 +1008,8 @@ export function BrandMonitor({
                       </CardContent>
                     </Card>
                   </div>
-                )}
+                  );
+                })()}
 
                 {activeResultsTab === 'rankings' && analysis.providerRankings && (
                   <div id="provider-rankings">

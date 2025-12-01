@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { CompetitorRanking, Company } from '@/lib/types';
 import { IdentifiedCompetitor } from '@/lib/brand-monitor-reducer';
-import { TrendingUp, TrendingDown, Minus, Crown, Target, ExternalLink } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Crown, Target, ExternalLink, Lightbulb, AlertTriangle, Info, Sparkles } from 'lucide-react';
 
 interface VisibilityScoreTabProps {
   competitors: CompetitorRanking[];
@@ -19,6 +19,54 @@ export function VisibilityScoreTab({
   identifiedCompetitors,
   company
 }: VisibilityScoreTabProps) {
+  const [fomoIndex, setFomoIndex] = useState(0);
+
+  const fomoStatements = [
+    "Did you know? Brands invisible in AI search lose up to 15% of high-intent traffic.",
+    "Fact: 40% of Gen Z uses AI instead of Google for product discovery. Are you there?",
+    "Alert: Your competitors are already optimizing for ChatGPT. Don't get left behind.",
+    "Insight: Being the #1 recommendation in AI chat is the new SEO rank #1.",
+    "Warning: AI hallucinations can damage your brand reputation if data isn't managed.",
+    "Stat: 70% of AI-driven purchases happen without a single click to a website.",
+    "Reality Check: If AI doesn't know your pricing, it recommends your competitor.",
+    "Trend: Voice and AI search are merging. Is your brand conversational-ready?",
+    "Did you know? 1 in 3 users accept the first AI recommendation as truth.",
+    "Tip: GEO (Generative Engine Optimization) is the fastest growing marketing channel.",
+    "Fact: Brands with high AI visibility see a 20% lower CAC.",
+    "Alert: Missing from Perplexity's citations? You're missing authority.",
+    "Insight: AI models update their knowledge bases weekly. Are you tracking changes?",
+    "Warning: Ignoring AI search today is like ignoring Mobile in 2010.",
+    "Stat: AI-referred leads convert 3x higher than traditional organic search.",
+    "Reality Check: Your 'About Us' page isn't enough. AI needs structured facts.",
+    "Trend: 'Zero-click' attribution is rising. Visibility is the only metric that matters.",
+    "Did you know? 50% of B2B buyers consult AI for vendor shortlisting.",
+    "Tip: Consistent brand mentions across sources train AI to trust you.",
+    "Fact: The first mover advantage in GEO is closing fast. Act now."
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFomoIndex((prev) => (prev + 1) % fomoStatements.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const getFomoIcon = (text: string) => {
+    if (text.startsWith("Warning") || text.startsWith("Alert")) {
+        return <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600"><AlertTriangle className="w-4 h-4" /></div>;
+    }
+    if (text.startsWith("Tip") || text.startsWith("Did you know")) {
+        return <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600"><Lightbulb className="w-4 h-4" /></div>;
+    }
+    if (text.startsWith("Stat") || text.startsWith("Trend")) {
+        return <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600"><TrendingUp className="w-4 h-4" /></div>;
+    }
+    if (text.startsWith("Fact") || text.startsWith("Reality")) {
+        return <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600"><Info className="w-4 h-4" /></div>;
+    }
+    return <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600"><Sparkles className="w-4 h-4" /></div>;
+  };
+
   const topCompetitor = competitors.filter(c => !c.isOwn)[0];
   const brandRank = competitors.findIndex(c => c.isOwn) + 1;
   const difference = topCompetitor ? brandData.visibilityScore - topCompetitor.visibilityScore : 0;
@@ -262,6 +310,18 @@ export function VisibilityScoreTab({
               })}
             </div>
         </CardContent>
+
+        {/* FOMO Carousel Footer */}
+        <div className="bg-slate-50/50 border-t border-slate-100 p-4 mt-auto">
+            <div className="flex items-center justify-center gap-3 max-w-2xl mx-auto animate-fade-in">
+                <div className="flex-shrink-0 transition-all duration-500">
+                    {getFomoIcon(fomoStatements[fomoIndex])}
+                </div>
+                <p className="text-sm font-medium text-slate-600 transition-all duration-500 min-h-[20px]">
+                   {fomoStatements[fomoIndex]}
+                </p>
+            </div>
+        </div>
       </Card>
     </div>
   );

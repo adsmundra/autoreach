@@ -60,8 +60,10 @@ export function ResultsNavigation({
       { title: 'Share of Voice', description: 'Your brand\'s dominance in the conversation compared to competitors.' },
     ],
     matrix: [
-      { title: 'Heatmap', description: 'Color intensity indicating performance (darker blue = higher visibility).' },
-      { title: 'Comparison', description: 'Head-to-head visibility scores against specific competitors.' },
+      { title: 'Market Avg', description: 'The average visibility score of all tracked competitors across all providers.' },
+      { title: 'Your Score', description: 'Your brand\'s specific visibility score averaged across all providers.' },
+      { title: 'Visual Mode', description: 'Interactive chart showing visibility trends and comparisons.' },
+      { title: 'Table Mode', description: 'Detailed data grid with raw visibility percentages.' },
     ],
     rankings: [
       { title: 'Provider Ranking', description: 'How different AI engines (e.g., GPT-4, Claude) rank your brand.' },
