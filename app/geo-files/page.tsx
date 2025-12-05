@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -43,6 +43,14 @@ interface GeoFileDetails extends GeoFile {
 }
 
 export default function GeoFilesPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>}>
+      <GeoFilesContent />
+    </Suspense>
+  );
+}
+
+function GeoFilesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
