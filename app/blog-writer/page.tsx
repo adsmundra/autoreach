@@ -1,10 +1,11 @@
 import { redirect } from "next/navigation";
 
 type BlogWriterRedirectProps = {
-  searchParams: Record<string, string | string[] | undefined>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default function BlogWriterRedirect({ searchParams }: BlogWriterRedirectProps) {
+export default async function BlogWriterRedirect(props: BlogWriterRedirectProps) {
+  const searchParams = await props.searchParams;
   const params = new URLSearchParams();
 
   const brandId = searchParams.brandId;

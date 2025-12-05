@@ -161,6 +161,13 @@ export const aeoReportsRelations = relations(aeoReports, ({ one }) => ({
   }),
 }));
 
+export const brandprofileRelations = relations(brandprofile, ({ one }) => ({
+  userProfile: one(userProfile, {
+    fields: [brandprofile.userId],
+    references: [userProfile.userId],
+  }),
+}));
+
 
 
 // Type exports for use in application

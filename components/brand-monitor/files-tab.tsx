@@ -70,17 +70,26 @@ export function FilesTab({ prefill }: { prefill?: FilesTabPrefill | null }) {
               .filter(Boolean)
           : [];
 
-        const res = await fetch("/api/files/jobs", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            url: prefill.url,
-            brand: prefill.customerName,
-            category: prefill.industry,
-            competitors,
-            prompts: "",
-          }),
-        });
+        let res;
+        if (brandId) {
+          res = await fetch("/api/geo-files", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ brandId }),
+          });
+        } else {
+          res = await fetch("/api/files/jobs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              url: prefill.url,
+              brand: prefill.customerName,
+              category: prefill.industry,
+              competitors,
+              prompts: "",
+            }),
+          });
+        }
 
         if (!res.ok) {
           const data = await res.json().catch(() => null);

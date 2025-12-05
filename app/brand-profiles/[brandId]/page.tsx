@@ -215,11 +215,22 @@ export default function BrandProfilePage() {
           }
         } catch (err) { console.error(err); }
 
+        // Fetch Geo Files
+        let fetchedGeoFiles = [];
+        try {
+          const geoResponse = await fetch(`/api/geo-files/history?brand=${encodeURIComponent(brand.name)}`);
+          if (geoResponse.ok) {
+             const geoData = await geoResponse.json();
+             fetchedGeoFiles = geoData.files || [];
+          }
+        } catch (err) { console.error(err); }
+
         setSectionData(prev => ({
           ...prev,
           aeoReports: fetchedAeoReports,
           blogReports: fetchedBlogReports,
           brandMonitorReports: fetchedBrandMonitorReports,
+          geoFileReports: fetchedGeoFiles,
         }));
       } catch (err) {
         console.error(err);
@@ -363,7 +374,7 @@ export default function BrandProfilePage() {
       icon: Search,
       colorClass: 'text-purple-600 bg-purple-50 border-purple-100 hover:bg-purple-100',
       buttonClass: 'bg-purple-600 hover:bg-purple-700 text-white shadow-purple-200',
-      link: `/aeo-report?customerName=${encodeURIComponent(brand.name)}&url=${encodeURIComponent(brand.url)}&brandId=${brand.id}`,
+      link: `/aeo-report?customerName=${encodeURIComponent(brand.name)}&url=${encodeURIComponent(brand.url)}&brandId=${brand.id}&competitors=${encodeURIComponent(JSON.stringify(brand.competitors || []))}`,
       data: sectionData.aeoReports,
       renderItem: (report: AEOReport) => (
         <Link
@@ -395,12 +406,29 @@ export default function BrandProfilePage() {
       icon: FileText,
       colorClass: 'text-orange-600 bg-orange-50 border-orange-100 hover:bg-orange-100',
       buttonClass: 'bg-orange-600 hover:bg-orange-700 text-white shadow-orange-200',
-      link: `/generate-files?brandId=${brand.id}`,
+      link: `/geo-files?customerName=${encodeURIComponent(brand.name)}&url=${encodeURIComponent(brand.url)}&brandId=${brand.id}`,
       data: sectionData.geoFileReports,
-      renderItem: (item: any) => (
-        <div key={item} className="p-6 text-sm text-slate-400 text-center italic bg-slate-50/50 mx-4 my-4 rounded-lg border border-dashed border-slate-200">
-          Feature coming soon
-        </div>
+      renderItem: (file: any) => (
+        <Link
+          key={file.id}
+          href={`/geo-files?id=${file.id}&brandId=${brandId}`}
+          className="group block p-4 border-b border-slate-50 hover:bg-slate-50 transition-all duration-200"
+        >
+          <div className="flex justify-between items-center mb-2">
+            <span className="font-semibold text-slate-900 text-sm truncate flex-1">
+              {file.brand || 'Untitled'}
+            </span>
+             <ArrowRight className="w-3 h-3 text-slate-300 group-hover:text-orange-500 transition-colors" />
+          </div>
+          <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
+            <Globe className="w-3 h-3 text-slate-400" />
+            <span className="truncate max-w-[200px]">{file.url}</span>
+          </div>
+          <div className="text-[10px] text-slate-400 flex items-center gap-1">
+            <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+            {new Date(file.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+          </div>
+        </Link>
       )
     },
     {
@@ -572,12 +600,12 @@ export default function BrandProfilePage() {
                 <p className="text-xs text-slate-500 mb-4 h-8 line-clamp-2">{section.description}</p>
 
                 <Link
-                  href={section.link}
-                  className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all active:scale-[0.98] ${section.buttonClass} shadow-sm`}
-                >
-                  <Plus className="w-4 h-4" />
-                  Create New
-                </Link>
+                    href={section.link}
+                    className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all active:scale-[0.98] ${section.buttonClass} shadow-sm`}
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create New
+                  </Link>
               </div>
 
               {/* Scrollable List */}

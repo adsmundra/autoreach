@@ -6,7 +6,7 @@ import { buildBasicSectionFromAudit } from '../../../lib/aeo/basicFromAudit';
 import { callLLMJSON } from '../../../lib/providers/llm';
 import { SCHEMA_AUDIT_PROMPT } from '../../../lib/aeo/prompts/schemaAuditPrompt';
 import { db } from '../../../lib/db';
-import { aeoReports, notifications } from '../../../lib/db/schema';
+import { aeoReports, notifications, brandprofile } from '../../../lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { auth } from '../../../lib/auth';
 import { Autumn } from 'autumn-js';
@@ -16,6 +16,39 @@ interface AEOReportRequest {
   url: string;
   customerName?: string;
   maxPages?: number;
+  competitors?: any[];
+}
+
+type CompetitorInput = string | { name?: string; title?: string };
+
+function extractCompetitors(scrapedData: any): string[] {
+  if (!scrapedData) return [];
+
+  const sources: CompetitorInput[][] = [
+    Array.isArray(scrapedData?.competitors) ? scrapedData.competitors : [],
+    Array.isArray(scrapedData?.topCompetitors) ? scrapedData.topCompetitors : [],
+    Array.isArray(scrapedData?.competitorList) ? scrapedData.competitorList : [],
+  ];
+
+  const set = new Set<string>();
+
+  for (const list of sources) {
+    for (const entry of list) {
+      if (!entry) continue;
+      if (typeof entry === 'string') {
+        const value = entry.trim();
+        if (value) set.add(value);
+        continue;
+      }
+      const name = entry.name || entry.title;
+      if (typeof name === 'string') {
+        const trimmed = name.trim();
+        if (trimmed) set.add(trimmed);
+      }
+    }
+  }
+
+  return Array.from(set);
 }
 
 function deriveCustomerNameFromUrl(u: string): string {
@@ -89,18 +122,11 @@ RULES:
 export async function POST(request: NextRequest) {
   try {
     const body: AEOReportRequest = await request.json();
-    const { url, maxPages = 5 } = body;
+    const { url, maxPages = 5, competitors = [] } = body;
     let { customerName } = body;
     if (!url) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
     }
-    // Normalize customerName for consistency
-    if (!customerName || !customerName.trim()) customerName = deriveCustomerNameFromUrl(url);
-    customerName = customerName.trim();
-    customerName = customerName
-      .split(/\s+/)
-      .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(' ');
 
     // Get session via Better Auth
     let userId: string | null = null;
@@ -118,6 +144,30 @@ export async function POST(request: NextRequest) {
     if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
+
+    // Extract competitors from existing brand profile if available
+    let extractedCompetitors: string[] = [];
+    try {
+        const [brand] = await db
+          .select()
+          .from(brandprofile)
+          .where(eq(brandprofile.url, url)) 
+          .limit(1);
+        
+        if (brand) {
+          extractedCompetitors = extractCompetitors(brand.scrapedData);
+        }
+    } catch (e) {
+      console.warn('Failed to lookup brand profile for competitors:', e);
+    }
+
+    // Normalize customerName for consistency
+    if (!customerName || !customerName.trim()) customerName = deriveCustomerNameFromUrl(url);
+    customerName = customerName.trim();
+    customerName = customerName
+      .split(/\s+/)
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
 
     const autumn = new Autumn({ apiKey: process.env.AUTUMN_SECRET_KEY! });
     // Unique per-run idempotency base to ensure every click deducts 30
@@ -172,17 +222,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to initiate AEO report generation' }, { status: 500 });
     }
 
-    const reportId = insertedReport[0]?.id;
-    if (!reportId) {
+    const id = insertedReport[0]?.id;
+    if (!id) {
       return NextResponse.json({ error: 'Failed to get report ID after insertion' }, { status: 500 });
     }
 
+    const payload ={
+      id,
+      brandUrl:url,
+      brandName: customerName,
+      flow: 1,
+      competitors: [...new Set([...competitors, ...extractedCompetitors])]
+    }
+
+    console.log(payload);
     // Send data to webhook
     try {
-      await fetch("https://n8n.welz.in/webhook/2f48da23-976e-4fd0-97da-2cb24c0b3e39", {
+      await fetch(process.env.WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reportId, url, userEmail: userEmail || null, brand: customerName }),
+        body: JSON.stringify(payload),
       });
     } catch (e) {
       console.error('Failed to send webhook for aeo_report:', e);
@@ -195,10 +254,10 @@ export async function POST(request: NextRequest) {
         userEmail,
         type: 'aeo_report_generated',
         message: `Your AEO report for ${customerName} is being generated. We will notify you when it's ready.`,
-        link: `/brand-monitor?tab=aeo&id=${reportId}`,
+        link: `/brand-monitor?tab=aeo&id=${id}`,
         status: 'not_sent',
         read: false,
-        assetId: reportId,
+        assetId: id,
         assetTable: 'aeo_reports',
       });
     } catch (e) {
@@ -208,7 +267,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "AEO report generation initiated. We will notify you when the report is ready.",
-      reportId: reportId,
+      reportId: id,
     });
   } catch (error) {
     console.error('AEO Report generation error (combined flows):', error);

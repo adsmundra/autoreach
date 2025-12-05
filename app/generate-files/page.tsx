@@ -1,10 +1,11 @@
 import { redirect } from "next/navigation";
 
 type GenerateFilesRedirectProps = {
-  searchParams: Record<string, string | string[] | undefined>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default function GenerateFilesRedirect({ searchParams }: GenerateFilesRedirectProps) {
+export default async function GenerateFilesRedirect(props: GenerateFilesRedirectProps) {
+  const searchParams = await props.searchParams;
   const params = new URLSearchParams();
 
   const brandId = searchParams.brandId;

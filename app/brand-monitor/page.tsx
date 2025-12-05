@@ -16,6 +16,8 @@ import { useSession } from "@/lib/auth-client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { FilesTabPrefill } from "@/types/files";
+import { assignUrlToCompetitor } from '@/lib/brand-monitor-utils';
+import { IdentifiedCompetitor } from '@/lib/brand-monitor-reducer';
 
 const BrandMonitor = dynamic(() => import("@/components/brand-monitor/brand-monitor").then(m => m.BrandMonitor), { ssr: false });
 const FilesTab = dynamic(() => import("@/components/brand-monitor/files-tab").then(m => m.FilesTab), { ssr: false });
@@ -43,7 +45,7 @@ function BrandMonitorContent({
   forceNew 
 }: { 
   session: any; 
-  onOpenAeoForUrl: (url: string, customerName?: string) => void; 
+  onOpenAeoForUrl: (url: string, customerName?: string, competitors?: any[]) => void; 
   onOpenFilesForUrl: (payload: FilesTabPrefill) => void; 
   prefillBrand?: { url: string; customerName: string } | null; 
   initialAnalysisId?: string | null;
@@ -118,9 +120,10 @@ function BrandMonitorContent({
 
 /* --------------------- Tabbed Page wrapper --------------------- */
 
-function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefill: { url: string; customerName: string } | null; onOpenBrandForUrl: (url: string, customerName?: string) => void; onOpenFilesForUrl: (payload: FilesTabPrefill) => void; }) {
+function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefill: { url: string; customerName: string; competitors?: any[] } | null; onOpenBrandForUrl: (url: string, customerName?: string, competitors?: any[]) => void; onOpenFilesForUrl: (payload: FilesTabPrefill) => void; }) {
   const [customerName, setCustomerName] = useState('');
   const [url, setUrl] = useState('');
+  const [competitors, setCompetitors] = useState<any[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [reportData, setReportData] = useState<{ htmlContent: string; customerName: string; reportType: string; generatedAt: string; read: boolean } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -172,6 +175,7 @@ function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefi
     // Set inputs and show lookup state immediately
     setCustomerName(prefill.customerName || 'autouser');
     setUrl(prefill.url || '');
+    if (prefill.competitors) setCompetitors(prefill.competitors);
     setPrefillLookupState('looking');
 
     // Wait until reports are fetched
@@ -204,7 +208,7 @@ function AeoReportTab({ prefill, onOpenBrandForUrl, onOpenFilesForUrl }: { prefi
       const res = await fetch('/api/aeo-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customerName: customerName.trim(), url: url.trim(), reportType: 'combined' })
+        body: JSON.stringify({ customerName: customerName.trim(), url: url.trim(), reportType: 'combined', competitors })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to generate report');
@@ -665,7 +669,7 @@ function BrandMonitorPageContent() {
   const [activeTab, setActiveTab] = useState<"brand" | "aeo" | "files" | "ugc">(
     "brand"
   );
-  const [prefillAeo, setPrefillAeo] = useState<{ url: string; customerName: string } | null>(null);
+  const [prefillAeo, setPrefillAeo] = useState<{ url: string; customerName: string; competitors?: any[] } | null>(null);
   const [prefillBrand, setPrefillBrand] = useState<{ url: string; customerName: string } | null>(null);
   const [pendingFiles, setPendingFiles] = useState<FilesTabPrefill | null>(null);
   const [prefillUgc, setPrefillUgc] = useState<{ url: string; brandName: string } | null>(null);
@@ -728,17 +732,22 @@ function BrandMonitorPageContent() {
 
         const scrapedCompetitors = Array.isArray(brandRecord?.scrapedData?.competitors)
           ? brandRecord.scrapedData.competitors
-              .map((entry: any) =>
-                typeof entry === "string" ? entry : entry?.name,
-              )
-              .filter((name: string | undefined): name is string => Boolean(name))
+              .map((entry: any) => {
+                const name = typeof entry === "string" ? entry : entry?.name;
+                if (!name) return null;
+                return {
+                  name,
+                  url: assignUrlToCompetitor(name)
+                };
+              })
+              .filter((c: any) => Boolean(c))
           : [];
 
         setPendingFiles({
           url: brandRecord.url,
           customerName: brandRecord.name,
           industry: brandRecord.industry,
-          competitors: scrapedCompetitors,
+          competitors: scrapedCompetitors.map((c: any) => c.name), // FilesTab still expects strings
         });
         setPrefillUgc({
           url: brandRecord.url,
@@ -748,6 +757,29 @@ function BrandMonitorPageContent() {
           url: brandRecord.url,
           customerName: brandRecord.name,
         });
+        // Pass full objects to AEO prefill logic if needed, but setPrefillAeo is not called here directly.
+        // We need to store it in a way that AeoReportTab can use if we auto-switch.
+        
+        // Wait, prefillAeo is local state. We only set it via handleOpenAeoForUrl.
+        // But we want to pre-populate it?
+        // Actually, AeoReportTab uses `prefill` prop.
+        // `prefillAeo` is state.
+        // If the user manually navigates, `prefillAeo` is null.
+        // If we want to support `competitors` in `AeoReportTab`, we need to update `handleOpenAeoForUrl` usage or hydration.
+        
+        // Let's just update setPendingFiles to use scrapedCompetitors names as before (to avoid breaking FilesTab),
+        // BUT ALSO update `handleOpenAeoForUrl` call sites if any.
+        // But wait, hydration doesn't set `prefillAeo`.
+        // If we want `AeoReportTab` to have competitors from hydration, we need to set it.
+        // The current code doesn't set `prefillAeo` on hydration. It just sets `pendingFiles`, `prefillUgc`, `prefillBrand`.
+        // So `AeoReportTab` won't have competitors populated from brand profile unless we explicitly set it.
+        
+        setPrefillAeo({
+            url: brandRecord.url,
+            customerName: brandRecord.name,
+            competitors: scrapedCompetitors
+        });
+
         setAppliedBrandPrefill(brandProfileIdFromQuery);
 
         // Respect hash or params if present
@@ -792,8 +824,8 @@ function BrandMonitorPageContent() {
     );
   }
 
-  const handleOpenAeoForUrl = (url: string, customerName?: string) => {
-    setPrefillAeo({ url, customerName: (customerName && customerName.trim()) ? customerName : "autouser" });
+        const handleOpenAeoForUrl = (url: string, customerName?: string, competitors?: any[]) => {
+    setPrefillAeo({ url, customerName: (customerName && customerName.trim()) ? customerName : "autouser", competitors });
     setActiveTab("aeo");
   };
   const handleOpenFilesForUrl = (payload: FilesTabPrefill) => {
@@ -840,7 +872,7 @@ function BrandMonitorPageContent() {
             forceNew={viewMode === 'new'}
           />
         )}
-        {activeTab === "aeo" && <AeoReportTab prefill={prefillAeo} onOpenBrandForUrl={(url, customerName) => { setPrefillBrand({ url, customerName: (customerName && customerName.trim()) ? customerName : "autouser" }); setActiveTab("brand"); }} onOpenFilesForUrl={handleOpenFilesForUrl} />}
+        {activeTab === "aeo" && <AeoReportTab prefill={prefillAeo} onOpenBrandForUrl={(url, customerName, competitors) => { setPrefillBrand({ url, customerName: (customerName && customerName.trim()) ? customerName : "autouser" }); setActiveTab("brand"); }} onOpenFilesForUrl={handleOpenFilesForUrl} />}
         {activeTab === "files" && (
           <FilesTab prefill={pendingFiles} />
         )}

@@ -1,6 +1,14 @@
 import { db } from '@/lib/db';
-import { brandprofile, brandAnalyses } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { 
+  brandprofile, 
+  brandAnalyses, 
+  aeoReports,
+  files,
+  fileGenerationJobs,
+  blogs,
+  topicSuggestions
+} from '@/lib/db/schema';
+import { eq, and, or } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 
@@ -124,15 +132,135 @@ export async function DELETE(
   try {
     const { brandId } = await params;
 
-    // Delete the brand profile
+    // Get current user session
+    const session = await auth.api.getSession({ headers: request.headers });
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const userId = session.user.id;
+    const userEmail = session.user.email;
+
+    // 1. Fetch the brand first to confirm ownership and get details
+    const [brand] = await db
+      .select()
+      .from(brandprofile)
+      .where(and(eq(brandprofile.id, brandId), eq(brandprofile.userId, userId)))
+      .limit(1);
+
+    if (!brand) {
+      return NextResponse.json(
+        { error: 'Brand profile not found' },
+        { status: 404 }
+      );
+    }
+
+    const brandUrl = brand.url;
+    const brandName = brand.name;
+
+    // 2. Delete related data in parallel promises where possible
+    // Using simple deletes for now. Ideally, this should be a transaction.
+    
+    // Brand Analyses
+    const deleteAnalyses = db.delete(brandAnalyses)
+      .where(
+        and(
+          eq(brandAnalyses.userId, userId),
+          or(
+            eq(brandAnalyses.url, brandUrl),
+            eq(brandAnalyses.companyName, brandName)
+          )
+        )
+      );
+
+    // AEO Reports
+    const deleteAeoReports = db.delete(aeoReports)
+      .where(
+        and(
+          eq(aeoReports.userId, userId),
+          or(
+            eq(aeoReports.url, brandUrl),
+            eq(aeoReports.customerName, brandName)
+          )
+        )
+      );
+
+    // Files (Geo Files)
+    const deleteFiles = db.delete(files)
+      .where(
+        and(
+          eq(files.userId, userId),
+          or(
+            eq(files.url, brandUrl),
+            eq(files.brand, brandName)
+          )
+        )
+      );
+
+    // File Generation Jobs
+    const deleteFileJobs = db.delete(fileGenerationJobs)
+      .where(
+        and(
+          eq(fileGenerationJobs.userId, userId),
+          or(
+            eq(fileGenerationJobs.url, brandUrl),
+            eq(fileGenerationJobs.brand, brandName)
+          )
+        )
+      );
+
+    // Prepare promises array
+    const deletePromises = [
+        deleteAnalyses,
+        deleteAeoReports,
+        deleteFiles,
+        deleteFileJobs
+    ];
+
+    // User-email based deletions (Blogs, Topics)
+    if (userEmail) {
+        // Blogs
+        deletePromises.push(
+            db.delete(blogs)
+            .where(
+                and(
+                    eq(blogs.emailId, userEmail),
+                    or(
+                        eq(blogs.companyUrl, brandUrl),
+                        eq(blogs.brandName, brandName)
+                    )
+                )
+            )
+        );
+
+        // Topic Suggestions
+        deletePromises.push(
+            db.delete(topicSuggestions)
+            .where(
+                and(
+                    eq(topicSuggestions.emailId, userEmail),
+                    eq(topicSuggestions.brandName, brandName)
+                )
+            )
+        );
+    }
+
+    // Execute all related deletions
+    await Promise.all(deletePromises);
+
+    // 3. Finally, delete the brand profile itself
     const result = await db
       .delete(brandprofile)
       .where(eq(brandprofile.id, brandId));
 
     if (!result) {
       return NextResponse.json(
-        { error: 'Brand profile not found' },
-        { status: 404 }
+        { error: 'Failed to delete brand profile' },
+        { status: 500 }
       );
     }
 

@@ -79,8 +79,8 @@ export async function identifyCompetitors(company: Company, progressCallback?: P
 
         const prompt = COMPETITOR_IDENTIFICATION_PROMPT({
             companyName: company.name,
-            industry: company.industry,
-            description: company.description,
+            industry: company.industry || '',
+            description: company.description || '',
             keywords: company.scrapedData?.keywords?.join(', '),
             knownCompetitors: company.scrapedData?.competitors?.join(', '),
             location: company.location
@@ -118,8 +118,10 @@ export async function identifyCompetitors(company: Company, progressCallback?: P
         // Add any competitors found during scraping
         if (company.scrapedData?.competitors) {
             company.scrapedData.competitors.forEach(comp => {
-                if (!competitors.includes(comp)) {
-                    competitors.push(comp);
+                // Handle legacy mixed type if necessary, but strictly we expect strings now
+                const name = typeof comp === 'string' ? comp : (comp as any).name;
+                if (!competitors.includes(name)) {
+                    competitors.push(name);
                 }
             });
         }
@@ -143,7 +145,7 @@ export async function identifyCompetitors(company: Company, progressCallback?: P
         return competitors;
     } catch (error) {
         console.error('Error identifying competitors:', error);
-        return company.scrapedData?.competitors || [];
+        return company.scrapedData?.competitors?.map(c => typeof c === 'string' ? c : (c as any).name) || [];
     }
 }
 

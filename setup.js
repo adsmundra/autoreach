@@ -151,7 +151,7 @@ async function applyMigrations(dir, description) {
 
 // Main setup
 async function main() {
-  console.log('\n🔥 Fire SaaS Geo Setup\n');
+  console.log('\n Senior Nishit Rana ji\n');
   
   try {
     // Prerequisites
