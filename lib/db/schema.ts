@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, boolean, jsonb, integer, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid, boolean, jsonb, integer, pgEnum, unique } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { metadata } from '@/app/layout';
 import { array } from 'better-auth';
@@ -71,7 +71,7 @@ export const brandprofile = pgTable('brand_profile',{
   id: uuid('id').primaryKey().notNull().unique(),
   userId: text('user_id').notNull(),
   name: text('brand_name').notNull(),
-  url: text('brandurl').notNull().unique(),
+  url: text('brandurl').notNull(),
   industry: text('industry').notNull(),
   location: text('location').default('Global'),
   email: text("email"),
@@ -82,7 +82,9 @@ export const brandprofile = pgTable('brand_profile',{
   isScraped: boolean('is_scraped').default(false), // Whether scraping was completed
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
-})
+}, (t) => ({
+  unq: unique().on(t.userId, t.url),
+}))
 
 // export const scrapedData = pgTable('Metadata',{
 //   id: uuid('id').primaryKey().unique().defaultRandom(),
