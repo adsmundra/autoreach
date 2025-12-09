@@ -16,6 +16,8 @@ import { openai } from '@ai-sdk/openai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { google } from '@ai-sdk/google';
 import { perplexity } from '@ai-sdk/perplexity';
+import { deepseek } from '@ai-sdk/deepseek';
+import { xai } from '@ai-sdk/xai';
 import { LanguageModelV1 } from 'ai';
 
 export interface ProviderModel {
@@ -55,9 +57,11 @@ export interface ProviderConfig {
  */
 export const PROVIDER_ENABLED_CONFIG: Record<string, boolean> = {
   openai: true,      // OpenAI is enabled
-  anthropic: true,   // Anthropic is enabled
+  anthropic: false,   // Anthropic is enabled
   google: true,      // Google is enabled
   perplexity: true,  // Perplexity is enabled
+  deepseek: false,    // DeepSeek is enabled
+  grok: false,        // Grok is enabled
 };
 
 /**
@@ -283,6 +287,92 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     },
     isConfigured: () => !!process.env.PERPLEXITY_API_KEY,
   },
+
+  deepseek: {
+    id: 'deepseek',
+    name: 'DeepSeek',
+    icon: '🐳',
+    envKey: 'DEEPSEEK_API_KEY',
+    enabled: PROVIDER_ENABLED_CONFIG.deepseek,
+    models: [
+      {
+        id: 'deepseek-chat',
+        name: 'DeepSeek Chat (V3)',
+        maxTokens: 64000,
+        supportsFunctionCalling: true,
+        supportsStructuredOutput: true,
+        supportsWebSearch: false,
+      },
+      {
+        id: 'deepseek-reasoner',
+        name: 'DeepSeek Reasoner (R1)',
+        maxTokens: 64000,
+        supportsFunctionCalling: false,
+        supportsStructuredOutput: false, // Reasoner models usually have restrictions
+        supportsWebSearch: false,
+      },
+    ],
+    defaultModel: 'deepseek-chat',
+    capabilities: {
+      webSearch: false,
+      functionCalling: true,
+      structuredOutput: true,
+      streamingResponse: true,
+      maxRequestsPerMinute: 100,
+    },
+    getModel: (modelId?: string) => {
+      if (!process.env.DEEPSEEK_API_KEY) return null;
+      return deepseek(modelId || PROVIDER_CONFIGS.deepseek.defaultModel);
+    },
+    isConfigured: () => !!process.env.DEEPSEEK_API_KEY,
+  },
+
+  grok: {
+    id: 'grok',
+    name: 'Grok',
+    icon: '🌌',
+    envKey: 'XAI_API_KEY',
+    enabled: PROVIDER_ENABLED_CONFIG.grok,
+    models: [
+      {
+        id: 'grok-2-1212',
+        name: 'Grok 2',
+        maxTokens: 131072,
+        supportsFunctionCalling: true,
+        supportsStructuredOutput: true,
+        supportsWebSearch: false,
+      },
+      {
+        id: 'grok-2-vision-1212',
+        name: 'Grok 2 Vision',
+        maxTokens: 32768,
+        supportsFunctionCalling: true,
+        supportsStructuredOutput: true,
+        supportsWebSearch: false,
+      },
+      {
+        id: 'grok-beta',
+        name: 'Grok Beta',
+        maxTokens: 131072,
+        supportsFunctionCalling: true,
+        supportsStructuredOutput: true,
+        supportsWebSearch: false,
+      },
+    ],
+    defaultModel: 'grok-2-1212',
+    capabilities: {
+      webSearch: false,
+      functionCalling: true,
+      structuredOutput: true,
+      streamingResponse: true,
+      maxRequestsPerMinute: 100,
+    },
+    getModel: (modelId?: string) => {
+      if (!process.env.XAI_API_KEY) return null;
+      return xai(modelId || PROVIDER_CONFIGS.grok.defaultModel);
+    },
+    isConfigured: () => !!process.env.XAI_API_KEY,
+  },
 };
 
 /**
@@ -293,7 +383,9 @@ export const PROVIDER_PRIORITY: Record<string, number> = {
   google: 1,      // Try Google first
   openai: 2,      // Then OpenAI
   anthropic: 3,   // Then Anthropic
-  perplexity: 4,  // Finally Perplexity
+  perplexity: 4,  // Then Perplexity
+  grok: 5,        // Then Grok
+  deepseek: 6,    // Finally DeepSeek
 };
 
 /**
@@ -374,6 +466,9 @@ export const PROVIDER_NAME_MAP: Record<string, string> = {
   'Anthropic': 'anthropic',
   'Google': 'google',
   'Perplexity': 'perplexity',
+  'DeepSeek': 'deepseek',
+  'Grok': 'grok',
+  'xAI': 'grok',
   // Add more mappings as needed
 };
 

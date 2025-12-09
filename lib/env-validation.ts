@@ -13,6 +13,8 @@ interface EnvConfig {
   ANTHROPIC_API_KEY?: string;
   GOOGLE_GENERATIVE_AI_API_KEY?: string;
   PERPLEXITY_API_KEY?: string;
+  DEEPSEEK_API_KEY?: string;
+  XAI_API_KEY?: string;
   FIRECRAWL_API_KEY?: string;
 }
 
@@ -54,6 +56,8 @@ export function validateEnv(): EnvConfig {
     ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
     GOOGLE_GENERATIVE_AI_API_KEY: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
     PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY,
+    DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY,
+    XAI_API_KEY: process.env.XAI_API_KEY,
     FIRECRAWL_API_KEY: process.env.FIRECRAWL_API_KEY,
   };
 }

@@ -26,6 +26,11 @@ const providerIcons = {
   'OpenAI': <Bot className="h-4 w-4" />,
   'Anthropic': <Brain className="h-4 w-4" />,
   'Google': <Sparkles className="h-4 w-4" />,
+  'Perplexity': <Sparkles className="h-4 w-4" />,
+  'DeepSeek': <img src="/logos/deepseek.jpeg" alt="DeepSeek" className="h-4 w-4" />,
+  'Grok': <img src="/logos/grok.jpeg" alt="Grok" className="h-4 w-4" />,
+  'xAI': <img src="/logos/grok.jpeg" alt="Grok" className="h-4 w-4" />,
+  'Grok (xAI)': <img src="/logos/grok.jpeg" alt="Grok" className="h-4 w-4" />,
 };
 
 const statusIcons = {

@@ -53,6 +53,24 @@ const getProviderIcon = (provider: string) => {
           className="w-6 h-6"
         />
       );
+    case 'DeepSeek':
+      return (
+        <img 
+          src="/logos/deepseek.jpeg" 
+          alt="DeepSeek" 
+          className="w-6 h-6"
+        />
+      );
+    case 'Grok':
+    case 'xAI':
+    case 'Grok (xAI)':
+      return (
+        <img 
+          src="/logos/grok.jpeg" 
+          alt="Grok" 
+          className="w-6 h-6"
+        />
+      );
     default:
       return <div className="w-6 h-6 bg-gray-400 rounded" />;
   }
@@ -206,11 +224,8 @@ export function PromptsResponsesTab({
                       Brand Mentioned
                     </Badge>
                   )}
-                </div>
-                
-                {/* Provider icons preview - deduplicated and ordered */}
                 <div className="flex items-center gap-2 shrink-0">
-                  {['OpenAI', 'Anthropic', 'Google', 'Perplexity'].map((providerName) => {
+{['OpenAI', 'Anthropic', 'Google', 'Perplexity', 'DeepSeek', 'Grok'].map((providerName) => {
                     const providerResponse = promptResponses.find(r => r.provider === providerName);
                     if (!providerResponse) return null;
                     
@@ -234,6 +249,8 @@ export function PromptsResponsesTab({
                   })}
                 </div>
                 
+                </div>
+
                 {/* Expand/Collapse indicator */}
                 <div className={`transition-transform duration-300 shrink-0 ${isExpanded ? 'rotate-180' : ''}`}>
                   <ChevronDown className="h-4 w-4 text-gray-400" />
@@ -252,7 +269,7 @@ export function PromptsResponsesTab({
               <div className="border-t border-gray-100 px-3 py-3">
                 {promptResponses.length > 0 ? (
                   <div className="space-y-4">
-                    {['OpenAI', 'Anthropic', 'Google', 'Perplexity'].map((providerName) => {
+                    {['OpenAI', 'Anthropic', 'Google', 'Perplexity', 'DeepSeek', 'Grok'].map((providerName) => {
                       const response = promptResponses.find(r => r.provider === providerName);
                       if (!response) return null;
                       

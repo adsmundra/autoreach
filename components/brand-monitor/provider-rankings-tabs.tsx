@@ -48,6 +48,24 @@ const getProviderIcon = (provider: string) => {
           className="w-6 h-6"
         />
       );
+    case 'DeepSeek':
+      return (
+        <img
+          src="/logos/deepseek.jpeg"
+          alt="DeepSeek"
+          className="w-6 h-6"
+        />
+      );
+    case 'Grok':
+    case 'xAI':
+    case 'Grok (xAI)':
+      return (
+        <img
+          src="/logos/grok.jpeg"
+          alt="Grok"
+          className="w-6 h-6"
+        />
+      );
     default:
       return <div className="w-7 h-7 bg-gray-400 rounded" />;
   }

@@ -47,6 +47,12 @@ const getProviderIcon = (provider: string, status?: string) => {
       );
     case 'Perplexity':
       return <img src="https://cdn.brandfetch.io/idNdawywEZ/w/800/h/800/theme/dark/icon.png?c=1dxbfHSJFAPEGdCLU4o5B" alt="Perplexity" className={className} />;
+    case 'DeepSeek':
+      return <img src="/logos/deepseek.jpeg" alt="DeepSeek" className={className} />;
+    case 'Grok':
+    case 'xAI':
+    case 'Grok (xAI)':
+      return <img src="/logos/grok.jpeg" alt="Grok" className={className} />;
     default:
       return <div className={`w-full h-full bg-slate-400 rounded transition-all duration-300 ${isGrayscale ? 'opacity-30' : 'opacity-80'}`} />;
   }
