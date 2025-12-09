@@ -57,11 +57,11 @@ export interface ProviderConfig {
  */
 export const PROVIDER_ENABLED_CONFIG: Record<string, boolean> = {
   openai: true,      // OpenAI is enabled
-  anthropic: true,   // Anthropic is enabled
+  anthropic: false,   // Anthropic is enabled
   google: true,      // Google is enabled
   perplexity: true,  // Perplexity is enabled
-  deepseek: true,    // DeepSeek is enabled
-  grok: true,        // Grok is enabled
+  deepseek: false,    // DeepSeek is enabled
+  grok: false,        // Grok is enabled
 };
 
 /**
