@@ -61,6 +61,23 @@ const getProviderIcon = (provider: string) => {
           className="w-4 h-4 object-contain"
         />
       );
+    case 'DeepSeek':
+      return (
+        <img 
+          src="https://cdn.brandfetch.io/deepseek.com/theme/dark/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B" 
+          alt="DeepSeek" 
+          className="w-4 h-4 object-contain"
+        />
+      );
+    case 'Grok':
+    case 'xAI':
+      return (
+        <img 
+          src="https://cdn.brandfetch.io/x.ai/theme/dark/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B" 
+          alt="xAI" 
+          className="w-4 h-4 object-contain"
+        />
+      );
     default:
       return <div className="w-4 h-4 bg-gray-300 rounded-full" />;
   }

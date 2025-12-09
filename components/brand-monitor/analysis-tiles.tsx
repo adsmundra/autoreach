@@ -26,6 +26,9 @@ const providerIcons = {
   'OpenAI': <Bot className="h-4 w-4" />,
   'Anthropic': <Brain className="h-4 w-4" />,
   'Google': <Sparkles className="h-4 w-4" />,
+  'Perplexity': <Sparkles className="h-4 w-4" />,
+  'DeepSeek': <img src="https://cdn.brandfetch.io/deepseek.com/theme/dark/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B" alt="DeepSeek" className="h-4 w-4" />,
+  'Grok': <img src="https://cdn.brandfetch.io/x.ai/theme/dark/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B" alt="Grok" className="h-4 w-4" />,
 };
 
 const statusIcons = {

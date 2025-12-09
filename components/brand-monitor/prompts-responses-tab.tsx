@@ -53,6 +53,23 @@ const getProviderIcon = (provider: string) => {
           className="w-6 h-6"
         />
       );
+    case 'DeepSeek':
+      return (
+        <img 
+          src="https://cdn.brandfetch.io/deepseek.com/theme/dark/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B" 
+          alt="DeepSeek" 
+          className="w-6 h-6"
+        />
+      );
+    case 'Grok':
+    case 'xAI':
+      return (
+        <img 
+          src="https://cdn.brandfetch.io/x.ai/theme/dark/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B" 
+          alt="xAI" 
+          className="w-6 h-6"
+        />
+      );
     default:
       return <div className="w-6 h-6 bg-gray-400 rounded" />;
   }
@@ -210,7 +227,7 @@ export function PromptsResponsesTab({
                 
                 {/* Provider icons preview - deduplicated and ordered */}
                 <div className="flex items-center gap-2 shrink-0">
-                  {['OpenAI', 'Anthropic', 'Google', 'Perplexity'].map((providerName) => {
+                  {['OpenAI', 'Anthropic', 'Google', 'Perplexity', 'DeepSeek', 'Grok'].map((providerName) => {
                     const providerResponse = promptResponses.find(r => r.provider === providerName);
                     if (!providerResponse) return null;
                     
@@ -252,7 +269,7 @@ export function PromptsResponsesTab({
               <div className="border-t border-gray-100 px-3 py-3">
                 {promptResponses.length > 0 ? (
                   <div className="space-y-4">
-                    {['OpenAI', 'Anthropic', 'Google', 'Perplexity'].map((providerName) => {
+                    {['OpenAI', 'Anthropic', 'Google', 'Perplexity', 'DeepSeek', 'Grok'].map((providerName) => {
                       const response = promptResponses.find(r => r.provider === providerName);
                       if (!response) return null;
                       
