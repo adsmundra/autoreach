@@ -50,13 +50,16 @@ const providerIcons: Record<string, React.ReactNode> = {
     </div>
   ),
   DeepSeek: (
-    <img src="https://cdn.brandfetch.io/deepseek.com/theme/dark/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B" alt="DeepSeek" className="w-4 h-4" />
+    <img src="/logos/deepseek.jpeg" alt="DeepSeek" className="w-4 h-4" />
   ),
   Grok: (
-    <img src="https://cdn.brandfetch.io/x.ai/theme/dark/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B" alt="Grok" className="w-4 h-4" />
+    <img src="/logos/grok.jpeg" alt="Grok" className="w-4 h-4" />
   ),
   xAI: (
-    <img src="https://cdn.brandfetch.io/x.ai/theme/dark/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B" alt="xAI" className="w-4 h-4" />
+    <img src="/logos/grok.jpeg" alt="Grok" className="w-4 h-4" />
+  ),
+  'Grok (xAI)': (
+    <img src="/logos/grok.jpeg" alt="Grok" className="w-4 h-4" />
   ),
 };
 

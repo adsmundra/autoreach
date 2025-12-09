@@ -51,17 +51,18 @@ const getProviderIcon = (provider: string) => {
     case 'DeepSeek':
       return (
         <img
-          src="https://cdn.brandfetch.io/deepseek.com/theme/dark/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B"
+          src="/logos/deepseek.jpeg"
           alt="DeepSeek"
           className="w-6 h-6"
         />
       );
     case 'Grok':
     case 'xAI':
+    case 'Grok (xAI)':
       return (
         <img
-          src="https://cdn.brandfetch.io/x.ai/theme/dark/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B"
-          alt="xAI"
+          src="/logos/grok.jpeg"
+          alt="Grok"
           className="w-6 h-6"
         />
       );

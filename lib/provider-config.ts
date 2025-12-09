@@ -61,7 +61,7 @@ export const PROVIDER_ENABLED_CONFIG: Record<string, boolean> = {
   google: true,      // Google is enabled
   perplexity: true,  // Perplexity is enabled
   deepseek: true,    // DeepSeek is enabled
-  grok: true,        // Grok (xAI) is enabled
+  grok: true,        // Grok is enabled
 };
 
 /**
@@ -329,7 +329,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
 
   grok: {
     id: 'grok',
-    name: 'Grok (xAI)',
+    name: 'Grok',
     icon: '🌌',
     envKey: 'XAI_API_KEY',
     enabled: PROVIDER_ENABLED_CONFIG.grok,
