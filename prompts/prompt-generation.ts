@@ -16,7 +16,7 @@ and GEO (Generative Engine Optimization) prompts for brands.
 Given a company's data, generate natural search-style queries that people
 might use to find or compare this brand in 2025.
 
-Create 3 prompts for each of these categories:
+Create 4 prompts for each of these categories:
 - ranking
 - comparison
 - alternatives

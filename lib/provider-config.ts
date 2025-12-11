@@ -56,7 +56,7 @@ export interface ProviderConfig {
  * Even if enabled, the provider must have a valid API key to be used
  */
 export const PROVIDER_ENABLED_CONFIG: Record<string, boolean> = {
-  openai: true,      // OpenAI is enabled
+  openai: false,      // OpenAI is enabled
   anthropic: false,   // Anthropic is enabled
   google: true,      // Google is enabled
   perplexity: true,  // Perplexity is enabled
